@@ -535,3 +535,8 @@ DONE  JOURNAL: the sheet's QUESTS tab is now JOURNAL. Work in hand (as before), 
       Saved with the world (last 150 entries). Verified by script + screenshot (proof/journal.png) and through a save and reload.
 DONE  HEIRLOOM QUEST: half of the delve jobs are now "bring back my family's gold cup" (item 1137, old heirloom). Taking the job puts the cup in a
       chest on the shrine at the bottom; carry it back within 8 days. Uses the existing hand-in flow; shown on the map and in the journal.
+DONE  HERMIT (first cave dweller): delves with 7+ chambers have a camp in one middle chamber (bedroll, barrel with a lamp, crate, cooking table).
+      Nothing hostile wakes in that chamber. A hermit lives there ("Quill - Hermit of the Black Warren"): sells lanterns, coal, cooked food, potions,
+      an iron pickaxe, iron, glow moss; buys bones, silk, chitin, leather, ores and ingots; never closes. ASK FOR WORK: kill the master below
+      (300 gold, 6 days) or bring him plain goods at double price. He keeps out of fights; if killed, another has taken the camp by sunrise.
+      Covered by tests/delve.py. Screenshots: proof/hermit_camp.png, hermit_talk.png, hermit_shop.png.

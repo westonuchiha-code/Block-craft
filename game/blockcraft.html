@@ -1686,18 +1686,21 @@ function delvePlan(rx,rz){
       if(nodes.length>=4){
         let hi = 1; for(let i=2;i<nodes.length;i++) if(nodes[i].dep>nodes[hi].dep || (nodes[i].dep===nodes[hi].dep && nodes[i].F<nodes[hi].F)) hi = i;      // the heart: the chamber furthest in
         const maxDep = nodes[hi].dep, tuns = [], kind = h3(rx,98,rz,SEED+904)<0.6 ? 0 : 1, chests = new Map();
+        let campI = -1;                                                                    // larger delves shelter a hermit: a camp in one middle chamber, where nothing hostile wakes
+        if(nodes.length>=7){ const c = nodes.map((N,i)=>i).filter(i=>i>1 && i!==hi && nodes[i].dep>=2 && nodes[i].dep<maxDep); if(c.length) campI = c[Math.floor(h3(rx,101,rz,SEED+907)*c.length)]; }
         let x0=ex-4, x1=ex+4, zz0=ez-3, zz1=zc, yLo=Math.min(...nodes.map(N=>N.F))-3, yHi=h+6;
         nodes.forEach((N,i)=>{
           N.tier = i===hi ? 2 : Math.min(2, Math.floor(N.dep/(maxDep+1)*3));
           if(N.par>=0){ const A = N.tA, B = N.tB; tuns.push([A[0], A[1], A[2], B[0]-A[0], B[1]-A[1], B[2]-A[2], Math.min(A[0],B[0])-5, Math.max(A[0],B[0])+5, Math.min(A[1],B[1])-5, Math.max(A[1],B[1])+5, Math.min(A[2],B[2])-5, Math.max(A[2],B[2])+5]); }
           const r = rnd();
           N.decor = i===hi ? 'shrine' : i===0 ? 'pillars' : (N.a>=9 && N.b>=8 && r<0.36) ? 'hall' : r<0.58 ? 'pillars' : r<0.74 ? 'pool' : 'bare';
+          if(i===campI) N.decor = 'camp';
           N.chests = N.decor==='shrine' ? [[N.cx-1,N.F+1,N.cz+2],[N.cx+1,N.F+1,N.cz+2]] : N.decor==='hall' ? [[N.cx,N.F,N.cz+3]] : [];
           for(const c of N.chests) chests.set(c.join(','), 'delve'+N.tier);
           x0 = Math.min(x0, N.cx-N.a-3); x1 = Math.max(x1, N.cx+N.a+3); zz0 = Math.min(zz0, N.cz-N.b-3); zz1 = Math.max(zz1, N.cz+N.b+3); yHi = Math.max(yHi, N.F+N.Hc+3);
         });
         const adj = DELVE_ADJ[Math.floor(h3(rx,99,rz,SEED+905)*DELVE_ADJ.length)], nouns = DELVE_NOUN[kind];
-        P = { key:'D'+rx+','+rz, ex, ez, h, D, F1, zc, nodes, tuns, heart:hi, kind, chests, name:'the '+adj+' '+nouns[Math.floor(h3(rx,100,rz,SEED+906)*nouns.length)],
+        P = { key:'D'+rx+','+rz, ex, ez, h, D, F1, zc, nodes, tuns, heart:hi, camp:campI, kind, chests, name:'the '+adj+' '+nouns[Math.floor(h3(rx,100,rz,SEED+906)*nouns.length)],
               boss:[nodes[hi].cx, nodes[hi].F+1, nodes[hi].cz-1], bb:[x0,x1,yLo,yHi,zz0,zz1] };
       }
     }
@@ -1750,6 +1753,7 @@ function delveBlock(x,y,z){
         if(N.decor==='hall' && Math.abs(u)<=5 && Math.abs(w)<=4) return h3(x,3,z,SEED+917)<0.3 ? MOSSY_BRICK : FLAGSTONE;
         if(N.decor==='pillars' && Math.abs(u)<=1 && Math.abs(w)<=7) return h3(x,3,z,SEED+917)<0.25 ? COBBLE : FLAGSTONE;
         if(N.decor==='shrine' && Math.abs(u)<=5 && Math.abs(w)<=5) return h3(x,3,z,SEED+917)<0.25 ? MOSSY_BRICK : STONE_BRICK;
+        if(N.decor==='camp' && Math.abs(u)<=3 && Math.abs(w)<=2) return h3(x,3,z,SEED+917)<0.3 ? COBBLE : FLAGSTONE;
         if(N.tier>=1 && !ruin && vnoise(x/5, z/5, SEED+918)>0.8) return GLOWMOSS;               // deep chambers glow faintly underfoot
       }
       if(q<1.3) floor = true;                                                                      // a sound floor: no natural cave opens a pit under a chamber (a tunnel leaving downward still cuts through)
@@ -1770,6 +1774,11 @@ function delveBlock(x,y,z){
     if(N.decor==='pillars' && Math.abs(u)===3 && (((w%4)+4)%4)===2 && Math.abs(w)<=7){
       const top = h3(x,9,z,SEED+922)<0.4 ? 99 : 2+Math.floor(h3(x,10,z,SEED+923)*4);              // some still reach the roof, most are stumps
       if(dy<top) return PILLAR;
+    }
+    if(N.decor==='camp'){                                                                          // a bedroll, a barrel with a lamp on it, a crate, a cooking table
+      if(dy===0){ if(u===2 && w===0) return BED0; if(u===2 && w===-1) return BED0+1; if(u===-2 && w===0) return BARREL; if(u===-2 && w===1) return CRATE; if(u===-2 && w===-1) return COOK_TABLE; }
+      if(dy===1 && u===-2 && w===0) return LANTERN0+1;
+      if(Math.abs(u)<=4 && Math.abs(w)<=3) return AIR;
     }
     if(N.decor==='shrine'){
       const au = Math.abs(u), aw = Math.abs(w);
@@ -6774,6 +6783,7 @@ const PRICE = {};
   for(const d of DISHES) PRICE[d.id] = 8 + FOOD_VAL[d.id]*2; }
 const CROPS_SOLD = [WHEAT,CARROT,POTATO,ONION,TOMATO,PEPPER,CORN_EAR,GRAPES,MELON_SLICE,PUMPKIN];
 const SHOPS = {
+  hermit:     { title:'What the deep provides', sell:[LANTERN0+1, COAL_ITEM, STEAK, MEAT_STEW, FIRE_POTION, BOLT_POTION, IRON_PICK, IRON_INGOT, GLOWMOSS], buy:[BONE, SILK, CHITIN, LEATHER, COAL_ITEM, IRON_ORE, IRON_INGOT, MITH_ORE, MITH_INGOT, ADAM_ORE, ADAM_INGOT, RAW_MEAT, GLOWMOSS, EMBER] },
   farmer:     { title:'Farm goods', sell:[SEEDS, ...CROPDEFS.map(d=>d.seed).filter(Boolean).slice(0,6), WHEAT, CARROT, POTATO, HAY, WOOD_HOE, STONE_HOE], buy:[...CROPS_SOLD, HAY, ...[0,1,2,3].map(w=>fenceId(w,0)), WOOD_BUCKET] },
   baker:      { title:'Bakery', sell:[FLOUR, ...DISHES.map(d=>d.id), STEAK, MEAT_STEW], buy:[...CROPS_SOLD, FLOUR, RAW_MEAT] },
   blacksmith: { title:'Smithy', sell:[WOOD_PICK, WOOD_AXE, WOOD_SWORD, STONE_PICK, STONE_AXE, STONE_SHOVEL, STONE_SWORD, IRON_PICK, IRON_AXE, IRON_SHOVEL, IRON_SWORD, IRON_INGOT, TINDERBOX, AR(0,0), AR(0,1), AR(0,2), AR(0,3), AR(2,0), AR(2,1), AR(2,2), AR(2,3), BARS0, LANTERN0+1, WOOD_BUCKET, CROSSBOW],
@@ -6784,8 +6794,9 @@ const SHOPS = {
   fisher:     { title:'Fisher\'s stall', sell:[WOOD_BUCKET, WATER_BUCKET, RAW_FISH, COOKED_FISH, RAW_MEAT], buy:[RAW_FISH, COOKED_FISH, RAW_MEAT, LEATHER, SILK] },
   villager:   { title:'Odds and ends', sell:[STICK, PLANKS, CRAFT_TABLE, BED0, WOOL0, CANDLE], buy:[SILK, WOOL0, LEATHER, LITTER, HAY, BED0, CHEST, ...[0,1,2,3].flatMap(w=>[tableId(w), chairId(w,0), benchId(w,0), doorId(w,0,0,0)]), ...Array.from({length:12},(_,i)=>RUG0+i)] }
 };
-const JOB_TITLE = { farmer:'Farmer', baker:'Baker', blacksmith:'Smith', miner:'Miner', librarian:'Scholar', cleric:'Cleric', fisher:'Fisher', villager:'Villager', guard:'Guard' };
+const JOB_TITLE = { hermit:'Hermit', farmer:'Farmer', baker:'Baker', blacksmith:'Smith', miner:'Miner', librarian:'Scholar', cleric:'Cleric', fisher:'Fisher', villager:'Villager', guard:'Guard' };
 const GREET = {
+  hermit:['Light and a living voice. Sit, if you mean no harm.','You came down through all that? Then you will want what I sell.','Mind the moss. It glows, but it does not warm.','I have lived down here longer than I lived up there.'],
   guard:['Keep your blade sheathed inside the walls.','Move along, traveller.','The beasts grow bold near the woods. Stay sharp.'],
   cleric:['The gods keep watch over this place.','Wounded? The temple can mend you, for a donation.'],
   blacksmith:['Need a sharper edge?','Mind the forge, it bites.'],
@@ -6855,6 +6866,14 @@ function questPlaced(b, x, z){
 const BEAST_NAME = { daedra:'fire daedra', daedroth:'daedroth', bat:'giant bat', fish:'slaughterfish', skeleton:'skeleton', zombie:'zombie', ghost:'ghost', cryptlord:'Crypt Lord',  bear:'grizzly bear', tiger:'sabertooth tiger', spider:'giant spider', scorpion:'giant scorpion' };
 // make up a job for this villager to offer (the same villager offers the same job until it is taken or the day turns)
 function questOffer(m){
+  if(m.job==='hermit'){                                        // a hermit wants the thing below dead, or the plain goods he cannot get down there
+    const P = siteByKey(m.site), rnd = vRng(Math.floor(h3(m.id, dayNo, 77, SEED+612)*4294967295));
+    if(P && !(cryptState[P.key] && cryptState[P.key].cleared) && rnd()<0.6){ const days = 6, reward = 300, what = P.kind===0 ? 'The lord of the dead' : 'The brood mother';
+      return { kind:'crypt', delve:1, crypt:P.key, cname:P.name, at:[P.ex,P.ez], days, reward, rep:0,
+               text:`${what} is below us, at the shrine. I hear it at night. I am too old to go down there, but you are not. Kill it within ${days} days and I will give you ${reward} gold I have no use for.` }; }
+    const item = [BONE, SILK, COAL_ITEM, LEATHER][Math.floor(rnd()*4)], n = 4+Math.floor(rnd()*5), reward = Math.round(n*(PRICE[item]||3)*2)+25, days = 5;
+    return { kind:'fetch', item, n, days, reward, rep:0, text:`I am short of ${NAMES[item]}. Bring me ${n} within ${days} days and I will pay ${reward} gold, twice what any village would.` };
+  }
   const rnd = vRng(Math.floor(h3(m.id, dayNo, (m.home||'').length*7+m.job.length, SEED+611)*4294967295));
   const kinds = m.job==='guard' ? ['hunt','crypt','crypt','deliver','order','build'] : ['hunt','deliver','fetch','order','order','build','crypt'];
   let kind = kinds[Math.floor(rnd()*kinds.length)];
@@ -7034,7 +7053,7 @@ function sellPrice(id){ return Math.max(1, Math.floor((PRICE[id]||1)*0.4*(1 + re
 function renderTalk(){
   const m = talkNpc; if(!m) return;
   const shop = SHOPS[m.job], el = document.getElementById('talkBody');
-  document.getElementById('talkName').textContent = m.name + ' \u2014 ' + (JOB_TITLE[m.job]||'Villager') + (hsOf(m) ? ' of '+hsOf(m).name : m.village ? ' of '+villageName(m.village[0],m.village[1]) : '');
+  document.getElementById('talkName').textContent = m.name + ' \u2014 ' + (JOB_TITLE[m.job]||'Villager') + (hsOf(m) ? ' of '+hsOf(m).name : m.village ? ' of '+villageName(m.village[0],m.village[1]) : m.site && siteByKey(m.site) ? ' of '+siteByKey(m.site).name : '');
   document.getElementById('talkGold').textContent = gold + ' gold';
   let h = '';
   document.getElementById('talkGold').textContent = gold + ' gold \u00b7 ' + repWord(repOf(m.village));
@@ -7056,7 +7075,7 @@ function renderTalk(){
     if(!talkOffer) h += `<button data-a="bye">GOODBYE</button>`;
     h += `</div>`;
   } else {
-    const closed = ratNight;
+    const closed = ratNight && m.job!=='hermit';      // village shops shut at night; a hermit's camp never does
     h += `<div class="tkTabs"><button data-a="back">← TALK</button><b>${shop.title}</b></div>`;
     if(shunned) h += `<div class="tkLine">\u201cNo.\u201d</div>`;
     else if(closed) h += `<div class="tkLine">\u201cWe're closed for the night. Come back in the morning.\u201d</div>`;
@@ -7426,6 +7445,7 @@ function npcDoors(m){
 function npcToggleDoor(x,y,z){ const sw = swingT; toggleDoor(x,y,z); swingT = sw; }
 function npcWalk(m, speed){ npcDoors(m); return ratWalk(m, speed); }
 function npcFindFoe(m){
+  if(m.hermit) return null;                                    // a hermit keeps out of fights, and the things of the deep leave the camp alone
   const range = m.job==='guard' ? 20 : 8, vc = m.vc; let best = null, bd = range;
   for(const o of mobs){
     if(!npcHostile(o)) continue;
@@ -8257,6 +8277,11 @@ function delveTick(){
     if(d>110){ delvePop.delete(k); return; }
     if(delvePop.has(k) || d>Math.max(N.a,N.b)+10 || !below || Math.abs(player.y-N.F)>N.Hc+10) return;      // a chamber wakes when you reach its mouth
     if(i!==P.heart && mobs.reduce((n,m)=>n+(m.crypt===P.key && !m.dead ? 1 : 0), 0) >= 14) return;                 // never a whole delve on you at once: the rest wake as these fall
+    if(N.decor==='camp'){ const hk = P.key+':hermit', st = villagerState[hk];
+      if(!(st && st.dead) && !mobs.some(m=>m.home===hk) && npcCanStand(N.cx, N.F, N.cz+1)){
+        const ch = npcGenerate(vRng(Math.floor(h3(N.cx,7,N.cz,SEED+930)*4294967295)), 'villager'); ch.job = 'hermit'; ch.topCol = '#5a5246'; ch.legsCol = '#3c382e'; ch.topTrim = '#8c6a3a';
+        const m = newNpc(N.cx, N.F, N.cz+1, ch); m.home = hk; m.house = null; m.village = null; m.vc = [N.cx, N.cz]; m.hermit = 1; m.site = P.key; m.hp = 80; mobs.push(m); delvePop.add(k); }
+      return; }
     const folk = DELVE_FOLK[P.kind][N.tier], want = cleared ? 1 : Math.min(6, 2 + N.tier + (N.a*N.b>130 ? 1 : 0) + (i===P.heart ? 1 : 0));
     const lvl = Math.min(7, dangerAt(N.cx,N.F,N.cz) + N.tier);
     let made = 0;

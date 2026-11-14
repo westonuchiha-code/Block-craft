@@ -26,6 +26,10 @@ JOURNAL AND QUESTS
 [ ] Character sheet -> JOURNAL: is the record useful? Anything missing?
 [ ] The two delve jobs from villagers: kill the master, bring back the heirloom. Pay and time limit fair?
 
+THE HERMIT (in the Black Warren: chamber 6, a camp with a bedroll and a lamp on a barrel)
+[ ] Is finding a friendly voice down there a good moment? Are his prices and goods useful at that depth?
+[ ] His two kinds of work: kill the master below, or bring plain goods.
+
 SMALLER THINGS
 [ ] No class picker at the start: does a fresh character feel right without one?
 [ ] Adamantite is now the top metal, mithril below it.

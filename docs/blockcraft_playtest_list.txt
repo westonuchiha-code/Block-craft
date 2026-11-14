@@ -13,12 +13,13 @@ THE LIFTED WORLD
 [ ] How long does it take to dig down to iron (below 48), mithril (below 20), adamantite (below 10)? Too far?
 [ ] GPU speed on the S21 Ultra and a PC (never measured on real hardware).
 
-DELVES (seed 12345: the Black Warren, gate at x 100, z -198, about 250 blocks north of spawn)
+DELVES (seed 12345: the Black Hideout, a bandit den, gate at x 100, z -198, about 250 blocks north of spawn)
 [ ] Finding the gate; the walk down the stair.
 [ ] Size and mood of the caverns; is the glowing moss too much or too little light?
 [ ] Can you find your way to the shrine? Is it too easy, too confusing, too long?
 [ ] How many creatures, how hard, how good the chests feel for the effort.
-[ ] The master fight (brood mother or Crypt Lord).
+[ ] The master fight (bandit chief, brood mother or Crypt Lord). Three kinds of delve: bandits, spiders, the dead.
+[ ] Bandits are people who attack on sight. Do they read as bandits? Too many, too few?
 [ ] Digging shortcuts: fun or does it spoil it?
 [ ] Delves are about 1 per 9 regions of 256 blocks. Too rare?
 
@@ -27,7 +28,7 @@ JOURNAL AND QUESTS
 [ ] The three delve jobs from villagers: kill the master, bring back the heirloom, rescue someone lost. Pay and time limit fair?
 [ ] Rescue: does the follower keep up through tunnels and up the stair, or get stuck? (Never watched by a person.)
 
-THE HERMIT (in the Black Warren: chamber 6, a camp with a bedroll and a lamp on a barrel)
+THE HERMIT (in the Black Hideout: chamber 6, a camp with a bedroll and a lamp on a barrel)
 [ ] Is finding a friendly voice down there a good moment? Are his prices and goods useful at that depth?
 [ ] His two kinds of work: kill the master below, or bring plain goods.
 

@@ -563,3 +563,10 @@ DONE  RESCUE QUEST (the lost miner): about a third of delve jobs are now "find <
       26 blocks behind, keep out of fights, and are safe once out through the gate; then tell the giver. 8 days, 300+ gold, counts as guild work.
       Covered by tests/delve.py (found, talks, follows, keeps close, safe at the gate, walks off, hand-in).
       Delve jobs are now a mix: rescue about 30%, heirloom about 35%, kill the master about 35%.
+DONE  Suite checkpoint on rescue + Thieves Guild build: 36 of 36 pass (proof/suite_rescue_thieves.log). That build was sent to him.
+DONE  BANDIT HIDEOUTS: a third kind of delve (about 28% of them; names end Den / Hideout / Roost / Cache). Bandits are people (the villager
+      body, dark clothes), go for you on sight within 15 blocks (less when sneaking), hit harder with depth, drop gold and sometimes goods.
+      The master is a Chief in red with gold trim (three times the health); killing him clears the hideout. You cannot talk to bandits.
+      Covered by tests/delve.py. Screenshot: proof/bandit_hideout.png.
+NOTE  Adding the third kind reshuffled which delve is which: on seed 12345 the delve nearest spawn (x 100, z -198) is now "the Black Hideout",
+      a bandit den. Layouts did not change, only who lives there.

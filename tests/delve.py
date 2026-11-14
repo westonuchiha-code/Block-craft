@@ -43,6 +43,11 @@ PLAY = r"""async ()=>{ beastSpawnT=1e9; ogreSpawnT=1e9; hurt=function(){}; const
         player.x=R.cx+3.5; await new Promise(r=>setTimeout(r,2500)); o.keepsClose=Math.hypot(lost.x-player.x,lost.z-player.z)<6;
         player.x=P.ex+0.5; player.z=P.ez-1.5; player.y=P.h+1; player.yaw=0; lastPCX=null; updateChunks(); await new Promise(r=>setTimeout(r,6000));
         o.rescued=rq.state==='done'; o.rescueGoal=renderQuests().includes('is safe'); await new Promise(r=>setTimeout(r,7000)); o.walkedOff=!mobs.includes(lost); finishQuest(rq,true); } } }
+  // a bandit hideout: people who go for you on sight, and a chief whose death clears it
+  { const B=delveNear(player.x,player.z,2600).find(P=>P.kind===2); o.banditDelve=!!B;
+    if(B){ cryptState={}; mobs.length=0; let hits=0; hurt=function(){ hits++; }; const H=B.nodes[B.heart]; player.x=H.cx+0.5; player.z=H.cz-5.5; player.y=H.F+0.01; lastPCX=null; updateChunks(); await new Promise(r=>setTimeout(r,7000));
+      const bs=mobs.filter(m=>m.bandit && !m.dead); o.bandits=bs.length; o.banditsAngry=bs.some(m=>m.angry>0); o.banditsHit=hits>0; const chief=bs.find(m=>m.master); o.chief=chief?chief.name:null;
+      o.noTalk=bs.length ? !openTalk(bs[0]) : false; if(chief){ spellDamage(chief,1e6); o.banditCleared=!!(cryptState[B.key] && cryptState[B.key].cleared); } hurt=function(){}; mobs.length=0; } }
   // the hermit: a camp in one chamber of the larger delves, nothing hostile wakes there, he trades and offers work
   const HP=delveNear(player.x,player.z,2000).find(P=>P.camp>=0); o.camp=!!HP;
   if(HP){ const C=HP.nodes[HP.camp]; mobs.length=0; player.x=C.cx+0.5; player.z=C.cz-5.5; player.y=C.F+0.01; lastPCX=null; updateChunks(); await new Promise(r=>setTimeout(r,6000));
@@ -65,7 +70,7 @@ with sync_playwright() as p:
         if not ok: bad.append(d['name'])
     if len(r)<3: bad.append('too few delves: %d' % len(r))
     g=pg.evaluate(PLAY); print('play', json.dumps(g))
-    if not (g['offer'] and g['seen'] and g['awake']>0 and g['chests']=='chest,chest' and min(g['loot'])>0 and g['master'] and g['cleared'] and g['quest']=='done' and g['site'] and g['relicOffer'] and g['idFree'] and g['inChest']==1 and g['canHandIn'] and g['goal'] and g['relicDone'] and g['rescueOffer'] and g['lostFound'] and g['lostTalk'] and g['following'] and g['keepsClose'] and g['rescued'] and g['rescueGoal'] and g['walkedOff'] and g['camp'] and g['hermit'] and g['campQuiet'] and g['campBlocks']=='bed,barrel,lantern,crate' and g['hermitWork'] and g['hermitTalk'] and g['hermitShop']): bad.append('play')
+    if not (g['offer'] and g['seen'] and g['awake']>0 and g['chests']=='chest,chest' and min(g['loot'])>0 and g['master'] and g['cleared'] and g['quest']=='done' and g['site'] and g['relicOffer'] and g['idFree'] and g['inChest']==1 and g['canHandIn'] and g['goal'] and g['relicDone'] and g['banditDelve'] and g['bandits']>=3 and g['banditsAngry'] and g['banditsHit'] and g['chief'] and g['noTalk'] and g['banditCleared'] and g['rescueOffer'] and g['lostFound'] and g['lostTalk'] and g['following'] and g['keepsClose'] and g['rescued'] and g['rescueGoal'] and g['walkedOff'] and g['camp'] and g['hermit'] and g['campQuiet'] and g['campBlocks']=='bed,barrel,lantern,crate' and g['hermitWork'] and g['hermitTalk'] and g['hermitShop']): bad.append('play')
     print(errs); b.close()
 print('DELVE TEST FAILED:', bad) if bad else print('delves ok')
 sys.exit(1 if (bad or errs) else 0)

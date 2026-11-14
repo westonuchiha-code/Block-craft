@@ -1633,7 +1633,7 @@ function cryptNear(x,z,r){
 // dungeon is its size, its dark and its inhabitants, not a maze. One per 256-block region at most, sited on the highest ground it can find.
 const DRS = 256;
 const DELVE_ADJ = ['Sunken','Hollow','Drowned','Shattered','Forgotten','Whispering','Blind','Black','Weeping','Howling','Silent','Broken'];
-const DELVE_NOUN = [['Hold','Halls','Vaults','Deeps'],['Nest','Warren','Maw','Burrows']];       // by kind: 0 held by the old dead, 1 a spider nest
+const DELVE_NOUN = [['Hold','Halls','Vaults','Deeps'],['Nest','Warren','Maw','Burrows'],['Den','Hideout','Roost','Cache']];       // by kind: 0 held by the old dead, 1 a spider nest, 2 a bandit hideout
 const delveByNum = new Map();
 let delveMemoRx = 1e9, delveMemoRz = 1e9, delveMemoP = null;
 function delvePlan(rx,rz){
@@ -1685,7 +1685,7 @@ function delvePlan(rx,rz){
       }
       if(nodes.length>=4){
         let hi = 1; for(let i=2;i<nodes.length;i++) if(nodes[i].dep>nodes[hi].dep || (nodes[i].dep===nodes[hi].dep && nodes[i].F<nodes[hi].F)) hi = i;      // the heart: the chamber furthest in
-        const maxDep = nodes[hi].dep, tuns = [], kind = h3(rx,98,rz,SEED+904)<0.6 ? 0 : 1, chests = new Map();
+        const maxDep = nodes[hi].dep, tuns = [], kind = (k=>k<0.42 ? 0 : k<0.72 ? 1 : 2)(h3(rx,98,rz,SEED+904)), chests = new Map();
         let campI = -1;                                                                    // larger delves shelter a hermit: a camp in one middle chamber, where nothing hostile wakes
         if(nodes.length>=7){ const c = nodes.map((N,i)=>i).filter(i=>i>1 && i!==hi && nodes[i].dep>=2 && nodes[i].dep<maxDep); if(c.length) campI = c[Math.floor(h3(rx,101,rz,SEED+907)*c.length)]; }
         let x0=ex-4, x1=ex+4, zz0=ez-3, zz1=zc, yLo=Math.min(...nodes.map(N=>N.F))-3, yHi=h+6;
@@ -6874,9 +6874,9 @@ const BEAST_NAME = { daedra:'fire daedra', daedroth:'daedroth', bat:'giant bat',
 function questOffer(m){
   if(m.job==='hermit'){                                        // a hermit wants the thing below dead, or the plain goods he cannot get down there
     const P = siteByKey(m.site), rnd = vRng(Math.floor(h3(m.id, dayNo, 77, SEED+612)*4294967295));
-    if(P && !(cryptState[P.key] && cryptState[P.key].cleared) && rnd()<0.6){ const days = 6, reward = 300, what = P.kind===0 ? 'The lord of the dead' : 'The brood mother';
+    if(P && !(cryptState[P.key] && cryptState[P.key].cleared) && rnd()<0.6){ const days = 6, reward = 300, what = P.kind===0 ? 'The lord of the dead' : P.kind===2 ? 'The bandit chief' : 'The brood mother';
       return { kind:'crypt', delve:1, crypt:P.key, cname:P.name, at:[P.ex,P.ez], days, reward, rep:0,
-               text:`${what} is below us, at the shrine. I hear it at night. I am too old to go down there, but you are not. Kill it within ${days} days and I will give you ${reward} gold I have no use for.` }; }
+               text:`${what} is below us, at the shrine. I hear ${P.kind===2 ? 'them' : 'it'} at night. I am too old to go down there, but you are not. Kill it within ${days} days and I will give you ${reward} gold I have no use for.` }; }
     const item = [BONE, SILK, COAL_ITEM, LEATHER][Math.floor(rnd()*4)], n = 4+Math.floor(rnd()*5), reward = Math.round(n*(PRICE[item]||3)*2)+25, days = 5;
     return { kind:'fetch', item, n, days, reward, rep:0, text:`I am short of ${NAMES[item]}. Bring me ${n} within ${days} days and I will pay ${reward} gold, twice what any village would.` };
   }
@@ -6905,7 +6905,7 @@ function questOffer(m){
     if(C && C.key[0]==='D' && rnd()<0.5){ const d = Math.hypot(C.ex-vc[0], C.ez-vc[1]), reward = 260 + Math.round(d/3), days = 8;
       return { kind:'fetch', relic:1, item:HEIRLOOM, n:1, crypt:C.key, cname:C.name, at:[C.ex,C.ez], days, reward, rep:20,
                text:`My grandfather went down into ${C.name} and never came up. He carried our family's cup, a gold one with a red stone. The gate is about ${Math.round(d/10)*10} paces ${dirWord(vc[0],vc[1],C.ex,C.ez)} of here. They say such things end up on the shrine at the very bottom. Bring it back to me within ${days} days and ${reward} gold is yours.` }; }
-    if(C && C.key[0]==='D'){ const d = Math.hypot(C.ex-vc[0], C.ez-vc[1]), reward = 320 + Math.round(d/3), days = 8, what = C.kind===0 ? 'The dead have a lord down there' : 'A brood mother is breeding down there';
+    if(C && C.key[0]==='D'){ const d = Math.hypot(C.ex-vc[0], C.ez-vc[1]), reward = 320 + Math.round(d/3), days = 8, what = C.kind===0 ? 'The dead have a lord down there' : C.kind===2 ? 'A bandit chief keeps his hoard and his cut-throats down there' : 'A brood mother is breeding down there';
       return { kind:'crypt', delve:1, crypt:C.key, cname:C.name, at:[C.ex,C.ez], days, reward, rep:25,
                text:`There is an old gate in the hills about ${Math.round(d/10)*10} paces ${dirWord(vc[0],vc[1],C.ex,C.ez)} of here, and under it ${C.name}: caverns that go down and down. ${what}, at the very bottom. Go down, find it and kill it within ${days} days. ${reward} gold, and no one here will forget it.` }; }
     if(C){ const d = Math.hypot(C.ex-vc[0], C.ez-vc[1]), reward = 160 + Math.round(d/4), days = 5;
@@ -7124,7 +7124,7 @@ function doRepair(){
 }
 let talkNpc = null, talkView = 'talk', talkLine = '', talkOffer = null;
 function openTalk(m){
-  if(paused || craftOpen || m.angry>0 || m.dead) return false;
+  if(paused || craftOpen || m.angry>0 || m.dead || m.bandit) return false;
   talkNpc = m; talkView = 'talk'; m.talkT = 0; talkOffer = null;
   const g = GREET[m.job] || GREET.villager; talkLine = g[Math.floor(Math.random()*g.length)];
   craftOpen = true;
@@ -7533,6 +7533,11 @@ function npcHit(m, dmg){                                         // you hit a vi
   if(m.dead || m.iframe>0) return;
   m.hp -= dmg; m.hurtT = 0.3; m.iframe = 0.3;
   const dx=m.x-player.x, dz=m.z-player.z, d=Math.hypot(dx,dz)||1; m.kx = dx/d*0.18; m.kz = dz/d*0.18;
+  if(m.bandit){ m.angry = 20;
+    if(m.hp<=0){ m.dead = true; m.deadT = 0; m.path = null; const x = Math.floor(m.x), y = Math.floor(m.y)+1, z = Math.floor(m.z), L = m.lvl||0;
+      spawnGold(x,y,z, Math.round((m.master ? 80 : 6+Math.random()*16)*(1+0.25*L))); if(Math.random()<0.25) spawnDrop(x,y,z, [LEATHER, IRON_INGOT, FIRE_POTION, BOLT_POTION][Math.floor(Math.random()*4)]);
+      if(m.master){ spawnDrop(x,y,z, MITH_INGOT); spawnDrop(x,y,z, IRON_SWORD); if(m.crypt) cryptCleared(m.crypt); } }
+    return; }
   if(m.job==='guard') m.angry = 30; else { m.fleeT = 5; m.path = null; m.replanT = 0; }
   if(m.village && !(m.angryRepT>0)){ addRep(m.village, -5); m.angryRepT = 20; crime(m.village, 'assault'); }
   for(const o of mobs) if(o.kind==='npc' && o.job==='guard' && !o.dead && Math.hypot(o.x-m.x,o.z-m.z)<32) o.angry = 30;
@@ -7551,7 +7556,7 @@ function npcDoors(m){
 function npcToggleDoor(x,y,z){ const sw = swingT; toggleDoor(x,y,z); swingT = sw; }
 function npcWalk(m, speed){ npcDoors(m); return ratWalk(m, speed); }
 function npcFindFoe(m){
-  if(m.hermit) return null;                                    // a hermit keeps out of fights, and the things of the deep leave the camp alone
+  if(m.hermit || m.bandit) return null;                                    // a hermit keeps out of fights, and the things of the deep leave the camp alone
   const range = m.job==='guard' ? 20 : 8, vc = m.vc; let best = null, bd = range;
   for(const o of mobs){
     if(!npcHostile(o)) continue;
@@ -7590,11 +7595,12 @@ function updateNpc(m, dt){
   const guard = m.job==='guard', dmg = guard ? 4 : 2;
   m.foeT -= dt; if(m.foeT<=0){ m.foeT = 0.5; m.foe = m.fleeT>0 ? null : npcFindFoe(m); }
   if(m.foe && (m.foe.dead || !mobs.includes(m.foe))) m.foe = null;
+  if(m.bandit && !dead && Math.hypot(player.x-m.x,player.z-m.z)<15*stealthMul() && Math.abs(player.y-m.y)<6) m.angry = Math.max(m.angry, 8);      // bandits go for you on sight
   if(dead) m.angry = 0;
-  if(m.angry>0){                                                                       // a guard after you
+  if(m.angry>0){                                                                       // a guard (or a bandit) after you
     m.angry -= dt;
     const dxp=player.x-m.x, dzp=player.z-m.z;
-    if(Math.hypot(dxp,dzp)<1.5 && Math.abs(player.y-m.y)<1.6){ m.moving=false; m.yaw=Math.atan2(dxp,-dzp); if(m.atkCd<=0){ hurt(3); m.atkCd = 1.1; m.swing = 1; } }
+    if(Math.hypot(dxp,dzp)<1.5 && Math.abs(player.y-m.y)<1.6){ m.moving=false; m.yaw=Math.atan2(dxp,-dzp); if(m.atkCd<=0){ hurt(m.dmg||3); m.atkCd = 1.1; m.swing = 1; } }
     else walking = npcChase(m, player.x, player.y, player.z, dt);
   } else if(m.follow){                                                                 // someone you are leading out: they keep close behind you
     const d = Math.hypot(player.x-m.x, player.z-m.z);
@@ -8377,7 +8383,15 @@ let cryptState = {}, cryptSeen = new Set(), cryptPop = new Set();
 const delvePop = new Set();
 // who lives in a delve, by its kind and how deep the chamber is
 const DELVE_FOLK = [[['skeleton','zombie','bat'],['skeleton','zombie','ghost','skeleton'],['ghost','skeleton','zombie','ghost']],
-                    [['spider','bat','bat'],['spider','spider','bat'],['spider','spider','spider']]];
+                    [['spider','bat','bat'],['spider','spider','bat'],['spider','spider','spider']],
+                    [['bandit','bandit','bat'],['bandit','bandit','bandit'],['bandit','bandit','bandit']]];
+// a bandit: a person like any villager, but one who goes for you on sight. The chief is the master of a hideout.
+function newBandit(x,y,z,lvl,chief){
+  const ch = npcGenerate(Math.random, 'guard'); ch.job = 'bandit'; ch.topCol = chief ? '#5a1c1c' : '#3a342c'; ch.legsCol = '#2a2622'; ch.topTrim = chief ? '#c8a040' : '#1c1a18';
+  const m = newNpc(x,y,z,ch); m.bandit = 1; m.lvl = lvl; m.hp = lvlHp(chief ? 70 : 22, lvl); m.dmg = lvlDmg(chief ? 5 : 3, lvl); m.house = null; m.village = null; m.home = null;
+  if(chief){ m.master = 1; m.name = ch.name+' the Chief'; }
+  return m;
+}
 // Things wake chamber by chamber as you come near, more of them and stronger the deeper you are; the master waits at the shrine.
 function delveTick(){
   if(worldGen<5 || testWorld || isUnder(player.z)) return;
@@ -8398,7 +8412,7 @@ function delveTick(){
     const k = P.key+':'+i, d = Math.hypot(N.cx-player.x, N.cz-player.z);
     if(d>110){ delvePop.delete(k); return; }
     if(delvePop.has(k) || d>Math.max(N.a,N.b)+10 || !below || Math.abs(player.y-N.F)>N.Hc+10) return;      // a chamber wakes when you reach its mouth
-    if(i!==P.heart && mobs.reduce((n,m)=>n+(m.crypt===P.key && !m.dead ? 1 : 0), 0) >= 14) return;                 // never a whole delve on you at once: the rest wake as these fall
+    if(i!==P.heart && mobs.reduce((n,m)=>n+(m.crypt===P.key && !m.dead ? 1 : 0), 0) >= (P.kind===2 ? 9 : 14)) return;                 // never a whole delve on you at once: the rest wake as these fall
     if(N.decor==='camp'){ const hk = P.key+':hermit', st = villagerState[hk];
       if(!(st && st.dead) && !mobs.some(m=>m.home===hk) && npcCanStand(N.cx, N.F, N.cz+1)){
         const ch = npcGenerate(vRng(Math.floor(h3(N.cx,7,N.cz,SEED+930)*4294967295)), 'villager'); ch.job = 'hermit'; ch.topCol = '#5a5246'; ch.legsCol = '#3c382e'; ch.topTrim = '#8c6a3a';
@@ -8412,11 +8426,11 @@ function delveTick(){
       if(Math.hypot(x-player.x, z-player.z)<7) continue;
       let y = -1; for(let yy=N.F+2; yy>=N.F; yy--) if(ratCanStand(x,yy,z) && PASS[ratGet(x,yy+1,z)]){ y = yy; break; }
       if(y<0) continue;
-      const m = newBeast(folk[(n+i)%folk.length], x, y, z, lvl); m.crypt = P.key; mobs.push(m); n++; made++;
+      const fk = folk[(n+i)%folk.length], m = fk==='bandit' ? newBandit(x, y, z, lvl) : newBeast(fk, x, y, z, lvl); m.crypt = P.key; mobs.push(m); n++; made++;
     }
     if(i===P.heart && !cleared && ratCanStand(P.boss[0],P.boss[1],P.boss[2])){
       const bl = Math.max(lvl+1, Math.floor(playerLevel()/4));
-      const L = P.kind===0 ? newBeast('cryptlord', P.boss[0], P.boss[1], P.boss[2], bl) : newBeast('spider', P.boss[0], P.boss[1], P.boss[2], bl+4);
+      const L = P.kind===0 ? newBeast('cryptlord', P.boss[0], P.boss[1], P.boss[2], bl) : P.kind===2 ? newBandit(P.boss[0], P.boss[1], P.boss[2], bl, true) : newBeast('spider', P.boss[0], P.boss[1], P.boss[2], bl+4);
       if(P.kind===1) L.hp *= 3;                                                                  // a brood mother takes far more killing than her brood
       L.crypt = P.key; L.master = 1; mobs.push(L); made++;
     }

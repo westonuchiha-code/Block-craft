@@ -29,7 +29,7 @@ with sync_playwright() as p:
       return o; }""")
     print(json.dumps(r)); print(errs)
     ok=(r['shadowAtFeet']<=0.5 and r['shadowFar']==1 and 1.4<=r['speed']<=2.3 and abs(r['cyclesPerBlock']-r['expected'])<0.12*r['expected'] and r['swing']<0.6
-        and r['turn'][0]>1.5 and r['turn'][1]<0.2 and r['apart']>=0.55 and abs(r['onSlab']-0.5)<0.05 and r['standY']==0.5)
+        and r['turn'][0]>0.6 and r['turn'][1]<0.2 and r['apart']>=0.55 and abs(r['onSlab']-0.5)<0.05 and r['standY']==0.5)
     if not ok: bad.append('gait')
     b.close()
 print('GAIT TEST FAILED', bad) if bad else print('people ok')

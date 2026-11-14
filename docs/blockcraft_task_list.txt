@@ -475,3 +475,9 @@ DONE  WORKER-VS-SINGLE "DIFFERENCES" (tp3 / og2 ~170,000): a test artefact, not 
       or if any value differs. Result: 0 differences in tp3, og2, wk2, wk5, wk7.
 NOTE  The suite has 33 tests (the brief said 34).
 OPEN  GPU speed on real hardware. Held items in THIRD person still use the old simple boxes (heldBoxes) - not touched.
+
+== CLASSES SHELVED (2026-11-14) ==
+DONE  The class picker no longer appears: a new world starts straight in the game with no class (all skills start at 5, 10 hearts, no perk).
+      Nothing was deleted: CLASSES, the picker screen, perks and confirmClass() are all still in the file behind one switch,
+      CLASSES_ON (false), just above the CLASSES table. Set it to true to bring the picker back.
+      Worlds made while classes were on keep their class and its perk.

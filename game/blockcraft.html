@@ -3329,7 +3329,7 @@ function loadWorld(id){
   if(health <= 0) die();
   paused = false;
   closeMenu();
-  if(!playerClass && !testWorld) setTimeout(openClassPick, 300);       // a new character chooses a class first
+  if(CLASSES_ON && !playerClass && !testWorld) setTimeout(openClassPick, 300);       // (when classes are switched on) a new character chooses a class first
 }
 
 function openMenu(){
@@ -11328,6 +11328,10 @@ let health = 20, food = 20, saturation = 5, exhaustion = 0;
 let dead = false, fallPeakY = 0, safeT = 2, vitalT = 0, starveT = 0;
 // ---------- classes: six of them, Final Fantasy style. Picked once per world; they set where your skills start, which ones
 // you learn faster (half again as fast), and one perk. Nothing is ever locked away by class.
+// SHELVED 2026-11-14: classes are switched off. A new world starts straight in the game with no class (no starting skill bonus, no perk).
+// Everything below still works and is kept to rebuild from: set CLASSES_ON to true and new characters get the picker again.
+// Worlds made while classes were on keep the class they chose.
+const CLASSES_ON = false;
 const CLASSES = [
   { id:'warrior',  name:'Warrior',     col:'#c8463c', start:{weapons:25, unarmed:10, athletics:15}, fav:['weapons','athletics'],
     perk:'Tough: starts with two extra hearts.', blurb:'Steel and stamina. Hits hard, takes a beating.' },

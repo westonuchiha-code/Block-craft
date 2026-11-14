@@ -44,7 +44,8 @@ a bestiary, a spellmaker, travel by wagon, danger that rises with distance).
   the best pickaxe**; bare hands / wood shovel take 4–5 hits minimum on dirt.
 - **Tool tiers:** wood → stone → iron → adamantite → mithril (mithril is top; adamantite was slotted below it,
   flagged to him as an interpretation).
-- **Classes:** few, Final-Fantasy-style (6 now), picked when a new world starts.
+- **Classes:** SHELVED 2026-11-14 at his request (they did not add much to the feel). The code is intact behind `CLASSES_ON = false`;
+  new worlds start with no class and no picker. Old worlds keep the class they chose. (Was: few, Final-Fantasy-style, 6, picked at world start.)
 - **Money** is Daggerfall-style gold. **Death** drops a floating sack with a light beam where you died.
 - The **pistol was removed** (too modern): it has no source and old saves have it stripped on load. The crossbow stays.
 - **Held items** use Minecraft's single "handheld" transform for every tool (see §5, trap 1). Never hand-tune
@@ -120,7 +121,7 @@ runs before optimising.
 - **Suite:** `bash tests/suite.sh` (33 scripts, ~15 min). It is a regression/smoke harness: a test fails on a
   non-zero exit, a Python traceback or page errors; many also print values to read. `gpu.py` compares GPU vs CPU
   pictures in 6 scenes and fails on mismatch. `sv.py` checks save → reload keeps edits.
-- **Conventions:** worlds are created via `#newName` / `#newSeed` / `#newBtn`, then the class picker must be
+- **Conventions:** worlds are created via `#newName` / `#newSeed` / `#newBtn`, then (only if `CLASSES_ON` is true; it is off now, so this is a harmless no-op) the class picker must be
   answered:
   `pg.evaluate("()=>{ if(document.getElementById('classMenu').classList.contains('show')){ classPick='warrior'; confirmClass(); } }")`.
   Freeze spawns when staging: `beastSpawnT=1e9; ogreSpawnT=1e9`. Builder buttons sit in collapsed `<details>`;

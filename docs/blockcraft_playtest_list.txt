@@ -1,0 +1,72 @@
+BLOCKCRAFT - PLAYTEST LIST
+Things to check when you have time. Write notes next to each one.
+
+TOOL PROGRESSION (added 2026-11-08, not yet playtested)
+
+[ ] Fist breaks dirt, grass, sand, gravel, logs, planks, leaves, glowstone
+[ ] Fist breaks stone and coal but drops nothing (needs a pickaxe)
+[ ] Wood pickaxe breaks stone and coal and drops cobble and coal
+[ ] Wood axe is faster on logs and planks
+[ ] Wood shovel is faster on dirt, grass, sand, gravel
+[ ] Wood sword is faster on leaves
+[ ] Stone tools are noticeably faster than wood tools
+[ ] Tools go on the hotbar: in the craft menu, click a hotbar slot, then click an item
+[ ] Holding a tool in the selected slot: it shows in the hand and mines the blocks it suits
+[ ] Holding a block or an empty slot: the fist, no tool effect
+[ ] Hotbar layout is saved and reloads with the world
+[ ] Durability: wood tools last about 59 blocks, stone about 131
+[ ] A tool disappears from inventory when it runs out
+[ ] Durability is not shown anywhere yet (note if you want a bar or a count)
+[ ] Break times feel right for each tool, compared to Minecraft
+[ ] Breaking stone with the fist takes long enough to feel slow, but not tedious
+
+TREES AND HOTBAR (added 2026-11-08, not yet playtested)
+
+[ ] Open meadows exist with few trees, and wooded areas are clustered between them
+[ ] Open areas are big enough to build a farm without clearing trees
+[ ] Forest density still feels right where trees are dense
+[ ] Hotbar starts empty, with blank squares like Minecraft
+[ ] Picking up a new item puts it in the first empty hotbar slot
+[ ] Items already on the hotbar don't get a second slot
+[ ] Hotbar shows item icons and counts, and counts only show above 1
+
+LEAF DECAY (added 2026-11-08, not yet playtested)
+
+[ ] Cutting every log from a tree makes its leaves start to fall away
+[ ] Leaves fall one at a time in random order, not all at once
+[ ] Falling leaves can drag down the leaves that were hanging off them
+[ ] Leaves with a log within 6 steps (through other leaves) stay put
+[ ] Leaves that fall away leave nothing behind
+[ ] Putting a log back saves the leaves that were starting to decay
+[ ] Chopping a tree in the open doesn't cause lag
+[ ] Each leaf falls between 4 and 30 seconds after losing its log; check whether the whole canopy feels gradual, and whether 4 to 30 is the right range
+
+WOOD LOOK (added 2026-11-08, not yet playtested; modeled on sugar maple)
+
+[ ] Bark reads as bark, grey-brown with ridges and furrows, and doesn't look like planks
+[ ] The cut end is pale with faint rings, and the middle is slightly reddish
+[ ] Planks are the same pale cream as the inside of the log
+[ ] Tree top and planks look different enough to tell apart side by side
+
+PHASE 2 AUTUMN LOOK (added 2026-11-08, not yet playtested)
+
+[ ] Sky is a cooler, hazier blue, fading to pale grey-white at the horizon
+[ ] Grass is golden and dry, with some browner patches
+[ ] Stone reads as cool grey with a few cracks and lighter flecks
+[ ] Dirt, sand, glass, and glowstone still look right next to the new colors
+[ ] Held block (in the hand) has the same colors as the same block in the world
+[ ] Dropped blocks match the world colors
+
+CARRIED OVER FROM PHASE 1
+
+[ ] Walk and run speed
+[ ] Punch strength and repeat rate while holding the button
+[ ] Dungeon hall size and lamp placement
+[ ] Autumn look and sky color
+[ ] Dropped block spin, bob, and shading (3D cubes)
+[ ] Break and place reach (now 4.5 blocks)
+[ ] Crafting menu on the phone
+
+OPEN QUESTIONS
+
+- Crafting table for bigger recipes: not built yet

@@ -1,0 +1,190 @@
+BLOCKCRAFT 1985 - FEATURE NOTES
+Prototype as of 2026-11-08
+One biome only. Terrain varies in height: grass, sand near low ground, and trees.
+
+For each feature, write what you'd change under "What I'd change".
+
+
+1. WORLD AND TERRAIN
+
+Endless seeded world
+  Now: Generated from a seed in 16x16 chunks, radius 4 around the player. Distant chunks are unloaded.
+  What I'd change:
+
+World height
+  Now: 32 blocks. Surface is about 10 to 22 blocks up.
+  What I'd change:
+
+Terrain layers
+  Now: Grass on top, 3 layers of dirt, then stone. Sand where ground is low.
+  What I'd change:
+
+Gravel patches
+  Now: Scattered in the dirt layer.
+  What I'd change:
+
+Coal ore
+  Now: About 4% of stone.
+  What I'd change:
+
+Trees
+  Now: About 3% of grass tiles. 4-block trunk with a leafy top.
+  What I'd change:
+
+Dungeon halls
+  Now: About half of each 32x32 region has one. 3x3 inside, cobblestone walls, glowstone lamps every 6 blocks, 12 to 23 blocks long, underground at y 3 to 5.
+  What I'd change:
+
+Edit memory
+  Now: Digging and building are kept while the page is open, even after chunks unload.
+  What I'd change:
+
+Saving
+  Now: None. Refreshing the page wipes all changes.
+  What I'd change:
+
+
+2. BLOCKS AND TEXTURES
+
+Block types
+  Now: Grass, dirt, stone, cobblestone, sand, gravel, log, planks, leaves, glass, glowstone, coal ore. Coal is also an item.
+  What I'd change:
+
+Textures
+  Now: Procedural 16x16 patterns: grass lip, stone cracks, cobblestone mortar, plank seams, log rings and bark, leaf holes, glass frame, glowstone and coal spots.
+  What I'd change:
+
+Held-block textures
+  Now: The held block uses the same textures as world blocks.
+  What I'd change:
+
+
+3. PLAYER AND INTERACTION
+
+Movement
+  Now: First-person. Walk or run (toggle), jump, gravity, collision with blocks.
+  What I'd change:
+
+Walk and run
+  Now: RUN button or Q toggles run speed. Stick is full speed past a small dead zone.
+  What I'd change:
+
+Break
+  Now: 6-block reach. No tools or break time. Bottom layer can't be broken.
+  What I'd change:
+
+Break drops
+  Now: Grass gives dirt. Stone gives cobblestone. Coal ore gives coal. Leaves give nothing. Everything else gives itself.
+  What I'd change:
+
+Place
+  Now: From the hotbar. Can't place inside the player.
+  What I'd change:
+
+Hotbar
+  Now: 9 slots, keys 1 to 9 or tap. Counts only, no stack limit.
+  What I'd change:
+
+Starting inventory
+  Now: 20 dirt, 8 logs, 10 stone, 4 glowstone.
+  What I'd change:
+
+Crafting
+  Now: One recipe (C key or CRAFT button): 1 log gives 4 planks. No crafting table or other recipes.
+  What I'd change:
+
+Survival
+  Now: No health, hunger, fall damage, or death.
+  What I'd change:
+
+
+4. LIGHTING AND SKY
+
+Day and night
+  Now: Day lasts 30 minutes. Night lasts 10 minutes.
+  What I'd change:
+
+Sun
+  Now: Moves across the sky and casts hard shadows. Trees and hills block it.
+  What I'd change:
+
+Moon
+  Now: Dimmer light at night.
+  What I'd change:
+
+Face shading
+  Now: Faces are shaded by their angle to the light.
+  What I'd change:
+
+Caves
+  Now: Dark unless glowstone is nearby.
+  What I'd change:
+
+Glowstone light
+  Now: Fades over about 15 blocks, only within its own chunk.
+  What I'd change:
+
+Sky color
+  Now: Shifts from day to night. Distant blocks fade into the horizon color beyond about 40 blocks.
+  What I'd change:
+
+Not drawn
+  Now: Clouds, a visible sun or moon, stars.
+  What I'd change:
+
+
+5. HELD ITEM AND ANIMATION
+
+Empty hand
+  Now: Short arm in the bottom-right corner.
+  What I'd change:
+
+Holding a block
+  Now: Textured block in the bottom-right corner. Hand is hidden.
+  What I'd change:
+
+Punch
+  Now: Hand or block drives toward the center of the screen when you break or place.
+  What I'd change:
+
+Walking bob
+  Now: Arm bobs slightly up and down while walking.
+  What I'd change:
+
+
+6. HUD AND CONTROLS
+
+HUD
+  Now: Position, block you're looking at, chunk count, day or night, coal, planks, and log counts.
+  What I'd change:
+
+Desktop controls
+  Now: WASD move. Space jump. Arrow keys look. Mouse look after clicking to lock the pointer. Left click break. Right click place. C craft. Q run. 1 to 9 hotbar.
+  What I'd change:
+
+Touch controls
+  Now: Left stick to move. Drag to look. Buttons for JUMP, BREAK, PLACE, CRAFT, RUN. Tap the hotbar. Hidden on desktop.
+  What I'd change:
+
+Layout
+  Now: Game view on the top half, controls on the bottom half on phones.
+  What I'd change:
+
+Render resolution
+  Now: Fixed at 224x140, scaled up.
+  What I'd change:
+
+
+7. NOT IN YET
+
+- Biomes
+- Villages and dialogue
+- Mobs and enemies
+- Water and lava
+- Sound
+- Saving between sessions
+- Menus or pause screen
+- Minecarts and mineshafts
+- Tools and durability
+- Multiplayer
+- Clouds, and a visible sun and moon

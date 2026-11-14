@@ -1,0 +1,69 @@
+VILLAGE / WORLD IDEAS (from the user's Daggerfall screenshots, 2026-11-09)
+Nothing here is built yet. Order of work is still: stairs+slabs, furnace+glass, fences, stone cutter, beds, then houses/villages.
+
+BUILDING TYPES
+- Tall A-frame longhouse: steep shingle roof reaching almost the ground, rows of arched windows on the gable wall (needs roof stairs/slabs).
+- Long low barn with a big shallow shingle roof, stone-brick walls, small lattice windows, plank door; cows/animals out front.
+- Timber-frame (half-timber) tavern/inn: dark beams over pale plaster, two storeys with a balcony/gallery, big hearth, bar with shelves of bottles.
+- Round or domed hall (desert/temple/palace) with small side domes - later, needs round roofs.
+- Greenhouse/herbalist: stone-tile pitched roof, teal marble walls, arched windows, hanging plants, raised hedge beds, fountain.
+- Desert adobe town: flat-roofed sand-colored houses packed close, palms in the streets.
+- Market square: flagstone plaza, lamp posts, houses facing it, a well in the middle.
+- Standing stones along village paths (tall tilted rocks).
+
+INTERIORS
+- Ceiling of wooden panels with exposed cross beams; plank or flagstone floor; plaster walls with a wood trim band along the top.
+- Half-timber walls: beam frame + white plaster panels + lattice windows.
+- Hearth/fireplace (stone or tiled arch, lit fire), hanging round lantern from ceiling beams.
+- Raised platform/stage, staircases to a loft or gallery.
+- Big rug with a gold-fringe border (dyeable), animal-skin rugs.
+- Bookshelf/bottle shelf, wardrobe/cabinet with a barrel, benches with backs, chairs, long tables, goblets, wall paintings.
+- Sconces and skull torches in dungeons.
+
+OBJECTS TO CRAFT (decor, also used by village generator)
+table, long table, chair, bench, stool, bookshelf, bottle shelf, cabinet, barrel, crate, chest, bed, rug (dyeable), banner, painting, candle, candelabra, hanging lantern, wall torch, lamp post, fireplace, cooking pot, anvil, flower pot, hanging plant pot, fountain, well, signs, mailbox, scarecrow, hay bale, rain barrel, bucket, goblet, plates.
+
+BLOCK / TEXTURE IDEAS
+stone brick, mossy stone brick, flagstone, cobbled path, packed dirt path, plaster (white + tinted), timber beam (vertical/horizontal), wood panel ceiling, shingle roof (wood, slate, clay), thatch, lattice glass window, arched window, marble (teal/white), tiles (checker), adobe/sand brick, iron bars, wooden door with iron studs, trapdoor, carpet, hedge block, column/pillar.
+
+VILLAGE LAYOUTS
+- Radial around a market square/well (spokes of paths).
+- Linear along a road or river with farms behind.
+- Cluster around a big building (inn, temple, castle).
+- Terraced hillside village; walled village with gate; desert compound with shared walls.
+- Farm plots with crops and rows, fenced animal pens, windmill/mill.
+
+SEWERS AND UNDER-VILLAGE DUNGEONS
+- Brick tunnels with a center water channel and side walkways, grates/drains to the surface, round arches.
+- Stone/cut-block dungeon rooms: iron-barred cells, skull torches, banners, cobwebs, bones, coffins/crypts.
+- Rats in sewers (already in game), skeletons deeper down, loot chests, hidden door from a house cellar or well.
+- Flooded rooms, slime/moss walls, rusty pipes, pillars.
+
+PLANT / WORLD STYLES
+- Palm trees (desert/coast), pine/spruce with dark layered boughs, round bushy oak.
+- Foxglove/lupin tall flower spikes (purple/pink), bushes with red berries, tomato/berry bushes.
+- Ferns, hanging plants in pots, topiary (cone-shaped hedge), ivy on walls, small desert shrubs, pumpkin/melon vines on the ground.
+- Beach: palms, small shrubs, purple flowers on sand, rocks/boulders in water.
+- Big standing rocks as scenery.
+
+MORE SCREENSHOTS (second batch)
+- Rainy village street: dark stone-brick walls with a timber-and-plaster upper band, thatched/shingled roofs, rain streaks, stone dogs/statues, overcast dark sky (weather: rain).
+- Crypt/library/temple interior: gray marble floors and walls, square pillars, ceiling light fixture (glowing hanging lamp), a wide staircase between pillars, wall niches with carved face plaques, potion-bottle shelves in alcoves.
+- Plaza with a low pink/stone fountain, red half-timber houses with diagonal brace beams, hanging wooden shop sign on a post (carved icon), thatch roofs, grass+dirt path mix.
+- Village at dusk: half-timber houses with steep tile roofs, iron street lamp posts, big round-canopy oak trees, packed-dirt ground with a flagstone plaza.
+- Wooden house interior: plank walls and ceiling, a long window gallery of many small panes with wood frames, a bed with green blanket and white pillow in the corner, bare dead trees outside.
+
+THIRD BATCH (towns + sewers)
+- Town on a slope: dark timber houses with very steep roofs, cobbled paths winding between them, iron lamp posts, compass/minimap HUD, held torch in the left hand.
+- Sewer/dungeon corridor: big sandstone-colored block walls, arched ceiling ribs, raised stone curbs along both sides with a sunken dirty channel in the middle, fog/dust, a hooded glowing-eyed monster (boss idea), player holds a torch + sword (two-hand: light source in off hand).
+- Plain interior room: rough orange plaster walls, a low stone-tile skirting band along the bottom of the wall, tiled floor (square brown tiles), wood panel ceiling, one hanging lantern in the middle, thick timber door frame.
+
+NETHER-STYLE UNDERWORLD (user refs 19:31) - a second dimension, not started, needs design talk before building
+- Mood: dark cavern world lit by its own glow; purple/magenta fleshy walls with sparkles; glowing violet/pink plants in pots; blue moss.
+- Insect folk: big orange beetle/roach people who live there (seen sitting at a table with tea and cards) - could be the underworld's NPCs/traders rather than just enemies.
+- Rusted industrial hell-city: huge riveted iron machines, pipes, towers, red furnace glow, crowds of thin red figures marching.
+- Minecraft-nether-like: lava sea, crimson and teal fungus forests with giant mushrooms, pale bone spikes, glowing cyan cave ceiling.
+- Floating dark-wood town over a glowing amber void, lit windows, hanging golden vines/light shafts, giant teal weeping tree.
+- Rusty riveted metal towers with yellow lamp panels, magenta portal/sky, red sky.
+- Hooded glowing-eyed sewer creature (repeat) as a boss/guardian idea.
+Building needs: a portal, a second world generator (ceiling + lava sea + floating islands), new blocks (flesh rock, rust plate, fungus, glow moss), new mobs (beetle folk, red husks).

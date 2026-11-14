@@ -1,0 +1,77 @@
+BLOCKCRAFT 1985 - GAME PLAN
+Written 2026-11-08. Order is a suggestion; each phase should be playtested before the next.
+
+
+DONE IN THIS PASS (not yet playtested)
+
+- Dungeon halls: taller (5 blocks) and wider (5 blocks), lamps set into the ceiling
+- Halls start a little lower to stay below the surface
+- Bedrock: unbreakable bottom layer
+- Stacks cap at 99
+- No starting inventory
+- Punch: the arm no longer shows a gap underneath
+- Autumn palette: golden grass, cool stone, grey-brown bark, orange and red leaves, pale tree rings
+
+
+PHASE 1: FEEL CHECK (now)
+
+- Playtest walking, running, punching, dungeon size, and the autumn look
+- Tune the numbers: walk and run speed, punch strength, dungeon size
+- Decide whether the autumn look is right before going further with textures
+
+PHASE 2: AUTUMN TEXTURES (polish)
+
+- Pass on each texture: dry grass, stone, bark, planks, leaves, sand, glass
+- Consider a cold, muted sky color for the biome (sky is not weather, not snow)
+- Make the held block match the world look
+
+PHASE 3: WORLD SIZE AND EDGE
+
+- Raise the world height from 32 to about 120 blocks (your Vita reference)
+- Check performance: taller chunks mean more blocks per chunk
+- Decide the edge rule. The world is endless, so "bordering" needs a choice:
+  a) bedrock walls at a fixed distance from spawn, or
+  b) bedrock only at the bottom, and no hard edge
+- If a fixed size is chosen, make the border bedrock and unbreakable
+
+PHASE 4: SAVE SYSTEM
+
+- Save each world: seed, height, and all edits
+- World list on the start screen: create, load, delete, and rename worlds
+- Autosave after changes, with a short delay so it doesn't save every block
+- Export and import world files, so saves aren't lost when the browser clears storage
+- Use the browser's local storage or IndexedDB for saves
+
+PHASE 5: CRAFTING AND PROGRESSION (big)
+
+- Research the original Minecraft 1.0 recipes and tools
+- Starting chain: chop logs, make planks, make sticks, make a crafting grid
+- Wood tools (pickaxe, axe, shovel, sword), then stone tools
+- Mining needs the right tool: stone needs a pickaxe, and some ores need a stone or better pickaxe
+- Tool durability and break speed per tool
+- Crafting table for bigger recipes, and a 2 × 2 grid in the inventory
+- Keep the progression simple: no food, no armor at first
+
+PHASE 6: SURVIVAL
+
+- Health, fall damage, hunger, death and respawn
+- Deferred until crafting and feel are right, as you asked
+
+PHASE 7: CONTROLS
+
+- Move to a controller-style layout later
+- Keep the touch and keyboard layouts working until then
+
+PHASE 8: HUD AND VISUAL POLISH
+
+- Make the HUD more visually appealing
+- Consider drawing a simple sun and moon, and stars, later
+
+PHASE 9: LATER CONTENT
+
+- Villages, with dialogue trees and procedural variation
+- Underground towns, with glow lighting
+- Minecarts and mineshafts
+- More biomes (the autumn biome is the first)
+- Mobs, water, lava, and sound
+- Multiplayer (last)

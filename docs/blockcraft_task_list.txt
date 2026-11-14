@@ -1,0 +1,442 @@
+BLOCKCRAFT - TASK LIST
+Work down the top part in order. The bottom part is for you to playtest when you have time.
+
+
+TO BUILD (in order)
+
+1. Crafting table block: place it, and it opens a 3 x 3 grid for bigger recipes, including tools
+2. Durability display on tools (a small bar or count)
+3. Survival basics: health, fall damage, hunger, death and respawn
+4. Controller-style control layout (keep touch and keyboard working too)
+5. HUD and visual polish (nicer HUD, simple sun and moon, maybe stars)
+6. Later content: villages with dialogue trees, underground towns with glow lighting, minecarts and mineshafts, more biomes, mobs, water and lava, sound, multiplayer last
+
+
+TO PLAYTEST (your notes go here)
+
+Tools and mining
+[ ] Fist breaks dirt, grass, sand, gravel, logs, planks, leaves, glowstone
+[ ] Fist breaks stone and coal but drops nothing (needs a pickaxe)
+[ ] Wood pickaxe breaks stone and coal and drops cobble and coal
+[ ] Wood axe is faster on logs and planks
+[ ] Wood shovel is faster on dirt, grass, sand, gravel
+[ ] Wood sword is faster on leaves
+[ ] Stone tools are noticeably faster than wood tools
+[ ] Break times feel right for each tool, compared to Minecraft
+[ ] Breaking stone with the fist takes long enough to feel slow, but not tedious
+[ ] A tool disappears from inventory when it runs out
+
+Hotbar and craft menu
+[ ] Tools go on the hotbar: in the craft menu, click a hotbar slot, then click an item
+[ ] Holding a tool in the selected slot: it shows in the hand and mines the blocks it suits
+[ ] Holding a block or an empty slot: the fist, no tool effect
+[ ] Hotbar layout is saved and reloads with the world
+[ ] Hotbar starts empty, with blank squares like Minecraft
+[ ] Picking up a new item puts it in the first empty hotbar slot
+[ ] Items already on the hotbar don't get a second slot
+[ ] Hotbar shows item icons and counts, and counts only show above 1
+[ ] Crafting menu works on the phone
+
+Trees and leaves
+[ ] Open meadows exist with few trees, and wooded areas are clustered between them
+[ ] Open areas are big enough to build a farm without clearing trees
+[ ] Forest density still feels right where trees are dense
+[ ] Cutting every log from a tree makes its leaves start to fall away
+[ ] Leaves fall one at a time in random order, not all at once
+[ ] Falling leaves can drag down the leaves that were hanging off them
+[ ] Leaves with a log within 6 steps (through other leaves) stay put
+[ ] Leaves that fall away leave nothing behind
+[ ] Putting a log back saves the leaves that were starting to decay
+[ ] Each leaf falls between 4 and 30 seconds after losing its log; is the whole canopy gradual enough, and is 4 to 30 the right range?
+[ ] Chopping a tree in the open doesn't cause lag
+
+Wood look
+[ ] Bark reads as bark, grey-brown with ridges and furrows, and doesn't look like planks
+[ ] The cut end is pale with faint rings, and the middle is slightly reddish
+[ ] Planks are the same pale cream as the inside of the log
+[ ] Tree top and planks look different enough to tell apart side by side
+[ ] Maple log and maple planks names show in the craft menu and HUD
+
+Autumn look
+[ ] Sky is a cooler, hazier blue, fading to pale grey-white at the horizon
+[ ] Grass is golden and dry, with some browner patches
+[ ] Stone reads as cool grey with a few cracks and lighter flecks
+[ ] Dirt, sand, glass, and glowstone still look right next to the new colors
+[ ] Held block (in the hand) has the same colors as the same block in the world
+[ ] Dropped blocks match the world colors
+[ ] Dungeon hall size and lamp placement
+
+Movement, feel, and world
+[ ] Walk and run speed (running should feel like a faster walk, not a different speed)
+[ ] Punch strength and repeat rate while holding the button
+[ ] Dropped block spin, bob, and shading (3D cubes)
+[ ] Break and place reach (now 4.5 blocks)
+[ ] Day length: about 30 minutes of day, 10 minutes of night
+
+Saves
+[ ] Delete works: tap DELETE, then SURE? within 3 seconds
+[ ] Terrain: flat plains about 60 blocks across exist in many places, with few trees
+[ ] Terrain: hills still roll like before
+[ ] Terrain: mountains are rare (roughly one area in a dozen) and tall, with bare stone at the top and no trees high up
+[ ] Terrain: caves inside hills and mountains are tunnels and rooms, not the straight hallways of the dungeons
+[ ] Terrain: caves don't open a hole in the top of plains; check the edges where mountains meet plains
+[ ] Terrain: existing worlds look different where you haven't dug or built yet (the terrain changed; your edits stayed)
+[ ] Terrain: chunks still load smoothly when you walk, including near mountains
+[ ] Crafting table: 4 planks in the 2 x 2 grid make one; placing it works; breaking it (fist or axe) gives it back
+[ ] Crafting table: using it opens a 3 x 3 grid; tool shapes match (pick, axe, shovel, sword, wood and stone)
+[ ] Crafting table: items in its grid return to the inventory when closed
+[ ] 2 x 2 grid: a planks recipe (one log) and a sticks recipe (two planks in one column) work
+[ ] 2 x 2 grid: tap an empty grid slot, then tap an item to fill it; tap a filled slot to take it back
+[ ] 2 x 2 grid: items left in the grid return to the inventory when the menu closes
+[ ] Save layout: old worlds still show up and play after the update (they're converted once)
+[ ] Save layout: a world can't be open in two browser tabs at once ("open elsewhere")
+[ ] Save layout: export then import still works, and the imported world matches
+[ ] Autosave: break or place a block, close the app within a few seconds, reopen; the change is there
+[ ] Autosave: switching to another app saves the world (no lost changes)
+[ ] Storage full: a red warning appears over the game, and the game keeps running
+[ ] Export: tap EXPORT on a world and a .blockcraft.json file downloads (on some phones it goes to the Files app)
+[ ] Import: tap IMPORT WORLD FILE, pick the file, and the world appears in the list. A duplicate name becomes "name (2)"
+[ ] Import refuses a file that isn't a Blockcraft world, with a message, and changes nothing
+[ ] Exported and re-imported world has the same blocks, inventory, hotbar, and time of day
+[ ] Rename works: tap RENAME, type a name, SAVE (or Enter). Empty and duplicate names are refused, CANCEL (or Escape) backs out, and a renamed world keeps its contents
+[ ] Saved worlds reload with the same blocks, inventory, and time of day
+
+DONE (this stretch): multi-map terrain; durability bars; inventory layout fixes; held 3D pickaxe + swing; dark-fantasy UI skin; survival (health/hunger/fall/death); axe/shovel/sword redrawn; controller layout (Gamepad API, Bedrock defaults, menu cursor, button hints).
+NEXT: HUD/visual polish; held models for remaining items from user's item sheet; food items; mobs; water/lava.
+DONE: inventory/hotbar duplication fix (items on hotbar hidden from inventory grid, tap selected slot to unequip)
+DONE: Task B trees (4 woods, 3 shapes, per-biome tables, any-planks crafting, sapling drop/plant/grow). Verified in node only; headless render of some trees.
+NEXT (user priority): water flow like Minecraft (dug pockets next to water must fill; source/flowing levels, falling water, no air pockets under sea)
+THEN: HUD/visual polish, held models for remaining items, food, mobs, sound, multiplayer last
+DONE: water flow (source 25 + flowing levels 40..46, flows 1 step/0.25s, falls, spreads 7, drains when cut; node-tested; not run in browser)
+NEXT: HUD/visual polish (+ flow visuals: lowered surface height, current push)
+DONE: HUD polish step 1 (debug text hidden by default, F3 / menu button toggles; selected-item name popup above hotbar). Item popup not seen in a screenshot.
+DONE: flowing water visuals (lowered surface by level, partial-height ray/swim tests, current push). Node-tested only; not seen in a render.
+NEXT (user request): draw/fog distance - see much farther: far chunks as cheap low-detail "distant terrain" (no physics, coarser render/heightmap-only, maybe lower resolution), full detail when close; load more chunks. Current: VIEW_DIST=56, LOAD_R=4.
+THEN: HUD pass from user's Minecraft references (waiting on screenshots)
+DONE: Daggerfall-style sky (time-of-day palette red/orange/cream-lavender/pink/night, streaky dark cloud banks, jagged mountain bands, stars, warm low sun light). Rendered in headless Chrome at 8 times of day; not seen on phone. Own pixels, not copied from the reference images.
+NEXT: draw distance (see task above), then HUD references pass
+DONE: 3D cloud layer (blocky slabs y=100..105, 8-block cells, drift, underside/side shading, haze fade). Painted panorama clouds kept in code (cloudCover 0) for a future stormy/spooky weather biome. Not rendered in a screenshot (headless Chrome hangs); user will check.
+DONE: horizon mountain ring switched off by default (SKY_FX.ring, for boss/spooky-biome effect later). Clouds approved by user.
+DONE: draw distance - far height-map terrain beyond full-detail range (4x4 cells, slope shading, woods darker, far water), new distance fog (pow 1.5 over FAR_DIST, clear nearby), DRAW DISTANCE menu button NORMAL/FAR/MAX (56/72/96 detail, 4/5/6 chunks, 224/320/448 far). Default FAR. Node-timed only; headless render hung, not seen. Far terrain has no trees (pop at detail edge).
+NEXT: user feedback on look/speed; then HUD references pass; maybe far trees as dots/silhouettes
+DONE: performance pass - chunk loading budgeted (~5ms/frame, nearest first), auto resolution scale (100/80/65/50%, drops after 1.2s of >26ms frames, creeps up after 6s of <19ms, 60s cooldown), cheaper shadows (only within 48 blocks, shorter beyond 24), default draw distance NORMAL (56 detail, far terrain to 320). Node bench: full res ~35-39ms, 0.5 res ~11ms (node, not phone). FPS/resolution shown in debug text (F3 / menu).
+REVERTED: auto resolution is now OFF by default (user: looked extremely ugly) - opt-in menu button; shadows back to full range. Kept: budgeted chunk loading.
+ROLLED BACK: whole performance pass (auto resolution, budgeted chunks, shadow limit) discarded at user request - graphics quality comes first. Do not reduce visual quality for speed.
+ROLLED BACK: far terrain + new fog + draw-distance setting discarded at user request (looked like smudges). Now at: 3D clouds, ring off, old 56-block view and old fog. Do not degrade visuals; ask before any visual change.
+DONE: fog thinned (clear first 55% of view, ramps to horizon color at edge). Visual-only, no speed cost. Next maybe: slightly larger real view if user wants.
+DONE: Thin fog (clear first 55%, ramp to horizon). Far-terrain/auto-res attempts rolled back (no visual loss rule).
+DONE (untested on phone): RAT mob - cave/dungeon spawn, underground pathing, packs, pack aggro, bite 1/0.8s, no-follow to surface. Constants RAT_* near the rat code.
+NEXT: wait for user feedback on rats, then draw distance / HUD pass.
+DONE: draw distance VIEW_DIST 56->80, LOAD_R 4->5 (no resolution/quality change). Rolls back via before_draw.html.
+NEXT (user request): COBBLESTONE GENERATORS - research how Minecraft cobblestone generators work (very standard in Skyblock): lava behavior (sources, flow levels, spread distance, speed), water behavior, and how they interact (water + lava source -> obsidian, water + flowing lava -> cobblestone, lava next to / flowing into water). Then make sure this game has every mechanic a generator needs, and that they are consistent with Minecraft (lava blocks, buckets or equivalent to place sources, flow timing, block replacement, sound/visual not needed). Ask before undiscussed choices.
+PENDING FIXES (user reported): sapling stays in hotbar after placing (fixed, untested on phone), sapling drawn as flat painted square instead of 3D voxel (replaced with box model, needs visual check).
+NEXT (user request, BIG - make a plan first): FARMING. (1) Hoe/tilling: new tilled-land block + texture. (2) Watering: watering can made from wood, carries water from a water source -> must be able to pick up a water source. (3) Tilled land next to a water source is always watered (dig hole, add water, land stays watered). (4) Seeds: breaking tall grass gives seeds. (5) Plant seeds on tilled + watered block, growth timer. (6) Break/harvest wheat and seeds from grown wheat. (7) Cats walking by a plant growing on watered land fertilize it (faster growth). Plan first, ask before undiscussed choices (hoe recipe, growth time, water range, tall grass block existence).
+NEXT (user request): TEXTURE REDO. References saved in references/textures + notes in references/texture_notes.md. Plan: rebuild block textures with hand-structured patterns (not hash noise), compare 16x16 vs 32x32 on phone, own pixels only, ask before visual changes.
+DONE: render speedups (chunk cache in cast, texture memo, no per-pixel garbage) - identical image, ~10% faster. Default sharpness back to level 2 (288x180). IDEA if still laggy: hierarchical empty-space skipping in cast (4x4x4 occupancy bricks built in computeDerived), bit-identical but riskier.
+DONE (needs phone check): textures pass 1 - hand-structured dirt/stone/cobble/gravel/sand/coal/bedrock/snow/glow/planks/grass/bark+cut ends/leaf tones via buildTiles(). Backup before_textures.html. NEXT textures: leaves holes, glass, craft table, ores, items/tools icons, water/lava.
+NEXT (user request): GRASS SPREADING - research how Minecraft grass spreads (dirt next to grass turns to grass with light/air above, random ticks, grass dies to dirt when covered/dark) and implement our own version. Check what the game does now first. Ask before undiscussed choices.
+NEXT (research DONE, implementation pending user decisions): COBBLESTONE GENERATOR. Notes: references/cobblestone_generator_notes.md. Needs: lava (source/flow 3 blocks/1.5s/light 15/damage), worldgen lava pools, buckets (pick up/place sources), interaction rules (obsidian/cobble/stone), obsidian block, infinite water rule, tests.
+DECIDED (cobble gen): water bucket = wood (planks); lava bucket = stone (cobblestone); obsidian = unbreakable for now. Still to confirm before building: lava pool depth/rarity, lava damage numbers.
+DONE-IN-PROGRESS (user request): infinite water (2 sources diagonal in a 2x2 hole fill the rest) - implemented with lava work, needs test. Rule: air/flowing cell with >=2 horizontal WATER-source neighbours and solid-or-source below becomes a source.
+DONE (untested on phone): lava (source/flow 3 blocks 1.5s/light/damage 2 hearts per s), worldgen lava lakes y<=7, wood/stone buckets (water/lava), water+lava reactions (obsidian/cobble/stone), infinite water, obsidian unbreakable. Test build: blockcraft_LAVATEST.html. TODO later: lava burns/destroys items, mobs avoid/die in lava, fire, lava camera overlay, bucket cooldown, hotbar icon polish.
+
+DONE: GRASS SPREADING - updateGrass(): random ticks within 40 blocks of player (40 columns / 0.5s). Lit grass (light 9+ above, none at night) converts dirt in 3x5x3 box (1 up, 3 down), target needs light 4+ and no opaque/water/lava above. Buried grass -> dirt. Glass/leaves/snow/water don't kill. Tunables: GRASS_STEP/SAMPLES/RADIUS/TRIES. Script-tested only.
+FIXED: bucket stack of 2+ put filled bucket in inventory not hotbar (now gets own hotbar slot).
+
+FARMING PLAN (decisions: hoe like Minecraft = 2 material on top + 2 sticks, wood/stone tiers; wheat grows 15-18 min (random 15-18) on watered land, 8 visual stages; water reaches tilled land within 4 blocks sideways, same level or 1 above; tall grass = new sprite plant on grass blocks, breaks instantly, ~1/8 drops seeds)
+ F1 Tall grass block (sprite, worldgen scatter on grass, drops seeds sometimes, no sapling-style shadow)
+ F2 Hoe (wood/stone) + tilled soil block + texture (dry/wet versions); hoe on grass/dirt -> tilled; reverts to dirt if nothing planted & dry long, or trampled/covered
+ F3 Watering: tilled land within 4 blocks of water is wet; plus water can (wood) fill from water source
+ F4 Seeds + wheat plant: plant on tilled soil, 8 growth stages, 15-18 min, only grows when wet+lit, loaded chunks
+ F5 Harvest: wheat + seeds drops, only mature gives wheat
+ F6 Cats fertilize growing plants on wet land (speeds growth)
+ Open: water can behavior (scoop source = pick up water? user asked "pick up a water source")
+
+DONE F1 TALL GRASS: TALL_GRASS=57 block (IS_PLANT, walk-through, thin 3D blades traced only inside plant cells, no shadow, doesn't block sky light), SEEDS=58 item (icon, no use yet). Worldgen patches (tallGrassAt). Breaks instantly by hand, 1/8 seeds. Pops off if ground broken; placing a block on it replaces it; water/lava/trees replace it. Render ~+9% in a dense meadow view (node timing). NEXT: F2 hoe + tilled soil.
+
+DONE F2 HOE + TILLED SOIL: WOOD_HOE=59, STONE_HOE=60 (recipes list + grid, both mirrors), TILLED=61 dry, TILLED_WET=62 (texture ready, nothing sets wet yet - F3). Right-click with hoe on grass/dirt with air/tall grass above -> tilled (clears tall grass, wears tool). Covered tilled -> dirt (updateTilled, 24 blocks around player). Breaking gives dirt. Tilled is a full-height block (not 15/16 like Minecraft). NEXT: F3 watering (wet when water within 4; dry tilled with no crop reverts to dirt; water can/scoop).
+
+DONE F3 WATERING (user decisions: no watering can item - the WATER BUCKET aimed at tilled soil waters the 3x3 tilled patch and empties; dry empty soil reverts to dirt ~10 min). Water within 4 sideways (same level or 1 above) = permanently wet. Hand-watered = wet 10 min (WET_HAND_SECS), timers not saved (reload -> dries out from then). Dry soil with no crop: ~10 min mean random revert to dirt. Crop check: IS_PLANT above and not TALL_GRASS (F4 crops must set IS_PLANT). NEXT: F4 seeds + wheat planting/growth.
+
+DONE F4+F5 WHEAT: WHEAT0..WHEAT7 = 63..70 crop blocks (8 stages, IS_PLANT, thin 3D stalks, grain heads from stage 5, gold when ripe), WHEAT=71 item (icon, no use yet). Seeds planted by right-click on WET tilled soil only (hotbar SEEDS). Grows only while soil below is wet; total 15-18 min (7 stage steps, random per plant); no light requirement; loaded chunks only; registry `crops` rebuilt on chunk load. Break: ripe -> 1 wheat + 0-3 seeds (avg ~1.4), young -> 1 seed. Water washes crops away; pops off if soil removed. Crops on dry soil pause. NEXT: F6 cats fertilize growing plants on wet land (crop.t speed-up) - ask: how much faster / visual effect. Possible: bread (wheat) / food ties in.
+
+DONE F6 CAT FERTILIZER (user decision: no speed-up, doubles drops). WHEATF0..WHEATF7 = 72..79 are the fertilized stages (look identical, persist in saves as blocks). A cat within 1 block of a growing (not ripe) crop on WET soil fertilizes it (50% per 0.5 s). Fertilized break: double wheat and double seeds. FARMING PLAN COMPLETE (F1-F6). Ideas not built: bread/food from wheat, light requirement for growth, trampling, visual cue for fertilized.
+
+DONE lava follow-ups: items dropped in lava vanish; rats/cats die instantly in lava (they already never path into it); orange full-screen overlay when your head is in lava (#lavaov). Script-tested only. STILL OPEN: fire (lava igniting wood/leaves/grass, fire block, spreading, burning player/mobs) - needs user decisions; bucket cooldown; hotbar icon polish.
+
+DONE FLOUR: FLOUR=80 'flour sack' item; crafting table (3x3 grid) only: 9 wheat filling the grid -> 1 flour sack. Icon drawn. Nothing uses flour yet (bread next? ask user for recipe/food values).
+
+NEXT (user request, BIG - plan first, ask before choices): MORE CROPS: carrots, corn, grape vines, watermelons, green peppers, pumpkins, sugarcane, potatoes, onions, tomatoes. No seed source yet (user will test via a TEST BUILD 'farm' with a small farm, all seeds+materials in inventory, cats nearby to fertilize). Then COOKING TABLE (stove top + oven; like crafting table): recipes e.g. carrot cake = flour+water+carrot; curry = onion+tomato+potato+carrot; make food sprites for each result. Eating effects TBD later (just cookable/holdable now). Food sprite refs saved in references/food/ + food_notes.md.
+NOTE (user, food): every food refills hunger. A cooked dish refills as much as eating ALL its ingredients individually (so cooking = compact/efficient to carry: soup of 4 ingredients = 4 ingredients' hunger in one item). Extra special effects later. => need EAT mechanic (right-click) + per-item hunger values (food/saturation system exists). Decisions confirmed for CROPS: mix of Minecraft rules (1-block root/bushy crops, corn+grapes 2 tall when ripe, pumpkin/melon stems spawn fruit beside, sugarcane stacks 3 next to water), varied growth times, own seed items (carrot/potato/onion/sugarcane plant themselves).
+
+DONE MORE CROPS (script + node-render tested, not phone): data-driven CROPDEFS (wheat, carrot, potato, onion, tomato, pepper, corn, grapes, pumpkin, melon). 4 stages for new crops; ids: carrot 81-88, potato 89-96, onion 97-104, tomato 105-112, pepper 113-120, corn 121-128, grapes 129-136, pumpkin stem 137-144, melon stem 145-152 (second 4 of each = cat-fertilized). SUGARCANE 153/154(f), CORN_TOP 155, GRAPE_TOP 156, PUMPKIN 157, MELON 158 blocks. Items 160-168 (carrot, potato, onion, tomato, pepper, corn ear, grapes, melon slice, sugarcane), seeds 170-175 (tomato, pepper, corn, grape, pumpkin, melon). Carrot/potato/onion/sugarcane plant themselves. Growth times: carrot/potato ~10-12 min, onion ~11-13, tomato/pepper/corn ~15-18, pumpkin/melon/grapes ~20-25, cane 200-280 s per segment (3 tall, needs water beside soil). Tall crops (corn, grapes) get an upper block when ripe; stems drop a fruit beside them every 2.5-5 min (fertilized stem = double fruit); melon block drops 3-5 slices. Test build: blockcraft_FARMTEST.html (20x faster growth, nothing saved, all seeds, hoes, buckets, 3 cats). NEXT: COOKING TABLE (plan first: ask recipes, hunger values, eat mechanic - cooked dish hunger = sum of ingredients).
+
+NEXT (user request, BIG - plan first): FLOWERS + DYE COLORS. Flowers reminiscent of Mario fire flowers: different designs, little FACES, 4-frame wiggle/dance animation if possible (else static). Reference palette saved: references/dye_palette_daggerfall.png + references/dye_palette.json (10 hue columns + red-orange strip x 16 shades). Plan: use ~half the shades (every other row => 88 colors); design a unique flower for roughly a QUARTER of those (~22); flowers are the main way to get dye colors for clothing etc (clothing/dye system comes later; other sources of color possible). Open questions asked to user.
+
+USER DECISIONS (cooking, confirmed): COOKING TABLE IS ITS OWN BLOCK (stove top + oven, like the crafting table block). EATING works like Minecraft (hold right-click to eat, food bar refills, can't eat when full unless allowed). FOOD VALUES: look up real-world calories per serving online; 3 tiers: SMALL / MEDIUM / LARGE hunger refill, assigned by calories (more calories = bigger tier); no fantasy foods. Cooked dish refills as much as all its ingredients combined (still capped to the tier system - decide how dishes map: sum of ingredient tiers). Extra special effects later.
+NEXT ALSO (user request): CONTROLLER REMAP - standardize to a standard Xbox controller layout (current buttons were stopgap). Research the Minecraft-Bedrock/Xbox default layout and map all current actions (move, look, jump, break, place, hotbar, craft/inventory, menu, run, eat/use...). Keep it consistent for later Steam Input.
+FLOWERS: chosen = 11 designs (one per dye color family), faces on 4 sides, 4-frame sway, biome patches, drops flower item, replantable.
+
+DONE FLOWERS: 11 flower designs (one per dye color family) with faces on all 4 sides, 4-frame sway, biome-weighted grass patches, punch to drop item, replant on grass/dirt. Node-render tested, icon sheet viewed. NOT phone-verified. Dye colors = FLOWERS[].pet.
+NEXT: COOKING TABLE + eating + 3-tier calorie hunger, then XBOX CONTROLLER REMAP.
+NOTE: user reported 'strange graphical glitch' (dark wedge/diagonal bars beside sugarcane on sand by water, dusk). Could not reproduce in node render (cane near camera renders fine). Asked user what part looks wrong. No change made.
+FIX: sand/snow washed out to white in strong sun (light >1 clipped). Added soft shoulder tone-map (cap ~1.22). Verified in node render; not phone-verified.
+FIX: rays passing through a plant/leaf cell lost water info (recast had no WTR) -> lake bed looked dry behind sugarcane/tall grass/leaves. Added WTR2 merge. Verified in node render before/after.
+FIX: planted flowers (and any plant poked by water/lava sim) vanished: fluid update turned plants into AIR when no fluid nearby. Fixed for water+lava. REDESIGN: flowers now Minecraft-style crossed flat sprites (inventory pixel art, outlined, 4-frame head sway) via flowerHit; flowerBoxes now unused.
+
+=== VILLAGES / BUILDING (user request 2026-11-09, 9 reference photos: log cabins, steep wood/stone roofs, balconies w/ fences, stone bases, flower boxes, lanterns, shutters, stone tower, wheat plots, path of slabs/stairs) ===
+Needs (user list): stairs + half slabs (new block shapes), wooden bed (planks + LEAF LITTER; leaves sometimes drop leaf litter on ground), FURNACE (coal fuel, sand->glass), crafting table turns glass blocks into glass windows (panes), fences from sticks, STONE CUTTER (cut stone into shapes: bricks, stairs, slabs, walls for castle tower), then PROCEDURAL HOUSES mix-and-match (modules: base, walls, roof, balcony, porch, chimney, garden) spawning in VILLAGES and sometimes alone.
+Implied extras from the photos: doors, lanterns, flower pots/boxes, shutters/trapdoors, stone brick, roof tiles, path blocks, hay/wheat plots, hedges (leaf blocks), chests.
+Engine note: renderer is full-cube DDA; stairs/slabs/fences need a "shaped block" path (sub-boxes like plants) + collision + placing orientation.
+Pending before/alongside: COOKING TABLE + eating + 3-tier calorie hunger; XBOX CONTROLLER REMAP.
+CHANGE: flowers now single billboard sprite always facing the player (Doom-style) instead of crossed planes.
+DONE COOKING TABLE: COOK_TABLE=187 (cobble ring + planks; also in recipe list), 8 dishes ids 188-195 (shapeless, any arrangement, water bucket returns empty), FOOD_VAL tiers 2/4/6 from calories, sum-of-ingredients dishes, EAT by holding use 1.6s only when food<20. Test build blockcraft_COOKTEST.html. Node-tested only. NEXT: XBOX CONTROLLER REMAP, then STAIRS/SLABS (villages).
+DONE CONTROLLER REMAP: standard Xbox/Bedrock layout: A jump, B drop held item (new dropHeld, also G key), X crafting, Y inventory (same menu), LT use/place/eat, RT attack/break, LB/RB + D-pad L/R hotbar, L3 run, Start menu, menus: stick cursor/A select/B-X-Y close/R stick scroll. R3 sneak reserved (no sneak in game yet). Tools can't be dropped (wear). Node-mock tested.
+CHANGE: touch buttons now JUMP/BREAK/USE/CRAFT/DROP/RUN to mirror controller (PLACE renamed USE, DROP added). COOKTEST rebuilt.
+
+=== CHARACTER CREATOR (user request 2026-11-09, BEFORE villages; 4 reference screenshots: voxel dress-up UI w/ category buttons left + name/save/load; MC Skin Creator layered library; Minecraft Bedrock character select + wardrobe grid w/ preview) ===
+Goal now: ONLY the creation tool (no cost, just options). Later: NPC generator uses same data to populate villages (random picks), maybe player appearance in multiplayer/mirrors.
+Categories seen: Hair, Skin color, Face, Chest, Legs, Feet (+ extras like back/wings/accessories in the Bedrock shot).
+Plan: character = small data record {skin, hair style+color, face (eyes/mouth/brows), top style+color, legs style+color, feet style+color, extras}; 3D preview rendered with our own box raycaster (like mob/flower models), drag to turn, rotate idle; left category list, option grid, color swatches from dye palette; name + save/load slots; Random button (doubles as NPC generator seed).
+
+DONE: CHARACTER CREATOR (menu > CHARACTER). Hair/Skin/Face/Chest/Legs/Feet tabs, thumbnails per style, free dye palette + trim colors, name, SAVE/LOAD slots (localStorage bc_chars), RANDOM. Core is ccDefault/ccRandom/ccRender (reusable for NPCs). Held hand uses chosen skin tone. Controller: B/X/Y/Start = done. Tested in headless Chrome screenshots (portrait+landscape) + jsdom clicks; NOT phone-verified.
+NEXT: NPC generator (ccRandom + profession outfits + in-world body), then VILLAGES (stairs/slabs first).
+DONE: character creator UI restyled to match the user's ChatGPT mockup (tab icons, framed sections, rotate buttons, pedestal, landscape 2-column).
+DONE: afro reshaped (halo, face clear, smaller), pigtails (long, out past the shoulder, tie bands), preview framing fixed so tall hair isn't cropped.
+DONE: Xbox-style on-screen pad (touch): LT/LB/START/RB/RT row, left stick (tap = L3 run), D-pad (L/R hotbar), A/B/X/Y colored, right stick = look (tap = R3 reserved). Old JUMP/BREAK/USE/CRAFT/DROP/RUN buttons removed. Drag-on-view look still works. Tested in headless Chrome (portrait + landscape), taps verified by state; not phone-verified.
+NEXT (user request): THIRD-PERSON VIEW showing the player's customized character in the world (toggle; F5-style). Needs a per-pixel box render of the character in the world raycaster with the ccPaint skin, walk/idle animation, camera pulled back with collision. Then NPC generator, then VILLAGES.
+DONE (user request): flowers simplified to a generic flower. No faces, no sway, no billboard. Crossed X planes like Minecraft, one shape in 11 dye colors, names now "teal flower" etc. Backup before_genericflower.html. Headless-Chrome screenshot checked; not phone-verified.
+DONE (user request): flowers = ONE flat sprite that always faces the player (no X planes, no sway, no faces); 11 dye colors.
+DONE (user request): RATS AT NIGHT: when sin(tod)<-0.1 rats may be on the surface (ratAllowed true); extra surface spawns (cap +5); no raids, no seeking you or farms. A rat only nibbles (1.8 s) a crop within 3 blocks of it; catnip is never eaten. Morning: surface rats head home/burrow (despawn after 25 s if >16 blocks away).
+DONE (user request): CATNIP: crop (blocks 196-203, seed item 204, leaf item 205, ripe 1-2 leaves + 1-3 seeds), rare wild patches in grass (ripe). If any catnip block is in the chunk you stand in: cat cap x2, spawn timer 9s->4.5s, 70% of spawns near it. Cats wander over to loll beside catnip within 26 blocks. Catnip leaves have no use yet. Tested headless (cat cap 3 -> 6, rat ate adjacent crop, far crop kept); not phone-verified.
+DONE (user request): THIRD-PERSON VIEW. camMode 0 first / 1 behind / 2 in front, toggled by D-pad Up (controller + on-screen), V or F5. Camera 3.8 blocks away, pulled in by blocks (plants/water/leaves don't block). The creator character is drawn as textured boxes (skin from ccPaint, hair/skirt/tunic volumes), head follows look yaw/pitch, body turns to face look when moving, limbs swing with walkPhase, right arm swings on punch. Crosshair and held item hidden in 3rd person; breaking/placing still aims from the eyes. Not shown yet: held item in hand, sneaking, jump pose. Headless-tested only (screenshots), not phone-verified.
+NEXT: NPC generator (ccRandom + profession outfits; reuse playerIntersect-style model for NPC bodies), then VILLAGES.
+DONE: NPC GENERATOR. npcGenerate(rnd, job) = ccRandom face/hair/skin + job outfit (farmer, miner, blacksmith, librarian, baker, guard, cleric, fisher, generic villager), color-jittered, random first name; record has name/job. In the world: kind 'npc' mobs rendered with the shared bodyIntersect (same model as the player: textured boxes, head turns to watch you within 9 blocks, limbs swing while walking). Wander ~3-11 blocks around home by day, max 3 near you, spawn on surface 16-44 away, not at night. Hit = stagger + walk away (no damage/fighting yet). Rats/cats ignore them. No talking/trading/name tags yet. Headless-tested only.
+NEXT: VILLAGES. Start with stairs + slabs (needs the shaped-block path), then furnace+glass, fences, stone cutter, beds+leaf litter, procedural houses; NPCs get homes there.
+
+DONE (headless-tested only): STAIRS + SLABS. Block ids now 16-bit (NB=512, Uint16 chunk data, region saves flagged 0x80000000, old 8-bit saves still decode - tested). Slabs ids 256-267, stairs 268-315, for 4 plank woods, cobble, stone. Recipes: slab 3->6, stairs 6->4 (stone ones not craftable yet - stone comes from the furnace). Walk up steps without jumping, slabs merge into full block, stairs face where you look, half chosen by aim height. Corner stairs not done.
+NEXT: furnace + glass windows. Ideas list: blockcraft_village_ideas.txt
+
+DONE (headless-tested only): FURNACE + GLASS WINDOWS. Furnace id 206 (8 cobble, ring pattern in grid), right-click opens Smelting list: 4 sand + 1 coal (or 2 planks) -> 4 glass; 4 cobble + 1 coal (or 2 planks) -> 4 stone. Windows ids 316-319 (framed panes, lattice), thin shaped panes with see-through texture, 1 glass -> 4 windows (lattice also needs 1 stick); pane orientation follows look direction; sun shines through them; clickable anywhere on the pane. Stone slab/stairs now craftable via smelted stone.
+NEXT: fences from sticks.
+
+DONE (headless-tested only): FENCES. 4 woods, ids 320-383 (wood*16 + connection mask). 4 planks + 2 sticks -> 3 fences (also 2x3 grid pattern). Posts auto-connect to neighboring fences and solid blocks, update on every setB. 1.5 blocks tall for collision. Sun passes through. No gates yet.
+NEXT: stone cutter.
+
+DONE (headless-tested only): STONE CUTTER. Cutter id 212 (3 stone + 3 planks). Tap -> Stonecutting list (1 stone -> brick/flagstone/pillar/carved; brick+leaves -> mossy brick; slabs x2 and stairs x1 for stone, stone brick, flagstone). New blocks 207-211. Slab/stair materials extended (ids 384-403 for brick/flagstone). Pillar has capital top.
+NEXT: beds + leaf litter.
+
+NEW REQUEST (2026-11-09, not started): MAGIC SYSTEM (Daggerfall hands + Bioshock-style potions).
+- Potions crafted at the cooking table (mix ingredients). Drinking a potion gives N charges of one spell: lightning or fire (start with these two).
+- Spell use at any time. Empty hand: cast from hand (Daggerfall two-hand casting look, fire/lightning on hands). Holding a sword: casting enchants the sword instead (extra attack power) for the same number of charges/hits.
+- Lightning = chain lightning: arcs to the aimed enemy, then jumps to other nearby enemies, bouncing each in range.
+- Fire = fireball, slightly more damage than lightning, small explosion radius hits nearby enemies (no chaining).
+- Lightning/fire/explosions never hurt the player; they only hurt other entities.
+- Screenshots: Daggerfall fire hands, lightning-wrapped sword, green/teal spell hands, lightning bolt between characters.
+Open questions: what counts as enemies (only rats/cats/NPCs exist now), ingredients, charges per potion, does it go before beds/villages.
+ANSWERS: magic goes AFTER villages. Targets: rats, cats, NPCs (hostile monsters later). Potions: fire = coal + red flower/pepper + water; lightning = sand/glass + stone + water; 5 casts each. Still to do now: beds + leaf litter, then houses/villages.
+MAGIC REFERENCES (Minecraft mods, 6 screenshots): first-person casting hand with a glowing spell orb/swirl in the open hand; hotbar-style spell icons row; mana + "burnout" bars (we use potion charges instead); glowing spell circles on the ground (rune circle under a target/caster); glowing sphere/orb projectiles with a trailing beam; huge white lightning arcs with branching bolts from the hand; pink/purple casting beam to a target; floating damage numbers; boss health bar at top. Ideas for later: ground rune circle effect, orb projectile with trail, branching bolt forks.
+
+DONE (headless-tested only): BEDS + LEAF LITTER. Litter item 213 (20% from broken/decayed leaves). Bed ids 404-411 (facing*2+part), 3 planks + 3 litter. Two cells, headboard, green blanket + white pillow. Tap: sets spawn (bedSpawn, saved in meta.bed); at night fades out and skips to morning (tod=0.02). Respawn on bed if still there. Breaking either half removes both, drops 1.
+
+USER (19:01): after beds, write a detailed plan for everything left, then work through it one by one WITHOUT waiting for "continue".
+
+PLAN (in order)
+ 1. DOORS + FENCE GATES: wood door (2 tall, opens/closes on tap, 4 woods), gate that connects to fences. NPCs/cats/rats treat closed doors as walls.
+ 2. BUILDING BLOCKS: plaster, half-timber (beam frame variants), shingle + thatch roof (as full/slab/stairs so roofs slope), packed path, hay bale, bookshelf, hanging lantern + lamp post (light), hedge.
+ 3. HOUSE GENERATOR: mix-and-match parts (footprint size, wall style, roof style, windows, door side, interior: bed, table, furnace, lantern, shelf). Deterministic from the world seed, crosses chunk borders.
+ 4. VILLAGES: plaza with a well, paths, 4-8 houses, farm plots, lamp posts, fenced pen; rare lone houses. NPCs live in houses (job from building), go home at night.
+ 5. NPC TALK: name tags, tap to talk (greeting by job), simple trades.
+ 6. MAGIC: fire + lightning potions at the cooking table (5 casts), cast from empty hand (hand effects), sword enchant, chain lightning, fireball with small blast, never hurts player.
+ 7. POLISH BACKLOG: corner stairs, held item in third-person hand, crosshair in third person, R3 sneak, catnip leaf use, bucket polish.
+ 8. LATER (from ideas list): sewers/dungeons under villages, hostile monsters, furniture/decor set, new plants + palms, weather, dye/clothing, fire spread.
+
+USER (19:02): put an EFFICIENCY CHECK at the top of the plan (make the game run smoother). Rule stands: never degrade visuals/gameplay for speed. Doing it now, before doors.
+
+DONE (headless only): EFFICIENCY CHECK. Profiled: ray caster was the whole cost. (1) cast() empty-space skipping: per-chunk maxY + per-4x4 column h4 (computeDerived), rays jump over known-empty air; verified identical hits vs old cast on 7 views x 51840 rays. (2) direct-mapped chunk table in getChunk. (3) render: one chunk lookup for roof+light, pow() skipped when fog=0, sqrt instead of hypot. (4) chunks one ring ahead pre-built 1 per frame (pregenQ), unload at LOAD_R+2. Headless: render 40/70/48/58 ms -> 27/38/30/31 ms on 4 test views; walking 29 -> 46 fps. No visual change.
+
+DONE (headless only): DOORS + FENCE GATES. NB=1024. Doors ids 412-475 (wood*16+facing*4+open*2+half), 6 planks -> 3; tap toggles (won't close on player); both halves break together. Gates ids 476-491 (wood*4+axis*2+open), 2 planks + 4 sticks; fences connect to gates along the gate's axis; open gate walkable. Mobs still treat open doors/gates as walls (fix in villages step).
+USER (19:13): anything above 320x200 is still pretty laggy -> do a second efficiency pass on higher resolutions after the building-blocks step is tested.
+
+DONE (headless only): BUILDING BLOCKS. ids 214-226: plaster, timber frame (plain/cross/brace/mirrored), beam, wood shingles, slate, thatch, dirt path, hay bale, bookshelf, hedge. Roof slabs+stairs for shingle/slate/thatch at ids 492-521 (SH_OFF). Lantern 522 hanging / 523 standing (light 15, emissive). Recipes in crafting list; slate at stone cutter. Leaves ingredient accepts any leaf type. Shaped blocks now inherit hardness/tool from their base block. Test house (stone-brick base, half-timber, shingle gable roof) looks right.
+NEXT: multi-core rendering (user: >320x200 laggy), then house generator.
+
+NEW REQUEST (19:16): GUN + CROSSBOW prototypes as new weapon types. Must feel modern: tight controls, accurate (shot goes exactly where the crosshair is), both with a RELOAD animation, drawn in the game's own pixel style (refs: retro-FPS pistol held center-low with chunky pixel shading; first-person crossbow held at the left with the bolt visible). Slot: plan step 6b, right after magic (shares the damage/projectile code). Open details to decide then: ammo items + recipes, damage, reload button on the Xbox layout (X?), aim-down-sights or not.
+
+DONE (headless only): MULTI-CORE RENDERING. Workers (min(4,cores-1), at least 2) are booted from the page's own script text (Blob; DOM stubbed by a Proxy; IS_WORKER flag). Main sends per frame: new chunks (data+bio), deleted chunk keys, block edits (wkEdit hook in setB/stampBlocks/water/writeCell), player/cam/tod/crack/mobs (models once)/saplings/CHAR, frozen clock (S.now). Worker k draws rows y%n==k and returns pixels+depth; main scatters rows and draws overlay (items, crosshair, hand) with the job's camera. update() keeps running every rAF. Fallback to single-core on any error/4s timeout. Menu button MULTI-CORE ON/OFF (bc_mc). Verified byte-identical image vs single-thread in 6 scenarios (mobs, 3rd person, edits, teleport, night, world switch). Sandbox has only 2 cores: 288x180 45->50 shown fps, 512x320 14.5->19; logic stays 60/s. Real gain on phone unknown.
+RULE for future features: anything render() reads that changes at runtime must be added to the snapshot S in renderFrame()/wkWorkerInit (and any direct chunk data write must call wkEdit).
+
+NEW REQUESTS (19:27), both go in a MONSTERS step after magic + guns (they need the combat/damage code; minotaur also needs dungeons/sewers to exist):
+- CYCLOPS OGRE: one-eyed ogre, 2.5x the player's height, club, loincloth. Spawns in large open areas, usually alone, extremely powerful (like Skyrim's giants: leave it alone unless you are strong). Refs: tan ogre with spiked club; crouching horned cyclops with skull belt.
+- MINOTAUR: spawns ONLY in dungeons and sewers, very rare. Ref: blocky bull-headed brute with horns, red loincloth, in a stone-brick dungeon.
+PLAN ORDER NOW: house gen + villages (in progress) -> NPC village life/talk -> magic -> gun + crossbow -> monsters (cyclops; hostile basics) -> sewers/dungeons (+ minotaur) -> polish backlog -> later ideas.
+NEW REQUEST (19:31): the game's own NETHER (underworld dimension). References saved in blockcraft_village_ideas.txt. Slot: after sewers/dungeons (it is the biggest item on the list: portal + second world generator + new blocks + new mobs). Ask the user design questions before starting it.
+
+DONE (headless only): HOUSE GENERATOR + VILLAGES. worldGen flag (meta.gen=2 for new worlds; old worlds get no villages - tested). VREG=192 regions, ~40% of regions get one; planVillage: leveled plaza + bank, well, 4 lamp posts, 5-8 houses on a ring facing the plaza (4 wall styles x 3 roof materials x sizes 5/7/9 x 5/7, wall height 3/4, gable roof with overhang, windows, door, bed, job furniture, chimney, ceiling beam + hanging lantern), 2 fenced farms with water channel and crops, 2-wide paths with cut/built cobble stairs (BFS test: every house reaches the plaza on 3 seeds, 26 villages). No trees root on village ground. New worlds spawn on the nearest village's plaza. V.houses has door/inside/bed/out/job for later NPC use.
+DONE: LIGHT ACROSS CHUNK BORDERS (own light + seeds from 4 neighbors' own light; LIGHT_PASS lets light through windows/fences/gates/open doors/plants). Workers receive light from main (WK.relight).
+DONE: water tint no longer drawn over mobs standing in front of water (user screenshots 03:39); mobs in water tinted only by water in front of them.
+USER (03:39): do NOT put NPCs in the world yet (keep the generator). NPCS_IN_WORLD=false. Plan step "NPC village life/talk" is ON HOLD until the user decides how NPCs should live in the world.
+NEXT: magic (potions, fire + lightning, hand casting, sword enchant).
+
+DONE (headless only): MAGIC. Potions ids 227 fire / 228 lightning, mixed at the cooking table (coal + pepper or red flower + water bucket; glass or sand + stone + water bucket; bucket returns). Use (LT) drinks: 5 casts, same potion stacks +5, other potion replaces. Cast = Y (pad + gamepad button 3) / F key; X alone opens crafting now. Fireball: aimed exactly at crosshair target, 20 b/s, direct 6, splash 4 within 2.6, explodes on blocks/water. Lightning: instant, 5 then chains up to 4 more mobs within 7 blocks for 4 each. Sword: cast while holding a sword -> swordSpell; each landed hit +4 fire / +3 lightning and spends a cast. Never damages player. fx list drawn in renderOverlay (drawFx) with depth test; hand flames/arcs in drawHandInner; HUD #spellHud; saved in meta. Tested: damage numbers, chain, splash, sword bonus, charges run out.
+NEXT: gun + crossbow.
+
+DONE (headless only): GUN + CROSSBOW prototypes. User answers: no reloading, free ammo, flintlock pistol, LT aims. Items 229 pistol / 230 crossbow (recipes: 2 planks+3 stone+1 coal; 3 planks+3 sticks+1 stone). RT fires (punch() -> fireWeapon), LT aims (aimK: zoom TAN 0.7->0.49, turn speed halved, weapon swings under crosshair); TAN is now a let and sent to workers (S.tan). Pistol: hitscan 70 blocks, 8 dmg, 0.55s between shots, muzzle flash, smoke, tracer, recoil. Crossbow: bolt 60 b/s straight to the crosshair point, 6 dmg, 0.6s, string re-cock animation, bolts stick in blocks 8s. Shots pass through grass/flowers, respect slab/stair/fence shapes. Tested hit at 24 blocks.
+NEXT: monsters (cyclops ogre) -> sewers/dungeons + minotaur -> polish -> underworld.
+
+DONE (headless only): CYCLOPS OGRE. kind:'ogre', OGRE_MODEL (solid-color boxes, 6 groups, scale 2.5 via M.scale in bodyIntersect), 90 hp, club 12 dmg + knock-up, neutral until player within 6 blocks or it is hit, chases at 4 b/s, calms after 5 s out of range (34), steering not pathfinding (ogreGround), spawns alone 38-60 blocks away on open flat grass/sand away from villages (ogreSiteOk; ~3 of 40 random places within 3 min), drops 6 coal + 1 fire + 1 lightning potion (placeholder loot). Spells, pistol, crossbow all hit it.
+FIXED: render crash "reading 'length'" in shapedHit when a ray went through a window gap and then hit a plant (_pr.shaped stale) - this silently killed multi-core and could freeze single-core since windows were added.
+FIXED: multi-core no longer gives up just because the main thread itself was blocked for 4 s (needs 40 more frames of silence).
+USER (04:50): delegate basic tasks to cheaper models; keep the hard work for the main model.
+NEXT: sewers/dungeons + minotaur.
+
+DONE (headless only): SEWERS + MINOTAUR.
+- buildSewer in planVillage: Fs = g-11. Cistern 9x9 under the well (well shaft = water column into the pool), 3 arms (W 28, N 26, S 26; stop early under thin ground) + short E arm to the stair shaft; tunnel = 3 wide, walkway/channel/walkway, upside-down stair vault, hanging lantern every 9, slab bridge every 10; rooms at arm ends (cells with iron bars / shrine / lair). Entry: stone hut at (cx+13,cz) with door, spiral of half-slab steps round a pillar (walkable both ways without jumping: BFS-tested on 19 villages, 2 seeds). V.sewer = {Fs, rooms, arms, spots, hut}.
+- IRON BARS ids 524/525 (window-type pane, furnace recipe 2 stone + 1 coal -> 4).
+- MINOTAUR kind 'mino' (model by a Sonnet helper: parts/minotaur_model.js, 54 boxes, scale 1.6). Shares the brute code with the cyclops via BRUTE table. 60 hp, 9 dmg, attacks on sight (13), prowls toward the player and charges using ratPath routes (minoAllowed), wades the channel. Spawns only while the player is in a sewer: 10% per 20 s check, max 1, at a spot >14 blocks away. Never on the surface (tested).
+- Regression run by a Haiku helper on the cyclops build: 17/17 scripts pass.
+DELEGATION NOTES: parts/preview_model.py previews any box model; tests live in /tmp (*.py).
+NEXT: polish backlog (corner stairs, held item in 3rd person, 3rd-person crosshair, sneak, catnip use, chests + loot), then the underworld (ask design questions first).
+
+DONE (headless only): POLISH.
+- CHESTS id 231 (8 planks). chests Map "x,y,z" -> {id:count}, saved in meta.chests. UI #chestMenu (tap moves whole stack). Village house chests (tier house) and sewer room chests (tier dungeon) roll seeded loot on first open (LOOT table); breaking spills contents. V.chests.
+- SNEAK (built by a Sonnet helper as parts/sneak.patch, applied cleanly; its 11-check test passes on the main file): R3 / tap right stick / Z; 0.3 speed; no walking off edges; excludes run.
+- THIRD PERSON: held item shown in the right fist (heldBoxes; S.held to workers; exact vs single-core) and a crosshair in the behind view placed on what the eyes point at.
+- Haiku regression on the sewer build: 20/20 pass.
+NOT DONE: corner stairs. Catnip leaf use. Health bar for big monsters.
+NEXT: underworld (ask design questions first).
+UNDERWORLD ANSWERS (05:xx): way in = BOTH (rare found gateways deep in sewers/dungeons + a portal the player can build). Look = ONE fused concept, not separate regions: glowing fungus caverns + rusted machine city + floating dark-wood towns all blended into a single place. Beetle folk = HOSTILE monsters.
+
+DONE (headless only): UNDERWORLD stage 1 + 2.
+- Dimension = same coordinate space, offset z + UNDER_Z (480000); isUnder(z). genChunk -> genUnder: lava sea (y<=14), flesh/crimson rock floor (fbm), ceiling 71-97 with stalactites, great pillars, glow moss, gold vines (shaped VINE0 528), crimson + teal giant mushrooms, bone spikes, rusted towers with amber lamps (40-block grid). No villages/trees/rats/cats/ogres there. Render: UW flag (no sun/sky/clouds, red haze fog, ambient 0.3). New blocks 232-242 (+DARKWOOD 242 unused yet), IS_EMIT table replaces the light-source test.
+- Gates: GATE stone 241 (5 from 5 stone brick + fire potion + lightning potion). Ring round a 2x3 opening, lit by using a fire potion on it or hitting it with a fireball (lightGate); PORTAL0 526/527 field; stand in it 1.2 s -> gateTravel (reuses a lit gate within 12 blocks on the far side, else builds one on standable ground / a ledge). Breaking the ring puts it out. Round trip + save/load tested. 40% of sewer lair rooms hold a lit gate (S.gate).
+- Beetle folk (model by a Sonnet helper, parts/beetle_model.js): kind 'beetle' in BRUTE (24 hp, 5 dmg, speed 4.3, hostile at 15, path-finding), bands of 1-2, max 4, spawn 16-32 blocks away only in the underworld; drop glow moss sometimes.
+TODO underworld stage 3: floating dark-wood towns (reuse buildHouse with DARKWOOD), pipes between towers, loot/chests down there, a reason to go (unique resource).
+
+DONE (headless only): DOUBLE DOORS (user screenshots 05:16). Mirrored door ids DOORM0 532-595 (SH_MIR). Placing a door beside a closed same-facing door makes a pair: left hinges left, right hinges right (the existing door flips if needed); texture measured from the hinge so handles meet in the middle (this also fixed handles on the hinge side for south/west-facing single doors); toggling one of a pair toggles both. Tested 4 facings x 2 placing orders. Doors already placed side by side in old saves stay as they were (break and re-place one).
+
+DONE (headless only): UNDERWORLD stage 3. Hanging towns (underIsland, 72-cell, 45%): dark-planks disc + hanging rock cone, 3 dark-wood houses (glass windows, lamp, chest, bookshelf), rim lamp posts, 2-wide plank ramp down to the ground. Pipes: walkable 3x3 rusted tubes joining neighbouring rust towers (underTower refactor). EMBER crystal 243 (glowing ore in rock/ceiling, pick tier 1): cooking table -> 3 fire potions (ember + water) or 3 lightning potions (ember + stone + water). Underworld chests use loot tier 'under'. Earlier Haiku wk2/5/7 failures were a mid-edit transient (all pass now).
+
+DONE (headless only): BOSS BAR + BEETLE SIZE + CORNER STAIRS. Boss bar (#bossBar, top centre) shows name + hp for ogre/minotaur/beetle for 6 s after a hit, hides on death/distance. Beetle scale 1.4 (hitbox/tall adjusted). CORNER STAIRS: ids 596-947 (cornerId(m,h,f,v), v bit0 right/left, bit1 inner), SH_CV; Minecraft rules in stairShape(); setB queues the changed cell + 4 neighbours (stairQ/stairFlush); breaking restores the straight shape. Drops stay the straight stair. Village roofs/paths (worldgen) are still straight stairs.
+
+DONE (headless only): TEST ROOM (user request 05:31). Menu button TEST ROOM makes a world with meta.test=1 (testWorld). Hall at z=TEST_Z 900000 (isUnder now bounded so it is not "underworld"), built from a box plan (testPlan/genTest, nothing saved). Hall 125 long, 10 rooms with double doors: left FARM, CATS, RATS, MINOTAUR, CYCLOPS; right BEETLE FOLK, BUILDING BLOCKS, MAGIC + GUNS, ITEM CHESTS (14 chests sorted by type, labelled in the chest menu), UNDERWORLD GATE (lit, works). East end: TRAVEL PADS (stand 1 s): Autumn Woods / Green Forest / Pine Highlands (searches for each biome), Village, Sewer, Spawn world. Menu button GO TO TEST HALL (only in test worlds). Room name shown on screen; mobs spawn on entering their room and are removed on leaving. Natural spawns off in the hall.
+
+DONE (headless only): FURNITURE (decor set 1). Tables (948+), chairs (952+, 4 facings, face you when placed), benches (968+) in 4 woods (shaped, wood texture), BARREL 244, CRATE 245 (own textures). Crafting recipes (table 4 planks+4 sticks, 2 chairs 3+3, 2 benches 3+2, barrel 6 planks+2 sticks, 2 crates 4+4). In the test hall BUILDING BLOCKS room + FURNITURE chest. NOT DONE: furniture inside generated village houses, sitting on chairs, rugs/curtains/dye, candles.
+
+DONE (headless only): FURNITURE IN VILLAGE HOUSES. Houses 7+ wide: a table with a chair at each end (random wood) and, 60%, a standing lantern on it; farmer/baker houses 7+ deep also get a barrel. Doorway column kept clear; village walkability test unchanged. NOT DONE: rugs, candles, sitting.
+
+DONE (headless only): CATNIP LURE + MONSTER LOOT + test-room cats/rats roam. Holding catnip: cats within 18 blocks come to you (90%/decision, stay ~1.8 away). Loot: cyclops = 5 bone, 6 coal, 1-2 fire + 1-2 lightning potions, 40% ember, 20% pistol/crossbow; minotaur = 2-4 ember, 3 bone, 3 coal, 1 fire + 1 lightning potion, 25% pistol/crossbow; beetle = 50% glow moss, 20% ember. catAllowed/ratAllowed true inside the test hall (cats were frozen in the roofed rooms before).
+NOT DONE / NEEDS USER CHOICE: dye/clothing/rugs (undiscussed design), rain weather (visual), sitting on chairs, village NPCs (on hold).
+
+DONE (headless only): DYE SYSTEM v1 (user spec: dye from flowers only; dyes wool only for now; leather armor dye later; dye stains glass). Dye items 976-986 (flower -> 2 dye), WOOL0 987 (white) + 11 colours, STAINED0 999-1009 (4 glass + 1 dye -> 4), rugs RUG0 1010-1021 (shaped, 2 wool -> 3). Wool is a PLACEHOLDER recipe (1 hay -> 2 wool) until sheep/another source exists. Dye only white wool. Not done: stained windows (WIN0), re-dyeing coloured wool, washing.
+USER WEATHER DECISION (10:53): for now only occasional RAIN. Later: snowy biome snow; desert biome sandstorm; underworld snows ash.
+
+DONE (headless only): RAIN. Occasional rain (first after 4-9 min, then every 5-15 min, lasting 1.5-4 min), outdoors only (not underworld/test hall), hidden under any roof (column scan), faint blue-grey tint + 150 streaks drawn in renderOverlay (main thread, workers unaffected). Menu button RAIN: AUTO/OFF (bc_rain). Rain has NO gameplay effect yet (crops/fire untouched).
+
+USER (11:00) RAIN RULE CHANGE, done: no more timer rain. At each sunrise (tod wraps past 0) roll 8% (RAIN_CHANCE); if it rains: half a day (55%, 0.25 cycle), a full day (35%, 0.5) or full day + night (10%, 1.0). rainDawn(), rainLeftT counts down in cycle fractions, an ongoing long rain isn't re-rolled; saved in meta.rain so reload keeps it. Menu RAIN: AUTO/OFF still there. Checked: 20000 rolls -> 7.9% rain, 54/34/12% durations; forced dawn starts it, it runs down and stops; reload restores it.
+
+NEW PLAN (11:02, ordered by dependency; user: "start working down the list"):
+ 1. SMALL LEFTOVERS BATCH: stained window panes, re-dye / wash wool, candles, sit on chairs, bucket polish, rain gameplay (crops watered, fires put out), health/loot polish.
+ 2. PHONE CHECKPOINT (user plays; I fix what they report) - nothing has been phone-verified yet, so catch problems before stacking more.
+ 3. BIOMES: snowy biome (snow, ice, spruce-heavy), desert biome (sandstone, cactus, palms, new plants) + village variants, test-hall pads.
+ 4. WEATHER VARIANTS (need the biomes): snow in the snowy biome, sandstorm in the desert, ash fall in the underworld.
+ 5. FARM ANIMALS: sheep (real wool, replaces the hay placeholder), cow/chicken (leather, food).
+ 6. ARMOR: leather armor (dyeable), then better tiers; unique cyclops/minotaur loot.
+ 7. FIRE SPREAD.
+ 8. UNDERWORLD POLISH: pipe/tower exploring, hazards, more loot reasons.
+ 9. NPC VILLAGE LIFE: ON HOLD until the user decides how NPCs live in the world.
+10. EFFICIENCY PASS 3 (more mobs/weather/biomes now), then Windows/Steam port (packaging, controller prompts, saves).
+
+USER (11:04): he IS playing between every delivery; wants me to blast through the list without waiting for a phone checkpoint, build automated tests whenever possible, and not break anything. So plan step 2 (phone checkpoint) is no longer a blocker. Regression suite: /tmp/suite.sh (copy in parts/suite.sh) runs ~31 scripts, all pass.
+DONE (headless only): LEFTOVERS BATCH. NB raised to 2048. Stained windows (ids 1024-1067: STW0 + (colour*2+style)*2 + orient; 1 stained glass -> 4, lattice +1 stick; tinted glass, wood frame kept). Re-dye wool from any colour (recipes any->any). Candle (id 1068, 1 coal + 1 stick -> 2, emits light, small shaped). Sit on chairs (tap chair; jump/move to stand; eye lowered). Rain waters tilled soil that is open to the sky. NOT DONE: wash wool back to white, bucket polish (never specified).
+NEXT: BIOMES (snowy, desert + palms/cactus/plants), then weather variants.
+DONE BIOMES: Frostlands (snow, ice lakes, spruce) + Sunscorch desert (sand, sandstone, palms, cactus prick); new worlds gen:3, old worlds unchanged; 8 test pads; full suite passes. Next: step 4 weather variants.
+DONE HUD: hotbar now inside game view (game HUD); #touch test-pad hidden in landscape or when any controller connected (haspad). Rule: touch pads are dev scaffolding only, never part of the game UI. Suite passes.
+DONE: controller legend bar (#gpHint) hidden; hotbar translucent.
+DONE LAMPS: aim + use button toggles lanterns (hanging/standing) and lamp blocks on/off (ids 1069-1071); off = no light, drops lit item. Suite passes.
+NEW (12:32-12:33 user):
+ A) HOUSE FURNITURE SPACING: rule - furniture/objects must not touch each other unless it makes sense (chairs by table ok); never block paths; keep walkable aisles (villagers will walk around: ~2-wide routes door->bed/table/chest etc). Applies to village houses (+ other generated interiors).
+ B) Villagers will be assigned to the pre-generated houses (live there, do stuff) - feeds step 9 NPC village life; user is now leaning this way, still need his OK on specifics before turning NPCS_IN_WORLD on.
+ C) STONE OVERUSE: stone too much of the world and looks plain; need better block mix + new blocks to spice up cliffs/mountains/terrain (e.g. andesite/granite-like variants, gravel, dirt patches, moss, ore veins, strata, tuff). Put right after weather or before - do next.
+DONE A) HOUSE SPACING: interior planner (doorway+entry kept clear, no touching except table/chairs, shelf rows, workbench lines; no sealed pockets; every piece reachable; >=44% floor free). Verified on 275 generated houses (test /tmp/hs.py). Suite passes. NEXT: C) stone variety.
+DONE C) STONE VARIETY + TEXTURES: new fine-grain stone/dirt/coal textures, clean ridged bark (all trees), new rocks andesite/granite/diorite/tuff/mossy rock (ids 1072-1076) via rockAt strata+blobs (stone 56%->49% overall, cliff faces 68%->55%), stonecutter recipes back to stone, test-hall STONE WORK chest. gen cost +1ms/chunk. Suite passes. NEXT: weather variants (step 4).
+DONE TREE CASCADE: chopping a log of a world-generated tree makes every log of that tree above it drop one block, bottom-up, 0.09s apart; player-placed logs/other wood never fall (detected by regenerating the tree at that spot: worldTreeAt). Leaves still decay via existing scan. Test /tmp/tf.py. Suite passes. NEXT: weather variants.
+DONE WEATHER VARIANTS (step 4): same sunrise 8% event is rain (woods) / snow (Frostlands) / sandstorm (Sunscorch); underworld always has drifting ash + embers (always on, toggled off by WEATHER: OFF); rain only waters soil outside frost biome; menu: WEATHER: AUTO/OFF + WEATHER NOW button. Suite passes. NEXT: step 5 farm animals (sheep/cow/chicken).
+DONE WOOLBLOOM (user spec attachment 16:45; replaces sheep/cow/chicken plan - Daggerfall-ish creature direction, still to decide set): creature 'wb' (46-box dandelion puffball, big, wander/graze/look, flees when hit), shed timer 70-180s + 2.4s shake, drifting seeds with wind, plant blocks WBP0=1077..1080 (sprout/young/full/shorn) shaped+passable, growth timers, use button on full plant = 2-3 wool + shorn, regrows; breaking drops sprout (placeable on grass/dirt), wool recipe from hay removed; spawn in meadow pockets (vnoise), test hall FARM room has 3; mob daylight lighting brightened for all mobs (0.2+0.7*day). Suite passes. Open: user's Daggerfall creature set (boar/stag/wolf/goat/bat/spider/bear/scorpion?) undecided; leather source needed for armor.
+DONE: Woolbloom v2 - boxy pixel-art model (cuboid body/head/legs, per-box pixel patterns, cube dandelion tufts). Note: reads sheep-like from the front; tufts need more prominence.
+DONE: Woolbloom v3 - dandelion-clock design: squat golden fur block, pale cap, green bract leaves round the sides, small face set into the fur, 3x3 crown of seed-cubes on stalks (yellow flower centre), flank seed-heads, stubby legs. Seed-heads have darker seed-cluster centres.
+DONE (headless only): DAGGERFALL BEASTS batch 1 - grizzly bear (woods, territorial: aggro within 5 or when hit; 2-3 leather, 2-4 raw meat), sabertooth tiger (Frostlands + pine highlands above y40; hunts within 14; 1-2 leather, 1-3 meat), giant spider (woods at night, leaves at sunrise; 1-3 silk), giant scorpion (desert; 1-2 chitin). Generic BEAST table + beastBoxes/updateBeast/beastHit/trySpawnBeasts (every 13s, 60%, max 4 total, 24-52 blocks away, never within 20 of a village). Items 1081-1086: leather, raw meat (2 food), steak (6, cook raw meat), meat stew (12: meat+potato+carrot+water), silk (4 -> white wool), chitin (for armor later). Mob pixel pattern 5 (plain hide grain). Test hall extended to x=-24 with rooms BEASTS: BEAR + TIGER (left) and SPIDER + SCORPION (right). Test /tmp/bst.py. Suite passes. NEXT: giant bat (flying), slaughterfish (swimming); leather/chitin armor (step 6).
+USER (06:05): sent UESP links (Leveling and Skills, Skills, ClassMaker, Classes, Character Creation, Quests). Daggerfall-inspired but still Minecraft rules/feel: different combat, NPC types, quest-like gameplay, long travel, same block interaction.
+DONE (headless only): SKILLS + LEVELS v1 (user: simplify, no per-school/per-weapon skills; ~6 classes FF-style later). 5 skills 5-100 trained by use: Weapons (melee tool hits, pistol, crossbow; dmg x(1+v/100)), Hand-to-Hand (fist hits; fist dmg 1+v/20), Magic (each cast; spell dmg x(1+v/100), v/300 chance to keep charge), Athletics (16 blocks sprint/swim per use, jumps 0.15; speed +v/500), Stealth (sneaking with calm hostile within 16, every 2s; aggro range x max(0.2,0.6-v/250) while sneaking). Uses per point = base*(1+floor(v/15)*0.6). Level = 1+floor((points gained+4)/12), max 30; max HP 20+2*floor((L-1)/2) up to 40 (second heart row above). Toasts for skill-ups and level-ups, SKILLS screen in menu, saved in world meta.skills. Test /tmp/sk.py. Suite passes.
+USER (06:17): classes ~6 (Final Fantasy style), not 18. USER (06:19): NPC idea - each NPC tied to a bed, respawns there if killed; quest keepers; defend village vs hostiles; asked my recommendation.
+DONE (headless only): VILLAGERS LIVE IN VILLAGES (NPCS_IN_WORLD=true) + GOLD. One resident per house (looks fixed by village seed+house index; job from the house; a villager house becomes the guard if a village has none), spawned within 56 of their house. Day: wander near home, pop inside; guards patrol between houses. Night: non-guards walk home (open/close doors themselves: npcPathing lets paths go through doors). Everyone attacks hostiles (beasts, rats, brutes) inside 48 of village centre (guards range 20 dmg 4 hp 34; others range 8 dmg 2); beasts fight back at the villager. Hit a villager -> guards within 32 attack you (3 dmg, 30s). Death -> villagerState[key]={dead:1}; next sunrise villagerDawn(): bed present -> back, bed broken -> {gone:1} (left for good). Saved in meta.villagers. GOLD purse (meta.gold, Daggerfall style): gold item id 1087 picked up into purse (+N toast), chest loot gold (house 2-15 60%, dungeon 15-80 85%, underworld 20-120 80%), cyclops 60-150, minotaur 30-80; shown on SKILLS screen. Test /tmp/vl.py (5 houses -> 5 villagers, bear killed by villagers, 4/4 home at night, dead->dawn respawn, bedless->gone, guards angry, gold pickup). Suite passes.
+USER (06:36): money like Daggerfall (gold). NEXT candidates: talking + shops (buy/sell for gold), quests + reputation, ~6 classes.
+DONE (headless only): TALK + SHOPS. Use button on a villager opens a talk panel (world pauses): greeting by job, ASK FOR NEWS (real direction+distance to nearest other village, beasts seen nearby, biome warning), TRADE (job shop: buy at PRICE, sell at 40%; closed at night), cleric HEALING (3 gold per HP). Guards talk only; angry guards won't talk. Shops: farmer, baker, blacksmith (tools, crossbow, pistol; buys leather/chitin/coal), miner, librarian (scholar: potions, dyes, books), cleric (temple), fisher, villager (odds and ends). Escape/B closes. Test /tmp/sh.py. Suite passes. NEXT: quests + reputation, then ~6 classes.
+DONE (headless only): QUESTS + REPUTATION. ASK FOR WORK in talk -> offer (ACCEPT/DECLINE); max 3 active; one per giver. Hunt (named beast den 70-160 from village in a fitting biome, spawns when within 64, 1.5x hp; kill -> return and REPORT THE KILL), Delivery (sealed parcel item 1088 to a named resident of the nearest other village; GIVE PARCEL to them; 2+dist/400 days, 30+dist/8 gold), Supplies (job-based item x n, HAND OVER). Days counted at sunrise (dayNo); overdue quests fail (-5 rep). Reputation per village (-100..100): quest +6..10 (+4 to recipient village), hitting a villager -5 (once per 20s), killing -25; prices +-25% at +-100; at -30 or below they refuse trade/work. QUESTS screen in menu: goals with live direction/distance, days left, standing per village. Saved: quests, rep, dayNo, questId. Test /tmp/qs.py. Suite passes. NEXT: ~6 classes (FF-style).
+DONE (headless only): CLASSES (6, FF-style). Picker opens once on a new world (and on old worlds without a class), can't be dismissed. Each sets starting skills (others 5), favoured skills learned 1.5x faster (uses x0.67), and a perk: Warrior (+2 hearts), Monk (fists +1), Thief (buy -15%, sell +15%), Ranger (beasts +1 of every drop), Black Mage (+20% keep-charge chance, starts with 2 fire + 2 lightning potions), White Mage (regen at food 6+, temple healing half price). Class + perk + favoured stars shown on SKILLS screen. Saved meta.cls. Tests that create worlds now auto-pick (ch, wk5, qs, sh, sk, vl, vl2, bst; new cl2.py). Suite passes (31).
+FUSION PLAN (proposed 2026-11-13, awaiting user playtest/feedback):
+ 1 One character sheet (skills, class, level, gold, quests journal, reputation) - one place, Daggerfall-style.
+ 2 Economy fusion: villagers buy what you make/grow/hunt; gold buys what you can't make (training, blueprints, services); work orders that ask you to build/craft/farm.
+ 3 Gear from the world: armor tiers leather/chitin/iron; iron tier tools; smith upgrades for gold.
+ 4 Minecraft verbs earn progression: one more skill (Craft or Survival: mining/chopping/farming/cooking) - NEEDS USER DECISION.
+ 5 Your own settlement: a bed in a house you built attracts homeless villagers; your town grows, has guards, reputation; build-request quests.
+ 6 Long travel made meaningful: roads between villages, signposts, maps, inns (rent bed, rumors), temples as respawn points, paid wagon travel between villages you've visited.
+ 7 Dungeons as quest destinations: crypts/ruins/sewers with undead (skeletons, zombies, ghosts), clear-the-dungeon quests, loot.
+ 8 Magic made craftable: spellmaker block, spells from world materials (ember, glowmoss), potions stay consumables.
+ 9 Danger scales with distance from spawn and depth; quests and rewards scale with level.
+10 Death: respawn at bed or nearest temple; decide item/gold loss - NEEDS USER DECISION.
+11 Consistency pass: one UI language, fantasy tone, decide on the pistol - NEEDS USER DECISION.
+DONE (headless only): FUSION STEP 1 - CHARACTER SHEET. Menu: CHARACTER (sheet) + APPEARANCE (old creator); QUESTS button removed. Sheet: class + level bar + hearts + gold + day, tabs SKILLS / QUESTS (n) / STANDING. J key toggles it during play (pauses), Escape/DONE closes. Quiet HUD readout top-left 'LV n · Ng' (spell readout moved below it). Test /tmp/sht.py. Suite passes. NEXT: step 2 economy fusion (needs no decisions).
+DONE (headless only): USER DECISIONS APPLIED. (a) 4 new skills (9 total): Mining (pickaxe on pick-required blocks that were in the world - placedSet tracks every block the player places, saved meta.placed; extra ore chance mining/250; tool wear skipped mining/200; harder-rock speed), Woodcutting (natural logs; extra log woodcut/250; axe wear skip), Farming (ripe crop + woolbloom harvests; +1 produce chance farming/200), Cooking & Alchemy (each cook/brew at cooking table; cooked food fills x(1+alchemy/200); brews may yield +1). (b) Death: inventory + tool wear go into a floating sack at the death spot with a golden light beam (64 tall, occluded by blocks, visible from far); walk into it to recover; listed in sheet QUESTS tab with direction; saved meta.sacks. Gold stays in purse. (c) Pistol removed from recipes, shops, loot, test hall; removed from inventories on load (code for crossbow kept). Also: dropped flat items no longer drawn as coloured cubes. Test /tmp/f2.py. Suite passes. NEXT: step 2 economy fusion.
+DONE (headless only): BREAK HITS RESCALED + SKILLS GIVE YIELD NOT SPEED. Base bare-hand hits: dirt/grass/tilled 4.5, gravel/path 5, sand 4, leaves/snow/glass/glow 2, logs 8, planks 6, stone family 9, tuff 8, cobble 10, coal 11, craft table 6, cook table 8, furnace 12; others 3+3*oldHARD (max 14), old 0 = instant. Tool power by tier: wood 1.25, stone 1.7, iron 2.5, top 4.5 (TIER_POW). Wrong tool on pick-blocks x3 and no drop. Min 2 hits for everything solid; only a top-tier tool on base<=5 (soft ground) can 1-hit. Results: dirt 5/4/3/2/1 (hand/wood/stone/iron/top), log 8/7/5/4/2, stone 27(hand)/8/6/4/2. Mining/Woodcutting: no speed; skillExtra: +1 at skill%, +1 more at (skill-50)% -> ~2.5x yield at 100; plain rock may give coal (up to 20%), logs may give 2 sticks (up to 25%); tool-wear skip kept. Measured /tmp/yield.py. Suite passes.
+DONE (headless only): METALS. Tiers: wood1 stone2 iron3 adamantite4 mithril5 (TIER_POW 1.25/1.7/2.5/3.4/4.5; only mithril shovel 1-hits soft ground). NOTE: put adamantite BELOW mithril because user said 'top one mithril' - Daggerfall has adamantium above mithril; ask/flag. Ores (ids 1090-1092) in 2x2x2-cell veins: iron y<=48 (~1 in 164 of deep rock), adamantite y<=20 (~1 in 547), mithril y<=10 by the lava (~1 in 1900). Need: iron ore stone pick, adamantite iron pick, mithril adamantite pick. Ore hits 12/16/20. Smelt at furnace: ingot = ore + 1/2/3 coal (1093-1095). 15 tools (1096-1110) shaped + list recipes (ingots + sticks), durability 250/900/1600, swords 7.5/8.75/10 dmg at Weapons 25. Smith sells iron tools/ingots, buys all ores/ingots; miner sells iron ore + iron pick; dungeon/underworld chests have some ingots. Textures: stone with coloured nugget clusters. ALSO FIXED: items with COLORS that are FLAT_ITEMS (leather, gold, steak, silk, stew, parcel, ingots) had been shown as plain coloured squares - now draw their icons. Test /tmp/ore.py. Suite passes.
+DONE (headless only): ARMOR (fusion step 3). 20 pieces (ids 1111-1130): leather (cap/jerkin/leggings/boots, pts 1/3/2/1), chitin (2/4/3/1), iron (2/6/5/2), adamantite (3/7/6/3), mithril (3/8/6/3); helm/cuirass/greaves/boots naming. Recipes: MC shapes (5/8/7/4 of material). Each point cuts 4% of a blow (max 80%); armor doesn't stop fall/hunger/drowning/lava/cactus (hurt(points, pure)). Each blow wears 1 durability from every worn piece (leather ~80, mithril ~1200; chest x1.25, boots x0.75); broken pieces vanish with a toast. Wear by using a piece from the hotbar, or WEAR/TAKE OFF on new GEAR tab of the character sheet (shows total armor %, durability bars). Leather can be dyed from the GEAR tab using any carried dye (uses 1). Worn armor recolours the player's shirt/legs/shoes (helm recolours hair) in third person. Death: worn armor goes into the sack and is re-worn on recovery. Smith sells leather + iron armor. Saved meta.armor. Tests /tmp/arm.py, arm2.py. Suite passes.
+DONE (headless only): ECONOMY FUSION (step 2). (a) Villagers buy what you make: villager buys furniture (tables/chairs/benches/doors of all woods, beds, chests, rugs); scholar buys bookshelves, glass, windows, candles; smith buys all armor + metal tools/swords + bars; farmer buys fences + buckets; miner buys worked stone. Prices for furniture/stonework added. (b) New quest kinds: ORDER (make job-appropriate crafted goods: iron tools, armor, furniture, lanterns, dishes...; reward ~1.8x price) and BUILD (place blocks inside the village, counted on placement within 48 of centre: lanterns, stone bricks/cobble walls, fences, flagstone paving, saplings; REPORT THE WORK). (c) Gold sinks: TRAIN (each job teaches one skill: guard Weapons, villager Stealth, miner Mining, farmer Farming, baker Cooking&Alchemy, cleric/scholar Magic, fisher Athletics, smith Woodcutting; +1 point, cost 15+4*skill, once a day per trainer, only up to 50), REPAIR at the smith (worn armor + tool in hand, ~half price of wear). Saved meta.trained. Test /tmp/ec.py; qs.py fixed (tester died to den bear -> world froze; test now keeps tester alive). Suite passes.
+DONE (headless only): HOMESTEADS (fusion step 5). Placing a bed runs houseCheck: floor flood-fill from the bed (<=260 cells, within 14), every cell roofed within 10 above, a door on the boundary, standing room. Fail -> toast with the reason (needs walls/roof/door). Not near generated villages, not test hall/underworld. Beds within 48 join a homestead (named e.g. Wolfdale; rep starts 40 'liked'), else a new one. Trade from house contents: furnace->smith (furnace+cutter->miner), cooking table->baker, bookshelf->scholar, cutter->miner, candle->cleric, hay/tilled near door->farmer, water near->fisher, else villager; 3rd settler becomes a guard if none. Sunrise (homesteadDawn): empty valid homes 75% get a settler (not the bed you sleep in); broken bed -> settler leaves; a new bed in the same house reuses the entry. Settlers spawn/behave as villagers (village key ['h',id]; villageHouses/regionOf/hsOf helpers fix guard patrol, news, delivery quests). STANDING tab lists homesteads, settlers, empty houses. Saved meta.homesteads/homesteadId. Test /tmp/hs.py. Suite passes.
+DONE (headless only): TRAVEL (fusion step 6). New worlds are gen 4: dirt-path roads (3 wide, gently winding) join each village to its nearest neighbour (<=520 apart), plank bridges where they cross water, trees/grass kept off them; a signpost (post + two boards) just outside each village beside the road: use it to read 'Here -> Next, N paces dir'. Villages have names (villageName), shown in talk header, news, and a NAME/discovered toast when you walk in (within 45). MAP (menu button or M): explored chunks (radius ~4 chunks around you) as coloured terrain with roads, discovered villages, homesteads, quest targets, death sacks, player arrow; zoom +/-. Wagon: from a known village/homestead, ride to any other known place: 5+dist/15 gold, dist/90 hours (advanceHours runs dawn hooks), some food. Inn: the 'villager' of a village rents a room (8g): sets respawn bed, full heal, at night sleeps to morning. Saved explored/visited. Old worlds (gen<4) get no roads/signs (their terrain is unchanged). Test /tmp/tv.py. Suite passes.
+DONE (headless only): CRYPTS + UNDEAD (fusion step 7). Gen-4 worlds: ~55% of 160-block regions get a crypt (flat dry site, away from villages/roads): mossy stone-brick hut with an open doorway; slab half-steps (orientation-free, walkable with 0.6 step-up) descend 10 blocks to a corridor (34 long) with 3 burial rooms off alternate sides and a boss hall (11x9). Bones along walls, glow lights, chests (new 'crypt' loot tier: gold, ingots incl. rare adamantite/mithril, potions, iron/chitin armor pieces, iron sword, crossbow). Undead (BEAST.undead, any-terrain pathing): skeleton (bone, rusty blade, drops bones), zombie (arms out, slow, drops gold 2-9), ghost (glowing, floats, crypt-only, drops glowmoss), Crypt Lord (1.3x, purple robe, crown, glowing staff, 70hp, 6 dmg; drops 80-150 gold, adamantite/mithril ingot, embers). Crypts populate when you go below the hut level within 60 (lord + 8 undead); killing the lord clears it for good (only 2 undead after). Skeletons and zombies also roam the surface at night (leave at day). New quest 'crypt' (guards often, others sometimes): destroy the Crypt Lord in a named barrow within 5 days, 160+d/4 gold, rep 15. Crypts named 'Barrow of X', discovered toast within 40, on the map (purple, grey when cleared). Test hall spider room now also holds the undead. Tests cr.py (walked down the stairs into the hall), cr2.py (quest flow), und.py (models). Suite passes.
+DONE (headless only): CRAFTED MAGIC (fusion step 8). Magicka (MP): max 10 + 0.4*Magic (+10 black mage, +6 white mage), refills 1 per max(0.8, 4-Magic/35)s; shown in top-left readout. SPELLMAKER block (id 1132; recipe CBC/SSS candle-bookshelf-candle over 3 stone bricks; scholar sells one for 120g): pick Firebolt/Lightning/Heal/Ward/Swiftness and strength I-III; costs reagents once (ember / glowmoss / candles / chitin / leather x1-3, glowmoss x2-6) + gold 30/120/270; spell joins the spellbook (max 8). Casting (F / Y): potion charges first (as before), otherwise the chosen book spell for MP (fire/bolt 1x/1.6x/2.2x damage; heal 4/8/14 (+Magic%); ward +4/+7/+10 armor points 30/45/60s; swiftness +25/40/55% speed 30s). G cycles spells; MAGIC tab on the character sheet lists them with CHOOSE. Each cast trains Magic. castSpell split into castEffect(kind) with castPow; fireballs carry pow. Saved book/bookSel/mp. Test /tmp/mg.py. Suite passes.
+DONE (headless only): DANGER SCALING (fusion step 9). dangerAt: bands every 450 paces from the world centre (0 Heartlands .. 5 Forsaken Reaches), +1 below y14, underworld 4. Creatures carry m.lvl from birthplace: beasts/undead hp x(1+0.35L), bite x(1+0.25L), +20%/L chance of an extra drop each, gold x(1+0.25L); brutes use L-1; rats L/2. More creatures allowed in wilder bands. Quest dens use max(band, level/5) and sit further out as you level (+15 paces/level, max +250); Crypt Lords max(band, level/4); quest rewards x(1+0.08*(level-1)). Toast when crossing into a wilder/safer band; map draws dashed red band rings and names your band + danger. Test /tmp/dg.py. Suite + qs/cr2/ec pass.
+DONE (headless only): CONSISTENCY PASS (fusion step 11). Menu sorted into WORLDS (list + new world), ADVENTURE (back to game, character, map, appearance), SETTINGS (collapsed: sharpness, multi-core, weather, debug) and BUILDER TOOLS (collapsed: test room, test hall, weather now, import). Death screen says where your belongings are, where you'll wake, and that your gold is safe; button RISE AGAIN. Bed/sleep messages in-world voice ('This bed is yours now...', 'You sleep...', 'Dawn breaks'); sleeping in a bed now runs the dawn hooks properly (advanceHours). Pistol name marks it removed. Tests clicking #testBtn etc. now click via JS (buttons live in collapsed sections). Suite passes. FUSION PLAN COMPLETE (steps 1-11).
+DONE (headless only): GIANT BATS + SLAUGHTERFISH (Daggerfall bestiary batch 2). updateFlyer: free 3D movement (per-axis collision, climbs over walls, random escape when boxed in), no gravity (updateMobs skips ground logic for fly/swim kinds). Bat: hp 6, bite 2, flies at night over land or any time in caves while you're underground, packs of 2-4 (max 6), red eyes, flapping wings, drops 0-1 leather. Slaughterfish: hp 10, bite 3, in lakes/rivers (ground at least 2 below sea), only attacks while you're in the water, gives up when you leave, flops and dies on land after 6s, drops 1-2 raw slaughterfish. New food: raw slaughterfish (2) -> grilled fish (5, cooked bonus) at cooking table; fisher sells/buys fish. Both scale with danger. Test /tmp/bf.py, bfm.py. Suite passes. NEXT (original plan): fire spread, underworld polish, efficiency pass 3, Windows/Steam port.
+DONE (headless only): FIRE SPREAD (original plan step 7). FIRE block (id 1135): walk-through flame boxes, flickering procedural colour, full light, punch to put out. IS_FLAM: logs, leaves, planks, wooden slabs/stairs, doors, fences, gates, furniture, beds, wool, rugs, hay, thatch, bookshelves, frames/beams/shingles, crafting table, barrels/crates, plants, grass, cactus, palm. fireTick (every 0.25s, max 300 fires, ~24 edits/tick): fires eat adjacent fuel (3.5%/tick), leap to spots beside more fuel, burn out after 6-16s or 2.5s without fuel; rain (outdoors, not frost/desert) and adjacent water put them out; standing in fire 1 heart/0.5s (armor useless), mobs take 2. Sources: fireballs ignite around the impact, lightning that hits ground (40%), lava beside fuel, TINDERBOX (id 1136; iron ingot over coal; smith sells, 25g; can also light the underworld gate). Burning village blocks costs -2 standing (throttled). Saved meta.fires. ALSO FIXED: flat items with COLORS were held in the hand as cubes; now held as icons. Test /tmp/fi.py (73-plank hut burns down in ~25s, stone untouched, fires die out). Suite passes.
+DONE (headless only): UNDERWORLD POLISH (original plan step 8). Daedra (Daggerfall's Oblivion): FIRE DAEDRA (horned black figure with ember cracks, burning hands, glowing eyes; hp 26, keeps 7 away and hurls fireballs every ~3s when it has line of sight - enemy fireballs hit you (armor applies) and set fuel alight; melee 3; drops 1-3 embers + 10-30 gold) and DAEDROTH (1.3x crocodile-headed brute with tail, spines, teeth, claws; hp 48, bite 5; drops bones, 20-50 gold, 35% adamantite/mithril ingot). Up to 3 near you in the underworld (with the beetle spawns, every 20s). Underworld danger 4 scaling applies. Map now explores and draws the underworld (lava, flesh rock, pillars), with its own note (no wagons). Test hall beetle room also holds daedra. Test /tmp/uw.py. Suite passes. NEXT: efficiency pass 3, then the Windows/Steam port.
+
+== BUG CHECK + EFFICIENCY PASS + SCREENSHOT TOUR (2026-11-13) ==
+DONE  CRITICAL: duplicate regionOf() (homesteads build) broke world saving: chunk edits weren't written, old regions didn't load. Renamed homestead one to villageRegionOf. New test sv.py (save -> reload) first in suite.
+DONE  Fire: fireTick timer piled up while no fire burned, so the first fire lit after a quiet spell died instantly. Timer now resets and step is capped at 1s.
+DONE  Phone portrait HUD: food bar and 2nd heart row were hidden behind the hotbar; item-name label drew over the hotbar slots. Fixed (vitals align to bottom, hotbar raised on narrow screens, label above hotbar).
+DONE  Speed: crypt + road lookups memoised (chunk gen 8.97 -> 5.98 ms); placed-block set -> per-chunk packed map (save 16.5 -> 1.6 ms, meta 374 -> 221 KB); NPC pathing flag try/finally; toast flag clears.
+DONE  Frame cost steady state: update 0.17 ms, render 0.26 ms; 60 fps headless; save 0.3 ms.
+DONE  Screenshot tour (tour.py): 66 shots in /home/claude/screenshots, zero page errors across the run.
+DONE  Portrait fills the screen: render size follows the screen shape (same pixel budget), taller field of view when upright, live re-size on rotate (workers follow).
+DONE  Standing tab lists every discovered / worked-for village by name with standing bar and distance.
+DONE  Helmets drawn on the head: leather cap, chitin ridged shell, iron helm w/ cheek + nose guards, adamantite/mithril with crest.
+DONE  Held sword pose matches the pickaxe (angled up-left, hilt bottom-right) instead of standing upright face-on.
+DONE  HELD TOOLS REBUILT ON MINECRAFT'S TRANSFORM (root cause of the repeated pickaxe/sword trouble): each tool kind had its own
+      hand-tuned pose in a homemade projection, tuned by eye from cropped shots. Replaced with ONE transform for every tool, taken
+      from Minecraft's handheld.json (firstperson_righthand: rot 0/-90/25, trans 1.13/3.2/1.13, scale 0.68) + ItemInHandRenderer
+      arm offset (0.56,-0.52,-0.72) and its swing, through a fixed 70-degree hand camera (drawHeldMC / heldMatrixMC).
+      Old per-tool HELD_POSE system deleted. Tall screens: same grip sized from width. Spell glow pinned to the blade.
+      RULE: never tune held items per tool again; check held items in FULL frames (landscape, portrait, tablet), not crops.
+
+== NOT A PHONE GAME: controller removed, one resolution (2026-11-13) ==
+DONE  On-screen touch controller removed entirely (DOM, CSS, stick/drag-look/button JS). Keyboard, mouse and real gamepad unchanged.
+DONE  Reverted today's portrait work: render size follows the screen shape, portrait FOV, portrait held-item layout, narrow-screen HUD rule. One fixed 16:10 picture; tall windows letterbox it like any PC game.
+DONE  Phone wording removed from UI text ("Tap" -> "Click"/"Press"); tests now use a landscape desktop window (no touch emulation).
+
+== GPU RENDERER: FULL RESOLUTION (2026-11-13) ==
+DONE  WebGL2 fragment-shader port of render(): same DDA ray-cast + empty-space skipping, baked block textures (on demand, seed-aware),
+      sun shadows, sky/torch light, water, lava, fog, sky, stars, clouds; shaped blocks (boxes + every colouring rule: doors, beds, windows,
+      lanterns, vines, fire, portals, woolbloom); plants (grass tufts, all 11 crops, cane, corn/grape tops, flower sprites);
+      creatures (box creatures + mobPix patterns), villagers/brutes/your character (jointed bodies, skins, poses, helmets, held items).
+DONE  Exactness: GPU vs CPU picture compared pixel by pixel in 10 scenes: <0.5% of pixels differ by >24 levels (edge rounding only);
+      ccHash reproduced bit-for-bit incl. JS double rounding. Found a 1-px seam in the CPU renderer the GPU doesn't have.
+DONE  Draws at the window's real resolution (16:10 picture area x devicePixelRatio, cap 2560 wide). Overlay (crosshair, held tool, items,
+      effects) drawn sharp at the same resolution.
+DONE  Default: GPU when WebGL2 runs on real graphics hardware; CPU renderer on software-only WebGL. Menu: RENDERER button overrides.
+DONE  WebGL context loss -> CPU renderer takes over instantly; GPU resumes when the context is restored.
+DONE  Suite: new 'gpu' test (forces GPU, compares 6 scenes). All 34 pass.
+OPEN  GPU speed is unverified here (sandbox has only a software GPU). Check on the S21 Ultra and a PC. If needed: a render-scale option.
+OPEN  Picture is still 16:10 (thin side bars on 16:9 monitors). Switching the logical aspect to 16:9 is a small change.
+OPEN  tp3 prints 153880 differing values worker-vs-single (pre-existing, same in older builds); wk2/wk5/wk7 pass. Investigate.

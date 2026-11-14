@@ -575,3 +575,19 @@ DONE  ARTIFACTS: four named things of power, found only on delve shrines (70% of
       Lifedrinker (sword, +1 and mends half a heart a blow), Deepdelver (top-tier pickaxe, 3000 uses). Own colours in the hand, on the hotbar
       and in third person. Taking one shows its lore and writes it in the journal. Worth 600 gold. tests/art.py (37 scripts in the suite).
       Screenshot: proof/artifacts_in_hand.png.
+DONE  Suite checkpoint on bandits + artifacts build: 37 of 37 pass (proof/suite_bandits_artifacts.log).
+
+== PEOPLE AND CREATURES LOOKED LIKE THEY FLOATED (2026-11-14, his report) ==
+HE SAID  "NPCs feel a little off... almost like floating in the world." Five causes found in the code, all fixed:
+DONE  1. NO GROUND SHADOWS. Blocks cast sun shadows but bodies did not darken the ground at all. Now a soft dark patch lies under every
+         creature, person and you (buildShadows / shadowAt; up to 24 nearest; flyers and swimmers excluded). Ported to the GPU shader
+         (uniforms uShd / uShdN); render workers are sent the same list. In the staged test scene the shadows darken 5% of the picture by 30 levels.
+DONE  2. FEET SLID. Legs swung about twice as fast as the ground covered. The swing is now driven by distance moved: one cycle per
+         2.7 x sin(swing) blocks, with a smaller swing for a stroll (0.42 rad) than a run (0.9). Measured: within 1% of the ideal.
+DONE  3. A LITTLE FAST. A stroll was 2.4 blocks a second; now 1.9 (NPC_WALK 0.032). Running unchanged.
+DONE  4. SNAPPED AND PASSED THROUGH. Bodies now turn over a few frames (m.vyaw follows m.yaw), and people step aside from you and from each
+         other (0.62 apart) instead of walking through. Standing still, the arms sway slightly.
+DONE  5. HALF A BLOCK ABOVE SLABS. Walkers (people, cats, rats) now settle onto a slab or low step at its real height (standY).
+TESTED tests/gait.py (38 scripts in the suite): all of the above by measurement. GPU = CPU in all 8 scenes with shadows in; multi-core = single (0).
+      Pictures: proof/npc_before_after.png (previous build left, this build right).
+NOT DONE  Shadows are a round patch under the feet, not a sun-direction silhouette. Animals keep their old leg timing (only people were retimed).

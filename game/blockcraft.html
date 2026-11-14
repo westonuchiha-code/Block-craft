@@ -5032,10 +5032,32 @@ const VIEW_DIST = 80;                           // how far you can see (loaded c
 const WTR2 = { len:0, t0:-1, top:false };       // water found by a ray that carried on past a plant or leaf hole
 const WTR = { len:0, t0:-1, top:false };       // what the current ray found out about water (see cast)
 let waterFrame = 0, lavaFrame = 0;
+// ---- contact shadows: a soft dark patch on the ground under every creature and person, so they stand ON the world ----
+// (Blocks already cast sun shadows; bodies did not darken the ground at all, which made them look as if they floated.)
+// Each entry: x, feet y, z, radius. Built once a frame from the creatures near the camera; the shader gets the same list.
+const SHD = new Float32Array(24*4); let SHDN = 0;
+function buildShadows(){
+  SHDN = 0; const list = [];
+  const add = (x,y,z,r)=>{ const d = (x-CAM.x)*(x-CAM.x) + (z-CAM.z)*(z-CAM.z); if(d<48*48) list.push([d,x,y,z,r]); };
+  if(!dead) add(player.x, player.y, player.z, 0.8);
+  for(const m of mobs){ if(m.dead) continue; const K = BEAST[m.kind]; if(K && (K.fly || K.swim)) continue;
+    add(m.x, m.y, m.z, m.kind==='npc' ? 0.85 : IS_BRUTE(m.kind) ? BRUTE[m.kind].tall*0.52 : K ? K.rect*0.55 : m.kind==='wb' ? 0.95 : m.kind==='cat' ? 0.6 : 0.42); }      // wider than the body, so the dark shows around the feet
+  list.sort((a,b)=>a[0]-b[0]);
+  for(const e of list){ if(SHDN>=24) break; SHD[SHDN*4] = e[1]; SHD[SHDN*4+1] = e[2]; SHD[SHDN*4+2] = e[3]; SHD[SHDN*4+3] = e[4]; SHDN++; }
+}
+// how much light is left at a point on the ground (1 = no shadow)
+function shadowAt(x,y,z){
+  let s = 1;
+  for(let i=0;i<SHDN;i++){ const k = i*4, dy = SHD[k+1]-y; if(dy<-0.3 || dy>2.5) continue;
+    const dx = SHD[k]-x, dz = SHD[k+2]-z, r = SHD[k+3], q = (dx*dx+dz*dz)/(r*r); if(q>=1) continue;
+    const v = 1 - 0.55*(1-q)*(1 - (dy>0 ? dy : 0)/2.5); if(v<s) s = v; }
+  return s;
+}
 function render(){
   waterFrame = Math.floor(performance.now()/700);
   lavaFrame = Math.floor(performance.now()/500)&15;
   camSetup();
+  if(!IS_WORKER) buildShadows();                             // (render workers are sent the list, so every core draws the same shadows)
   const f=CAM.f, r=CAM.r, u=CAM.u;
   const ex=CAM.x, ey=CAM.y, ez=CAM.z;
   // sun moves in a circle; moon is opposite it
@@ -5205,6 +5227,7 @@ function render(){
         // lighting never drops below a floor, so you can always see your surroundings
         const floorL = 0.14 + 0.1*dayness;
         let LR=Math.max(lr,floorL), LG=Math.max(lg,floorL), LB=Math.max(lb,floorL);
+        if(SHDN){ const cs = shadowAt(ex+dx*hit.t, ey+dy*hit.t, ez+dz*hit.t); LR*=cs; LG*=cs; LB*=cs; }      // someone is standing here
         { const mx=Math.max(LR,LG,LB); if(mx>1){ const k=(1+0.22*(1-Math.exp(-(mx-1)*2.2)))/mx; LR*=k; LG*=k; LB*=k; } }      // soft shoulder: strong sun on pale blocks (sand, snow) keeps its texture and color instead of clipping to flat white
         R = c[0]*LR; G = c[1]*LG; B = c[2]*LB;
         if(IS_EMIT[hit.b] && hit.b!==GLOW){ R=c[0]; G=c[1]; B=c[2]; }                              // lava glows on its own
@@ -5367,6 +5390,7 @@ uniform vec3 uSun, uMoon; uniform float uSunI, uMoonI, uDay, uWarm; uniform int 
 uniform vec3 uTop, uHor, uGlowCol, uCDark, uCSide; uniform float uGlow, uStars; uniform vec2 uCloudOff;
 uniform int uWaterFrame, uLavaFrame, uSeedW, uSeedC; uniform ivec4 uCrack; uniform float uCrackP;
 const int H = 120; const float VIEW = 80.0; const float INF = 1e30;
+uniform vec4 uShd[24]; uniform int uShdN;      // contact shadows: x (relative to uBase), feet y, z, radius
 uniform float uCloudY;          // the height of the cloud layer (it rises with the land in lifted worlds)
 #define CLOUD_Y0 uCloudY
 #define CLOUD_Y1 (uCloudY+5.0)
@@ -5979,6 +6003,11 @@ void main(){
     float lb = skyAmb*1.05 + sunT*0.85*(1.0-0.5*uWarm) + moonT + blT*0.45;
     float floorL = 0.14 + 0.1*uDay;
     vec3 LL = max(vec3(lr,lg,lb), vec3(floorL));
+    if(uShdN>0){ float cs = 1.0;                                // someone is standing here
+      for(int i=0;i<24;i++){ if(i>=uShdN) break; vec4 S = uShd[i]; float sdy = S.y-w.y; if(sdy<-0.3 || sdy>2.5) continue;
+        float sdx = S.x-w.x, sdz = S.z-w.z, q = (sdx*sdx+sdz*sdz)/(S.w*S.w); if(q>=1.0) continue;
+        cs = min(cs, 1.0 - 0.55*(1.0-q)*(1.0 - max(sdy,0.0)/2.5)); }
+      LL *= cs; }
     float mx = max(LL.r, max(LL.g, LL.b)); if(mx>1.0){ float k = (1.0+0.22*(1.0-exp(-(mx-1.0)*2.2)))/mx; LL *= k; }
     C = c*LL;
     if((P.r & 32u)!=0u && (P.g & 1u)==0u) C = c;                         // lava and lamps glow on their own (glowstone is lit)
@@ -6214,6 +6243,8 @@ function gpuRender(){
   gl.uniform3i(U.uBase, bx, 0, bz);
   gl.uniform3fv(U.uSun, sun); gl.uniform3f(U.uMoon, -sun[0], -sun[1], -sun[2]);
   gl.uniform1f(U.uSunI, sunI); gl.uniform1f(U.uMoonI, moonI); gl.uniform1f(U.uDay, dayness); gl.uniform1f(U.uWarm, warm); gl.uniform1i(U.uUW, UW?1:0); gl.uniform1f(U.uCloudY, CLOUD_Y0);
+  { buildShadows(); const a = GPU.shdBuf || (GPU.shdBuf = new Float32Array(96)); for(let i=0;i<SHDN;i++){ a[i*4] = SHD[i*4]-bx; a[i*4+1] = SHD[i*4+1]; a[i*4+2] = SHD[i*4+2]-bz; a[i*4+3] = SHD[i*4+3]; }
+    gl.uniform4fv(U['uShd[0]'] || U.uShd, a); gl.uniform1i(U.uShdN, SHDN); }
   gl.uniform3fv(U.uTop, skyTop); gl.uniform3fv(U.uHor, horCol); gl.uniform3f(U.uGlowCol, 255,150,60);
   gl.uniform1f(U.uGlow, 0.9*warm*(sun[1]>-0.2?1:0)); gl.uniform1f(U.uStars, clamp01((-sun[1]-0.05)*4));
   gl.uniform3fv(U.uCDark, cDark); gl.uniform3fv(U.uCSide, cSide);
@@ -6364,7 +6395,7 @@ function renderFrame(){
   }
   const saps = []; for(const sp of saplings.values()) saps.push([sp.x,sp.y,sp.z]);
   const S = { now:performance.now(), reset:WK.reset, seed:SEED, tod, player:{ x:player.x, y:player.y, z:player.z, yaw:player.yaw, pitch:player.pitch },
-              camMode, bodyYaw, limbAmp, walkPhase, swingT, tan:TAN, held:(inv[HOTBAR[sel]]>0 ? HOTBAR[sel] : 0), charKey:JSON.stringify(dressedChar()), yoff:YOFF, crack: crack ? { x:crack.x, y:crack.y, z:crack.z, hits:crack.hits, need:crack.need } : null,
+              camMode, bodyYaw, limbAmp, walkPhase, swingT, tan:TAN, held:(inv[HOTBAR[sel]]>0 ? HOTBAR[sel] : 0), charKey:JSON.stringify(dressedChar()), yoff:YOFF, shd:(camSetup(), buildShadows(), Array.from(SHD.subarray(0, SHDN*4))), crack: crack ? { x:crack.x, y:crack.y, z:crack.z, hits:crack.hits, need:crack.need } : null,
               mobs:ms, saps, del:WK.del, edits:WK.edits, step:WK.n, y0:0,
               add:WK.add.map(c=>({ cx:c.cx, cz:c.cz, data:c.data, bio:c.bio, light:c.light })), relight:[] };
   for(const c of WK.relight) if(chunks.get(chunkKey(c.cx,c.cz))===c && !WK.add.includes(c)) S.relight.push({ cx:c.cx, cz:c.cz, light:c.light });
@@ -6394,6 +6425,7 @@ function wkWorkerInit(){
       camMode = S.camMode; bodyYaw = S.bodyYaw; limbAmp = S.limbAmp; walkPhase = S.walkPhase; swingT = S.swingT; crack = S.crack;
       if(S.charKey !== charKey){ charKey = S.charKey; CHAR = JSON.parse(charKey); }
       if((S.yoff|0) !== YOFF) setWorldShape(S.yoff);
+      { const a = S.shd || []; SHDN = a.length>>2; for(let i=0;i<a.length;i++) SHD[i] = a[i]; }
       wkHeld = S.held || 0;
       mobs.length = 0;
       for(const m of S.mobs){
@@ -7274,7 +7306,7 @@ function talkSell(id){
 // Anyone who dies comes back in their own bed at the next sunrise, so a quest giver or shopkeeper is never lost for good; if their bed
 // has been broken they leave the village instead. Everyone fights hostile creatures inside the village; guards hunt them down.
 // Hit a villager and the guards come after you.
-const NPC_WALK = 0.04, NPC_RUN = 0.085, NPC_HP = 20, GUARD_HP = 34;
+const NPC_WALK = 0.032, NPC_RUN = 0.085, NPC_HP = 20, GUARD_HP = 34;
 const NPCS_IN_WORLD = true;
 let npcSpawnT = 1, villagerState = {};                       // per-resident record: { dead:1 } until sunrise, { gone:1 } once their bed is gone
 let npcPathing = false;                                      // while true, closed doors count as walkable (villagers open them)
@@ -7664,17 +7696,30 @@ function updateNpc(m, dt){
     if(!walking){ m.state='idle'; m.idleT = 2+Math.random()*6; }
   }
   if(!walking) m.moving=false;
+  { const push = (ox,oz,oy,share)=>{ const dx = m.x-ox, dz = m.z-oz, d = Math.hypot(dx,dz); if(d>=0.62 || Math.abs(oy-m.y)>1.5) return; const k = (0.62-d)*share/(d||1), nx = m.x+(d ? dx : 0.01)*k, nz = m.z+dz*k;
+      if(npcCanStand(Math.floor(nx),Math.round(m.y),Math.floor(nz))){ m.x = nx; m.z = nz; } };
+    if(talkNpc!==m) push(player.x, player.z, player.y, 0.5);
+    for(const o of mobs) if(o!==m && o.kind==='npc' && !o.dead) push(o.x, o.z, o.y, 0.25); }
   if(m.door && !walking) npcDoors(m);
   // pose: limbs swing while walking, the right arm strikes when fighting, and the head turns to watch you when you are close
   const P = m.pose;
   m.limb += ((m.moving?1:0) - m.limb)*Math.min(1,0.25*frameScale);
   P.c = Math.cos(m.yaw); P.s = Math.sin(m.yaw);
-  const sw = Math.sin(m.phase*1.15) * 0.95 * m.limb;
+  // The legs swing exactly as fast as the ground goes by, so feet do not slide: a leg 0.675 long swinging A radians each way covers
+  // 4 x 0.675 x sin(A) blocks in one full cycle. A stroll swings less than a run.
+  { const dxm = m.x-(m.lx===undefined ? m.x : m.lx), dzm = m.z-(m.lz===undefined ? m.z : m.lz), dist = Math.min(0.4, Math.hypot(dxm,dzm)); m.lx = m.x; m.lz = m.z;
+    const v = dist/Math.max(0.2, frameScale), A = 0.42 + 0.48*Math.max(0, Math.min(1, (v-NPC_WALK)/(NPC_RUN-NPC_WALK)));
+    m.gaitA = m.gaitA===undefined ? A : m.gaitA + (A-m.gaitA)*Math.min(1, 0.2*frameScale);
+    m.gait = (m.gait||0) + dist*(6.2832/(2.7*Math.sin(m.gaitA)));
+    // the body turns toward where it is going, it does not snap
+    if(m.vyaw===undefined) m.vyaw = m.yaw; let dy_ = m.yaw - m.vyaw; dy_ = Math.atan2(Math.sin(dy_), Math.cos(dy_)); m.vyaw += dy_*Math.min(1, 0.2*frameScale);
+    P.c = Math.cos(m.vyaw); P.s = Math.sin(m.vyaw); }
+  const sw = Math.sin(m.gait) * m.gaitA * m.limb + (m.moving ? 0 : Math.sin(performance.now()/900 + m.id)*0.025);      // standing still, the arms still breathe
   P.ra = m.swing>0 ? -2.2*Math.sin(m.swing*Math.PI) : sw; P.la = -sw; P.rl = -sw; P.ll = sw;
   const dxp=player.x-m.x, dzp=player.z-m.z, dp=Math.hypot(dxp,dzp);
   let hd=0, hp=0;
   if(dp<9 && Math.abs(player.y-m.y)<5 && !m.foe){
-    const want = Math.atan2(dxp,-dzp); let rel = want - m.yaw; rel = Math.atan2(Math.sin(rel), Math.cos(rel));
+    const want = Math.atan2(dxp,-dzp); let rel = want - m.vyaw; rel = Math.atan2(Math.sin(rel), Math.cos(rel));
     hd = Math.max(-1.1, Math.min(1.1, rel)); hp = Math.max(-0.5, Math.min(0.5, Math.atan2((player.y+1.6)-(m.y+1.6), dp)));
   }
   P.hd += (hd-P.hd)*Math.min(1,0.15*frameScale); P.hp += (hp-P.hp)*Math.min(1,0.15*frameScale);
@@ -7976,14 +8021,21 @@ function ratChooseGoal(m){
   if(p){ ratSetPath(m,p); m.state='wander'; } else { m.state='idle'; m.idleT = 1+Math.random()*2; }
 }
 // walk along m.path at the given speed. Returns true while still walking.
+// the height someone stands at in cell (x,y,z): the cell's floor, or lower when the block underneath is a slab or a low step
+function standY(x,y,z){
+  const b = ratGet(x,y-1,z); if(!IS_SHAPED[b]) return y;
+  const bx = SH_COL[b] || SH_BOXES[b]; if(!bx) return y; let top = 0;
+  for(const B of bx) if(B[0]<=0.5 && B[3]>=0.5 && B[2]<=0.5 && B[5]>=0.5 && B[4]>top) top = B[4];
+  return top>0 && top<1 ? y-1+top : y;
+}
 function ratWalk(m, speed){
   if(!m.path || m.pi>=m.path.length){ m.moving=false; return false; }
   const n = m.path[m.pi], tx=n[0]+0.5, tz=n[2]+0.5, dx=tx-m.x, dz=tz-m.z, d=Math.hypot(dx,dz);
   const step = Math.min(d, speed*frameScale);
   if(d>0.001){ m.x += dx/d*step; m.z += dz/d*step; m.yaw = Math.atan2(dx,-dz); }
-  const dyy = n[2]===n[2] ? n[1]-m.y : 0;
+  const ty = d<0.6 ? standY(n[0],n[1],n[2]) : Math.max(m.y, standY(n[0],n[1],n[2])), dyy = ty-m.y;      // rise early for a step up, sink onto a slab once over it
   m.y += Math.max(-0.4, Math.min(0.22, dyy));
-  if(d<0.12 && Math.abs(n[1]-m.y)<0.3){ m.pi++; }
+  if(d<0.12 && Math.abs(ty-m.y)<0.3){ m.pi++; }
   m.moving = true; m.phase += step*5;
   return true;
 }

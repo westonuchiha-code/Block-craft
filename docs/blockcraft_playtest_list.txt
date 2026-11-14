@@ -3,6 +3,12 @@ BLOCKCRAFT - PLAYTEST LIST
 == TO LOOK AT WHEN YOU ARE BACK (built 2026-11-14 onward, checked by scripts and screenshots only) ==
 Start a NEW world for all of this (old worlds keep the old low land and have no delves).
 
+PEOPLE (you said they felt like they were floating)
+[ ] Villagers, bandits, cats and beasts now have a dark patch under them. Do they feel planted on the ground now?
+[ ] Watch someone walk: do the feet still slide? Is the slower stroll right? Do they turn naturally?
+[ ] Walk into a villager: they should step aside, not pass through you.
+[ ] If they still feel off, try to say when: standing, walking, turning, on stairs, at night?
+
 HELD ITEMS
 [ ] Blocks, stairs, doors, beds, lanterns, food, ingots in the hand: do they sit right? Chairs and fences are thin and low.
 [ ] The 3D arm when the hand is empty, and its punch.

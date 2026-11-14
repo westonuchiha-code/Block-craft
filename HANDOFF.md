@@ -50,7 +50,25 @@ a bestiary, a spellmaker, travel by wagon, danger that rises with distance).
 - **Held items** use Minecraft's single "handheld" transform for every tool (see §5, trap 1). Never hand-tune
   per-tool poses.
 
-## 3. Current state (2026-11-14)
+## 3. Current state (2026-11-14, later the same day)
+
+**He cannot playtest until about 2026-11-16.** Until then: build only what scripts and screenshots can verify, do not ask him to try
+things, and keep `docs/blockcraft_playtest_list.txt` (top section) current with what he should look at when he is back.
+
+The suite has 36 scripts and all pass. Built since the kit was handed over, newest first (details in `docs/blockcraft_task_list.txt`):
+- **Daggerfall systems:** journal (sheet tab), guilds (Fighters, Mages, Temple, Thieves; ranks from guild work only), the law (bounty,
+  witnesses, arrest, fine / cells / resist), rumours from villagers, three delve jobs (kill the master, bring back the heirloom, rescue
+  someone lost), a hermit trader camped inside larger delves.
+- **Delves:** cavern dungeons with ruins (see open items). **The world is lifted 40 blocks** in new worlds for a deep underground.
+- **Held items rebuilt in 3D**, new hand magic, classes shelved (`CLASSES_ON`), metals in Daggerfall's order (adamantite on top),
+  16:9 picture, pistol removed, save bug fixed (quests / standing / day count were not restored on load).
+
+Where the new code lives (search for the function names): `delvePlan` `delveBlock` `delveTick` `siteByKey` (delves); `setWorldShape`
+(world lift); `heldModel` `drawHeldPosed` `drawSpellAura` (hand); `logJournal` `journalSheet` (journal); `GUILDS` `guildRank` `guildCut`
+`guildSheet` (guilds); `crime` `witnessAt` `openArrest` `arrestEnd` `chestTheft` (law); `questOffer` (all job kinds, incl. the hermit's).
+New save fields in the world meta: `journal`, `guilds`, `bounty`, `thefts`.
+
+### State at handover (kept for reference)
 
 All 33 tests in the suite pass on this build. Recent work, newest first:
 1. **GPU renderer (WebGL2), full resolution.** The 3D picture used to be drawn per-pixel on the CPU at 288×180 by
@@ -124,7 +142,7 @@ runs before optimising.
 
 - Needs Python 3 + Playwright and Chrome (tests use `/usr/bin/google-chrome` and the game at
   `/home/claude/blockcraft_prototype.html`; see `tests/README.md` to repoint them).
-- **Suite:** `bash tests/suite.sh` (33 scripts, ~15 min). It is a regression/smoke harness: a test fails on a
+- **Suite:** `bash tests/suite.sh` (36 scripts, ~25 min). It is a regression/smoke harness: a test fails on a
   non-zero exit, a Python traceback or page errors; many also print values to read. `gpu.py` compares GPU vs CPU
   pictures in 6 scenes and fails on mismatch. `sv.py` checks save → reload keeps edits.
 - **Conventions:** worlds are created via `#newName` / `#newSeed` / `#newBtn`, then (only if `CLASSES_ON` is true; it is off now, so this is a harmless no-op) the class picker must be

@@ -24,7 +24,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 
 ## Run
 
-- `bash suite.sh`: the regression suite (34 scripts, about 20 minutes). Each line prints `name rc=<exit code>`
+- `bash suite.sh`: the regression suite (35 scripts, about 20 minutes). Each line prints `name rc=<exit code>`
   and the script's last output line. A failure is a non-zero exit, `ERR` (traceback), or page errors in the
   printed list. Many scripts also print values meant to be read, not only asserted.
 - `python3 gpu.py`: renders 6 scenes with the CPU renderer and the GPU renderer at the same size and fails if
@@ -40,6 +40,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 |---|---|
 | sv | saving and reloading keeps edits |
 | gpu | GPU picture matches the CPU picture |
+| guild | guilds: joining, perks, ranks from guild work, journal, save and reload |
 | delve | delves: lifted world shape, every chamber and the master reachable on foot, master kill, chests, quest, map entry |
 | sh2, sh4, sh5, sc, bb | stairs, slabs and other shaped blocks, recipes |
 | fe | fences |

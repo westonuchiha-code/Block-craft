@@ -540,3 +540,9 @@ DONE  HERMIT (first cave dweller): delves with 7+ chambers have a camp in one mi
       an iron pickaxe, iron, glow moss; buys bones, silk, chitin, leather, ores and ingots; never closes. ASK FOR WORK: kill the master below
       (300 gold, 6 days) or bring him plain goods at double price. He keeps out of fights; if killed, another has taken the camp by sunrise.
       Covered by tests/delve.py. Screenshots: proof/hermit_camp.png, hermit_talk.png, hermit_shop.png.
+DONE  Suite checkpoint on journal + heirloom + hermit build: 34 of 34 pass (proof/suite_journal_hermit.log).
+DONE  GUILDS: Fighters Guild (guards), Mages Guild (scholars), Temple (clerics). Join free by asking a member (new talk button). Standing comes only
+      from work done for members: +8 a job, +12 a hunt or delve, -6 a failure. Six ranks at 0/20/50/90/140/200 standing (GUILD_STEPS).
+      Perks per rank: members paid +8% for guild work; lessons from that guild 10% cheaper and 8 skill points further; Mages: spells 10% cheaper
+      and +2 magicka; Temple: healing 15% cheaper (to 90%). Shown under STANDING on the sheet; joins and promotions go in the journal. Saved.
+      Skills gate nothing (his rule): rank needs only standing. tests/guild.py added (35 scripts in the suite). Screenshot: proof/guilds_standing.png.

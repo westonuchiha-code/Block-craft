@@ -30,6 +30,11 @@ THE HERMIT (in the Black Warren: chamber 6, a camp with a bedroll and a lamp on 
 [ ] Is finding a friendly voice down there a good moment? Are his prices and goods useful at that depth?
 [ ] His two kinds of work: kill the master below, or bring plain goods.
 
+GUILDS (ask a guard, a scholar or a cleric to join; see STANDING on the sheet)
+[ ] Does joining and rising feel like becoming someone? Is two or three jobs a rank about right, slowing as you go up?
+[ ] Are the perks worth having (better pay, cheaper lessons, cheaper spells and healing)? What else should rank give?
+[ ] Should there be a Thieves Guild, and what would its work be?
+
 SMALLER THINGS
 [ ] No class picker at the start: does a fresh character feel right without one?
 [ ] Adamantite is now the top metal, mithril below it.

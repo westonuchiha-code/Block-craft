@@ -3290,7 +3290,7 @@ function saveWorld(){
   if(!currentWorld) return;
   const meta = {
     format: SAVE_FORMAT, version: SAVE_VERSION, name: currentWorldName, seed: SEED, gen: worldGen, test: testWorld ? 1 : 0, rain: [rainOn?1:0, rainLeftT],
-    inv, wear, hotbar: HOTBAR, grid2, tod, health, food, saturation, skills:{ v:skills, u:skillUses, g:skillGained }, gold, armor, book, bookSel, mp, fires:[...fires.values()].slice(0,300), crypts:cryptState, cryptSeen:[...cryptSeen], journal, trained:trainedDay, homesteads, homesteadId, explored:[...explored], visited:[...visitedV], cls:playerClass, sacks:deathSacks, placed:packPlaced(), villagers:villagerState, quests, rep:villageRep, dayNo, questId, bed: bedSpawn, spell, spellCharges, swordSpell, chests: Object.fromEntries(chests),
+    inv, wear, hotbar: HOTBAR, grid2, tod, health, food, saturation, skills:{ v:skills, u:skillUses, g:skillGained }, gold, armor, book, bookSel, mp, fires:[...fires.values()].slice(0,300), crypts:cryptState, cryptSeen:[...cryptSeen], journal, guilds, trained:trainedDay, homesteads, homesteadId, explored:[...explored], visited:[...visitedV], cls:playerClass, sacks:deathSacks, placed:packPlaced(), villagers:villagerState, quests, rep:villageRep, dayNo, questId, bed: bedSpawn, spell, spellCharges, swordSpell, chests: Object.fromEntries(chests),
     player: { x:player.x, y:player.y, z:player.z, yaw:player.yaw, pitch:player.pitch }
   };
   try{
@@ -3501,7 +3501,7 @@ function loadWorld(id){
   explored = new Set(meta.explored || []); visitedV = new Set(meta.visited || []); mapTiles.clear(); roadEdgeCache.clear(); roadChunkCache.clear(); roadMemoCx = 1e9;
   fires.clear(); for(const f of (meta.fires||[])) fires.set(f.x+','+f.y+','+f.z, f);
   book = meta.book || []; bookSel = meta.bookSel || 0; mp = meta.mp===undefined ? 10 : meta.mp; wardT = wardPts = swiftT = swiftK = 0;
-  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
+  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; guilds = meta.guilds || {}; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
   trainedDay = meta.trained || {}; homesteads = meta.homesteads || []; homesteadId = meta.homesteadId || 1;
   gold = meta.gold || 0; playerClass = meta.cls || null; deathSacks = meta.sacks || []; placedMap = unpackPlaced(meta.placed);
   if(meta.inv && meta.inv[PISTOL]) delete inv[PISTOL];          // the pistol is gone from the world
@@ -6928,6 +6928,41 @@ function questOffer(m){
   }
   return { kind:'fetch', item:COAL_ITEM, n:6, days:4, reward:40, rep:6, text:`Bring me 6 coal within 4 days and I'll pay you 40 gold.` };
 }
+// ---------- guilds (Daggerfall's way of becoming someone): join by asking a member, rise by doing the guild's work ----------
+// Three to start: the Fighters Guild (guards), the Mages Guild (scholars) and the Temple (clerics). Membership is for the whole land.
+// Standing in a guild comes only from work done for its members (never from skills, which lock nothing): six ranks, each asking more
+// work than the last (GUILD_STEPS; a job is worth 8, a hunt or a delve 12, a failure costs 6).
+// Every rank makes its members' services cheaper and their teaching go further, and members are paid more for guild work.
+const GUILDS = {
+  fighters: { name:'Fighters Guild', short:'Fighters', job:'guard',     who:'a guard',   ranks:['Apprentice','Journeyman','Swordsman','Defender','Warder','Champion'],
+              perk:r=>`Guards pay you ${8*(r+1)}% more for work. Weapons lessons cost ${Math.min(60,10*(r+1))}% less and go up to skill ${50+8*(r+1)}.` },
+  mages:    { name:'Mages Guild',    short:'Mages',    job:'librarian', who:'a scholar', ranks:['Apprentice','Evoker','Conjurer','Magician','Wizard','Archmage'],
+              perk:r=>`Making a spell costs ${Math.min(60,10*(r+1))}% less gold. ${2*(r+1)} more magicka. Magic lessons cost ${Math.min(60,10*(r+1))}% less and go up to skill ${50+8*(r+1)}.` },
+  temple:   { name:'Temple',         short:'Temple',   job:'cleric',    who:'a cleric',  ranks:['Novice','Acolyte','Adept','Curate','Disciple','Patriarch'],
+              perk:r=>`Healing costs ${Math.min(90,15*(r+1))}% less. Clerics pay you ${8*(r+1)}% more for work.` } };
+let guilds = {};                                              // guild id -> { rep } for the guilds you have joined
+function guildOfJob(job){ for(const id in GUILDS) if(GUILDS[id].job===job) return id; return null; }
+const GUILD_STEPS = [0, 20, 50, 90, 140, 200];               // standing needed for each rank: every step up asks more work than the last
+function guildRank(id){ const g = guilds[id]; if(!g) return -1; let r = 0; while(r<5 && g.rep>=GUILD_STEPS[r+1]) r++; return r; }      // -1: not a member
+function guildCut(id, per, cap){ const r = guildRank(id); return r<0 ? 1 : 1 - Math.min(cap, per*(r+1))/100; }      // a price multiplier for members
+function guildJoin(id){ if(guilds[id]) return; guilds[id] = { rep:0 }; const G = GUILDS[id]; skillToast(G.name.toUpperCase()+'<br><small>you are now '+aAn(G.ranks[0])+'</small>', true); logJournal('Joined the '+G.name+' as '+aAn(G.ranks[0])+'.'); }
+function aAn(w){ return ('aeiouAEIOU'.includes(w[0]) ? 'an ' : 'a ') + w; }
+function guildGain(id, n){
+  const g = guilds[id]; if(!g) return; const r0 = guildRank(id);
+  g.rep = Math.max(0, Math.min(220, g.rep + n)); const r1 = guildRank(id), G = GUILDS[id];
+  if(r1>r0){ skillToast(G.name.toUpperCase()+'<br><small>you are raised to '+G.ranks[r1]+'</small>', true); logJournal('Raised to '+G.ranks[r1]+' of the '+G.name+'.'); }
+  else if(r1<r0) logJournal('Set back to '+G.ranks[r1]+' of the '+G.name+'.');
+  scheduleSave();
+}
+function guildSheet(){
+  let h = '';
+  for(const id in GUILDS){ const G = GUILDS[id], r = guildRank(id);
+    if(r<0){ h += `<div class="skRow"><div class="skHead"><b style="color:#8f8a7a">${G.name}</b><span>not a member</span></div><div class="skDesc">Ask ${G.who} in any village to join.</div></div>`; continue; }
+    const rep = guilds[id].rep, into = r>=5 ? 1 : (rep - GUILD_STEPS[r])/(GUILD_STEPS[r+1]-GUILD_STEPS[r]);
+    h += `<div class="skRow"><div class="skHead"><b>${G.name}</b><span>${G.ranks[r]}</span></div><div class="skBar thin"><i style="width:${Math.max(0,Math.min(1,into))*100}%"></i></div>`
+       + `<div class="skDesc" style="color:#d8cfb8">${G.perk(r)}</div><div class="skDesc">${r>=5 ? 'the highest rank' : 'next: '+G.ranks[r+1]+'. Do work for '+G.who+' to rise.'}</div></div>`; }
+  return h;
+}
 // ---------- the journal: a dated record of what you have done, the places you have found and the work you have in hand ----------
 let journal = [];
 function logJournal(t){ journal.push({ d:dayNo, t }); if(journal.length>150) journal.splice(0, journal.length-150); scheduleSave(); }
@@ -6953,6 +6988,7 @@ function journalSheet(){
 function acceptQuest(m, q){
   if(quests.length>=QUEST_MAX) return 'You already have as much work as you can carry.';
   if(!q.scaled){ q.reward = Math.round(q.reward*(1 + 0.08*(playerLevel()-1))); q.scaled = 1; }        // seasoned adventurers get paid more
+  { const gid = guildOfJob(m.job); if(gid && guildRank(gid)>=0 && !q.guildPay){ q.reward = Math.round(q.reward*(1 + 0.08*(guildRank(gid)+1))); q.guildPay = 1; } }      // a guild pays its own better
   Object.assign(q, { id:questId++, giver:m.home, giverName:m.name, giverJob:m.job, village:m.village, gvc:m.vc, due:dayNo+q.days, state:'active' });
   if(q.kind==='deliver'){ inv[PARCEL] = (inv[PARCEL]||0)+1; autoFillHotbar(PARCEL); }
   if(q.relic){ const P = siteByKey(q.crypt), c = P && P.nodes[P.heart].chests[0]; if(c){ const it = chestItems(c[0],c[1],c[2]); it[HEIRLOOM] = (it[HEIRLOOM]||0)+1; } }      // the heirloom waits in a chest on the shrine
@@ -6961,6 +6997,7 @@ function acceptQuest(m, q){
 }
 function finishQuest(q, ok){
   quests.splice(quests.indexOf(q),1);
+  { const gid = guildOfJob(q.giverJob); if(gid) guildGain(gid, ok ? (q.kind==='crypt' || q.kind==='hunt' ? 12 : 8) : -6); }
   logJournal(ok ? `Finished the work for ${q.giverName} (${questTitle(q)}) and was paid ${q.reward} gold.` : `Failed the work for ${q.giverName} (${questTitle(q)}): out of time.`);
   if(ok){ gold += q.reward; addRep(q.village, q.rep); if(q.kind==='deliver') addRep(q.to.split(':')[0].split(',').map(Number), 4); skillToast('QUEST DONE<br><small>+'+q.reward+' gold</small>', true); }
   else { addRep(q.village, -5); if(q.kind==='deliver' && inv[PARCEL]>0) inv[PARCEL]--; if(q.relic && inv[HEIRLOOM]>0) inv[HEIRLOOM]--; skillToast('QUEST FAILED<br><small>'+q.giverName+' is disappointed</small>', true); }
@@ -7025,7 +7062,8 @@ function closeQuests(){ document.getElementById('questMenu').classList.remove('s
 const TRAINS = { guard:'weapons', villager:'stealth', miner:'mining', farmer:'farming', baker:'alchemy', cleric:'magic', librarian:'magic', fisher:'athletics', blacksmith:'woodcut' };
 const TRAIN_CAP = 50;
 let trainedDay = {};                                          // trainer -> the day of their last lesson
-function trainCost(id){ return 15 + skills[id]*4; }
+function trainCost(id, job){ const gid = guildOfJob(job); return Math.round((15 + skills[id]*4) * (gid ? guildCut(gid, 10, 60) : 1)); }
+function trainCap(job){ const gid = guildOfJob(job), r = gid ? guildRank(gid) : -1; return TRAIN_CAP + (r>=0 ? 8*(r+1) : 0); }
 // repairs: the smith mends what you're wearing and the tool in your hand, for gold
 function repairCost(){
   let c = 0;
@@ -7066,7 +7104,8 @@ function renderTalk(){
     if(del) h += `<button data-a="deliver">GIVE PARCEL</button>`;
     if(back) h += `<button data-a="turnin">${back.kind==='build' ? 'REPORT THE WORK' : back.kind==='hunt' || back.kind==='crypt' ? 'REPORT THE KILL' : 'HAND OVER '+back.n+' '+NAMES[back.item].toUpperCase()}</button>`;
     h += `<button data-a="work">ASK FOR WORK</button>`;
-    if(TRAINS[m.job]) h += `<button data-a="train">TRAIN ${SKILLS.find(k=>k.id===TRAINS[m.job]).name.toUpperCase()} (${trainCost(TRAINS[m.job])}g)</button>`;
+    { const gid = guildOfJob(m.job); if(gid && guildRank(gid)<0) h += `<button data-a="join">JOIN THE ${GUILDS[gid].name.toUpperCase()}</button>`; }
+    if(TRAINS[m.job]) h += `<button data-a="train">TRAIN ${SKILLS.find(k=>k.id===TRAINS[m.job]).name.toUpperCase()} (${trainCost(TRAINS[m.job], m.job)}g)</button>`;
     if(m.job==='blacksmith'){ const rc = repairCost(); if(rc>0) h += `<button data-a="repair">REPAIR (${rc}g)</button>`; }
     if(m.job==='villager' && m.house && m.house.bed) h += `<button data-a="room">RENT A ROOM (8g)</button>`;
     if(shop) h += `<button data-a="trade">TRADE</button>`;
@@ -7098,9 +7137,10 @@ function talkAction(a){
   if(a==='trade'){ talkView = 'trade'; }
   else if(a==='back'){ talkView = 'talk'; }
   else if(a==='news'){ talkLine = talkNews(m); }
+  else if(a==='join'){ const gid = guildOfJob(m.job); if(gid && guildRank(gid)<0){ guildJoin(gid); talkLine = gid==='fighters' ? 'Then you are one of us. Do the work we give you, and the Guild will see you rise.' : gid==='mages' ? 'Your name is in the book. Bring us what we ask for, and the Guild will open its doors wider.' : 'The gods take note of you. Serve, and you will be raised.'; } }
   else if(a==='train'){
-    const id = TRAINS[m.job], K = SKILLS.find(k=>k.id===id), cost = trainCost(id);
-    if(skills[id]>=TRAIN_CAP) talkLine = `You know as much of ${K.name.toLowerCase()} as I can teach. The rest you'll learn by doing.`;
+    const id = TRAINS[m.job], K = SKILLS.find(k=>k.id===id), cost = trainCost(id, m.job);
+    if(skills[id]>=trainCap(m.job)) talkLine = `You know as much of ${K.name.toLowerCase()} as I can teach. The rest you'll learn by doing.`;
     else if(trainedDay[m.home]===dayNo) talkLine = 'That\'s enough for one day. Come back tomorrow.';
     else if(gold<cost) talkLine = `A lesson costs ${cost} gold. You have ${gold}.`;
     else { gold -= cost; trainedDay[m.home] = dayNo; skillUses[id] = skillUsesFor(id); trainSkill(id, 0); talkLine = `An afternoon's practice. Your ${K.name.toLowerCase()} is now ${skills[id]}. (${cost} gold)`; }
@@ -7128,7 +7168,7 @@ function talkAction(a){
     else if(q && q.kind==='build' && q.state==='done'){ finishQuest(q, true); talkLine = `I saw it with my own eyes. Fine work! ${q.reward} gold, as promised.`; }
     else if(q && q.kind==='fetch' && (inv[q.item]||0)>=q.n){ inv[q.item] -= q.n; finishQuest(q, true); talkLine = q.relic ? `Grandfather's cup. You found it. I never thought to hold it again. ${q.reward} gold, and my family's thanks.` : `Just what I needed. ${q.reward} gold, as promised.`; } }
   else if(a==='heal'){
-    const need = maxHP()-health, cost = need*(isClass('whitemage') ? 1.5 : 3) | 0;
+    const need = maxHP()-health, cost = need*(isClass('whitemage') ? 1.5 : 3)*guildCut('temple', 15, 90) | 0;
     if(need<=0) talkLine = 'You are whole. Go with the gods.';
     else if(gold<cost) talkLine = `Healing your wounds asks a donation of ${cost} gold. You have ${gold}.`;
     else { gold -= cost; health = maxHP(); vitalKey = ''; talkLine = `The light mends you. (${cost} gold)`; }
@@ -10865,7 +10905,7 @@ const SPELL_FX = {
   swift: { name:'Swiftness', mat:LEATHER,  matN:[1,2,3], mp:[6,9,12],  desc:'run 25 / 40 / 55% faster for 30 seconds' } };
 const SPELL_POW = [1, 1.6, 2.2], ROMAN = ['I','II','III'];
 let book = [], bookSel = 0, mp = 10, mpT = 0, castPow = 1, wardT = 0, wardPts = 0, swiftT = 0, swiftK = 0;
-function mpMax(){ return 10 + Math.floor(skills.magic*0.4) + (isClass('blackmage') ? 10 : isClass('whitemage') ? 6 : 0); }
+function mpMax(){ return 10 + Math.floor(skills.magic*0.4) + (isClass('blackmage') ? 10 : isClass('whitemage') ? 6 : 0) + 2*(guildRank('mages')+1); }
 function mpTick(dt){
   mpT += dt; const per = Math.max(0.8, 4 - skills.magic/35);
   while(mpT>=per){ mpT -= per; if(mp<mpMax()){ mp++; vitalKey = ''; } }
@@ -10888,7 +10928,7 @@ function castBook(){
 }
 // the spellmaker: pick an effect and a strength, pay its reagents and some gold, and the spell is yours
 let smFx = 'fire', smPow = 0;
-function smCost(){ const F = SPELL_FX[smFx]; return { mat:F.mat, n:F.matN[smPow], gold:30*(smPow+1)*(smPow+1) }; }
+function smCost(){ const F = SPELL_FX[smFx]; return { mat:F.mat, n:F.matN[smPow], gold:Math.round(30*(smPow+1)*(smPow+1)*guildCut('mages', 10, 60)) }; }
 function renderSpellmaker(){
   const F = SPELL_FX[smFx], c = smCost(), have = inv[c.mat]||0, known = book.some(b=>b.fx===smFx && b.pow===smPow);
   let h = `<div class="skNote">Make a spell of your own. It costs reagents and gold once; casting it costs magicka. You have ${mp}/${mpMax()} magicka.</div><div class="tkBtns">`;
@@ -11753,7 +11793,7 @@ function renderSheet(){
     }
   } else {
     const [qh, sh] = questSheetParts();
-    h += sheetTab==='quests' ? '<div class="tkHd">WORK IN HAND</div>' + qh + journalSheet() : '<div class="tkHd">YOUR HOMESTEADS</div>' + homesteadSheet() + '<div class="tkHd" style="margin-top:14px">VILLAGES</div>' + (sh || '<div class="skNote">No village found yet. Their opinion of you changes with the work you do for them, and with how you treat their people.</div>');
+    h += sheetTab==='quests' ? '<div class="tkHd">WORK IN HAND</div>' + qh + journalSheet() : '<div class="tkHd">GUILDS</div>' + guildSheet() + '<div class="tkHd" style="margin-top:14px">YOUR HOMESTEADS</div>' + homesteadSheet() + '<div class="tkHd" style="margin-top:14px">VILLAGES</div>' + (sh || '<div class="skNote">No village found yet. Their opinion of you changes with the work you do for them, and with how you treat their people.</div>');
   }
   const el = document.getElementById('skillList'); el.innerHTML = h;
   el.querySelectorAll('[data-ic]').forEach(sp=>sp.appendChild(iconCanvas(+sp.dataset.ic)));

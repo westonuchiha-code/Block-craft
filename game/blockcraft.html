@@ -8226,7 +8226,8 @@ function delveTick(){
   P.nodes.forEach((N,i)=>{
     const k = P.key+':'+i, d = Math.hypot(N.cx-player.x, N.cz-player.z);
     if(d>110){ delvePop.delete(k); return; }
-    if(delvePop.has(k) || d>N.a+26 || !below || Math.abs(player.y-N.F)>N.Hc+14) return;
+    if(delvePop.has(k) || d>Math.max(N.a,N.b)+10 || !below || Math.abs(player.y-N.F)>N.Hc+10) return;      // a chamber wakes when you reach its mouth
+    if(i!==P.heart && mobs.reduce((n,m)=>n+(m.crypt===P.key && !m.dead ? 1 : 0), 0) >= 14) return;                 // never a whole delve on you at once: the rest wake as these fall
     const folk = DELVE_FOLK[P.kind][N.tier], want = cleared ? 1 : Math.min(6, 2 + N.tier + (N.a*N.b>130 ? 1 : 0) + (i===P.heart ? 1 : 0));
     const lvl = Math.min(7, dangerAt(N.cx,N.F,N.cz) + N.tier);
     let made = 0;

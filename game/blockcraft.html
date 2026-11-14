@@ -3290,7 +3290,7 @@ function saveWorld(){
   if(!currentWorld) return;
   const meta = {
     format: SAVE_FORMAT, version: SAVE_VERSION, name: currentWorldName, seed: SEED, gen: worldGen, test: testWorld ? 1 : 0, rain: [rainOn?1:0, rainLeftT],
-    inv, wear, hotbar: HOTBAR, grid2, tod, health, food, saturation, skills:{ v:skills, u:skillUses, g:skillGained }, gold, armor, book, bookSel, mp, fires:[...fires.values()].slice(0,300), crypts:cryptState, cryptSeen:[...cryptSeen], journal, guilds, trained:trainedDay, homesteads, homesteadId, explored:[...explored], visited:[...visitedV], cls:playerClass, sacks:deathSacks, placed:packPlaced(), villagers:villagerState, quests, rep:villageRep, dayNo, questId, bed: bedSpawn, spell, spellCharges, swordSpell, chests: Object.fromEntries(chests),
+    inv, wear, hotbar: HOTBAR, grid2, tod, health, food, saturation, skills:{ v:skills, u:skillUses, g:skillGained }, gold, armor, book, bookSel, mp, fires:[...fires.values()].slice(0,300), crypts:cryptState, cryptSeen:[...cryptSeen], journal, guilds, bounty, trained:trainedDay, homesteads, homesteadId, explored:[...explored], visited:[...visitedV], cls:playerClass, sacks:deathSacks, placed:packPlaced(), villagers:villagerState, quests, rep:villageRep, dayNo, questId, bed: bedSpawn, spell, spellCharges, swordSpell, chests: Object.fromEntries(chests),
     player: { x:player.x, y:player.y, z:player.z, yaw:player.yaw, pitch:player.pitch }
   };
   try{
@@ -3501,7 +3501,7 @@ function loadWorld(id){
   explored = new Set(meta.explored || []); visitedV = new Set(meta.visited || []); mapTiles.clear(); roadEdgeCache.clear(); roadChunkCache.clear(); roadMemoCx = 1e9;
   fires.clear(); for(const f of (meta.fires||[])) fires.set(f.x+','+f.y+','+f.z, f);
   book = meta.book || []; bookSel = meta.bookSel || 0; mp = meta.mp===undefined ? 10 : meta.mp; wardT = wardPts = swiftT = swiftK = 0;
-  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; guilds = meta.guilds || {}; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
+  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; guilds = meta.guilds || {}; bounty = meta.bounty || {}; arrestUntil = 0; arrestOpen = false; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
   trainedDay = meta.trained || {}; homesteads = meta.homesteads || []; homesteadId = meta.homesteadId || 1;
   gold = meta.gold || 0; playerClass = meta.cls || null; deathSacks = meta.sacks || []; placedMap = unpackPlaced(meta.placed);
   if(meta.inv && meta.inv[PISTOL]) delete inv[PISTOL];          // the pistol is gone from the world
@@ -6928,6 +6928,37 @@ function questOffer(m){
   }
   return { kind:'fetch', item:COAL_ITEM, n:6, days:4, reward:40, rep:6, text:`Bring me 6 coal within 4 days and I'll pay you 40 gold.` };
 }
+// ---------- the law (Daggerfall's): a crime a villager sees puts a price on your head in that village ----------
+// Assault, murder, stealing from a house chest and smashing up buildings each add to the bounty, if someone is near enough to see
+// (a good sneak is seen from less far, and learns from every theft that goes unseen). While you are wanted there, nobody trades or
+// gives work, and any guard who spots you comes to arrest you: pay the fine, serve the days in the cells, or resist and fight.
+const CRIME = { assault:[40,'assault'], murder:[300,'murder'], theft:[30,'theft'], vandal:[6,'wrecking property'] };
+let bounty = {}, arrestUntil = 0, arrestOpen = false;        // village key -> gold owed
+function bountyOf(v){ return v && v[0]!=='h' ? (bounty[vkey(v)]||0) : 0; }
+function witnessAt(x,y,z){                                   // a living villager close enough to have seen it
+  const r = 10*stealthMul();
+  for(const o of mobs) if(o.kind==='npc' && !o.dead && o.village && o.village[0]!=='h' && Math.abs(o.y-y)<5 && Math.hypot(o.x-x,o.z-z)<r) return o;
+  return null;
+}
+function crime(v, kind, extra){
+  if(!v || v[0]==='h') return; const k = vkey(v), was = bounty[k]||0, C = CRIME[kind];
+  bounty[k] = Math.min(2000, was + C[0] + (extra||0));
+  const nm = villageName(v[0], v[1]);
+  if(!was){ skillToast('WANTED IN '+nm.toUpperCase()+'<br><small>'+C[1]+'</small>', true); logJournal('Wanted in '+nm+' for '+C[1]+'.'); }
+  scheduleSave();
+}
+function openArrest(m){
+  openTalk(m);                                              // (talking to a guard while wanted turns into the arrest: see renderTalk)
+}
+function jailDays(b){ return Math.max(1, Math.min(7, Math.ceil(b/60))); }
+function arrestEnd(m, how){
+  const k = vkey(m.village), b = bounty[k]||0, nm = villageName(m.village[0], m.village[1]);
+  arrestOpen = false; arrestUntil = performance.now() + 25000;
+  if(how==='pay'){ gold -= b; delete bounty[k]; talkView = 'talk'; talkLine = 'Paid in full. Keep your hands to yourself in future.'; logJournal('Paid a fine of '+b+' gold in '+nm+'.'); }
+  else if(how==='jail'){ const d = jailDays(b); delete bounty[k]; closeTalk(); advanceHours((d-1)*24 + ((1.02-tod)%1)*24); skillToast(d+(d===1?' DAY':' DAYS')+' IN THE CELLS<br><small>'+nm+'</small>', true); logJournal('Served '+d+(d===1?' day':' days')+' in the cells of '+nm+'.'); }
+  else { bounty[k] = Math.min(2000, b + 60); addRep(m.village, -5); closeTalk(); for(const o of mobs) if(o.kind==='npc' && o.job==='guard' && !o.dead && Math.hypot(o.x-m.x,o.z-m.z)<40) o.angry = 60; logJournal('Resisted arrest in '+nm+'.'); }
+  scheduleSave();
+}
 // ---------- guilds (Daggerfall's way of becoming someone): join by asking a member, rise by doing the guild's work ----------
 // Three to start: the Fighters Guild (guards), the Mages Guild (scholars) and the Temple (clerics). Membership is for the whole land.
 // Standing in a guild comes only from work done for its members (never from skills, which lock nothing): six ranks, each asking more
@@ -7038,7 +7069,7 @@ function renderQuests(){
   const keys = new Set([...visitedV, ...Object.keys(villageRep).filter(k=>villageRep[k] && k[0]!=='h'), ...quests.filter(q=>q.village && q.village[0]!=='h').map(q=>vkey(q.village))]);
   const rows = [];
   for(const k of keys){ const [rx,rz] = k.split(',').map(Number), v = villageAt(rx,rz); if(!v || !v.houses) continue; const c = villageCentre(v), r = villageRep[k]||0;
-    rows.push({ r, d:Math.hypot(c[0]-player.x,c[1]-player.z), html:`<div class="skRow"><div class="skHead"><b>${villageName(rx,rz)}</b><span>${repWord(r)}${r ? ' ('+(r>0?'+':'')+r+')' : ''}</span></div><div class="skBar thin"><i style="width:${(r+100)/2}%"></i></div><div class="skDesc">${far(c[0],c[1])}</div></div>` }); }
+    rows.push({ r, d:Math.hypot(c[0]-player.x,c[1]-player.z), html:`<div class="skRow"><div class="skHead"><b>${villageName(rx,rz)}</b><span>${bounty[k] ? '<b style="color:#e06050">wanted: '+bounty[k]+'g</b> \u00b7 ' : ''}${repWord(r)}${r ? ' ('+(r>0?'+':'')+r+')' : ''}</span></div><div class="skBar thin"><i style="width:${(r+100)/2}%"></i></div><div class="skDesc">${far(c[0],c[1])}</div></div>` }); }
   rows.sort((p,q)=>p.d-q.d);
   if(rows.length){ h += '<div class="tkHd" style="margin-top:14px">STANDING</div>'; for(const R of rows) h += R.html; }
   return h;
@@ -7086,7 +7117,9 @@ function openTalk(m){
   if(document.pointerLockElement) document.exitPointerLock();
   return true;
 }
-function closeTalk(){ talkNpc = null; craftOpen = false; document.getElementById('talkMenu').classList.remove('show'); scheduleSave(); }
+function closeTalk(){
+  if(arrestOpen && talkNpc){ arrestEnd(talkNpc, 'resist'); return; }      // walking away from an arrest is resisting it
+  talkNpc = null; craftOpen = false; document.getElementById('talkMenu').classList.remove('show'); scheduleSave(); }
 function sellPrice(id){ return Math.max(1, Math.floor((PRICE[id]||1)*0.4*(1 + repOf(talkNpc && talkNpc.village)/400)*(isClass('thief') ? 1.15 : 1))); }
 function renderTalk(){
   const m = talkNpc; if(!m) return;
@@ -7096,6 +7129,14 @@ function renderTalk(){
   let h = '';
   document.getElementById('talkGold').textContent = gold + ' gold \u00b7 ' + repWord(repOf(m.village));
   const shunned = repOf(m.village) <= -30;
+  if(talkView==='talk' && m.job==='guard' && bountyOf(m.village)>0 && !talkOffer){      // speak to a guard while wanted and he arrests you
+    talkView = 'arrest'; arrestOpen = true; talkLine = `Halt! You are wanted in ${villageName(m.village[0], m.village[1])}. The fine is ${bountyOf(m.village)} gold. Pay it, or come quietly.`; }
+  if(talkView==='arrest'){ const b = bountyOf(m.village), d = jailDays(b);
+    el.innerHTML = `<div class="tkLine">\u201c${talkLine}\u201d</div><div class="tkBtns"><button data-a="finepay" ${gold<b ? 'disabled' : ''}>PAY THE FINE (${b}g)</button><button data-a="jail">GO TO THE CELLS (${d} ${d===1?'day':'days'})</button><button data-a="resist">RESIST</button></div><div class="skNote" style="margin-top:8px">Days in the cells pass in a moment, but any work you have taken keeps its time limit.</div>`;
+    return; }
+  if(talkView==='talk' && bountyOf(m.village)>0 && !talkOffer){
+    el.innerHTML = `<div class="tkLine">\u201cYou are wanted here. I'll have nothing to do with you until you have answered to the guard.\u201d</div><div class="tkBtns"><button data-a="bye">LEAVE</button></div>`;
+    return; }
   if(talkView==='talk'){
     h += `<div class="tkLine">\u201c${shunned ? 'We don\'t deal with your kind here. Leave.' : talkLine}\u201d</div><div class="tkBtns">`;
     if(talkOffer) h += `<button data-a="accept">ACCEPT</button><button data-a="decline">DECLINE</button>`;
@@ -7134,7 +7175,11 @@ function renderTalk(){
 function talkAction(a){
   const m = talkNpc; if(!m) return;
   if(a==='bye'){ closeTalk(); return; }
-  if(a==='trade'){ talkView = 'trade'; }
+  if(a==='finepay'){ if(gold>=bountyOf(m.village)) arrestEnd(m, 'pay'); }
+  else if(a==='jail'){ arrestEnd(m, 'jail'); return; }
+  else if(a==='resist'){ arrestEnd(m, 'resist'); return; }
+  else if(a==='bye'){ closeTalk(); return; }
+  else if(a==='trade'){ talkView = 'trade'; }
   else if(a==='back'){ talkView = 'talk'; }
   else if(a==='news'){ talkLine = talkNews(m); }
   else if(a==='join'){ const gid = guildOfJob(m.job); if(gid && guildRank(gid)<0){ guildJoin(gid); talkLine = gid==='fighters' ? 'Then you are one of us. Do the work we give you, and the Guild will see you rise.' : gid==='mages' ? 'Your name is in the book. Bring us what we ask for, and the Guild will open its doors wider.' : 'The gods take note of you. Serve, and you will be raised.'; } }
@@ -7468,9 +7513,9 @@ function npcHit(m, dmg){                                         // you hit a vi
   m.hp -= dmg; m.hurtT = 0.3; m.iframe = 0.3;
   const dx=m.x-player.x, dz=m.z-player.z, d=Math.hypot(dx,dz)||1; m.kx = dx/d*0.18; m.kz = dz/d*0.18;
   if(m.job==='guard') m.angry = 30; else { m.fleeT = 5; m.path = null; m.replanT = 0; }
-  if(m.village && !(m.angryRepT>0)){ addRep(m.village, -5); m.angryRepT = 20; }
+  if(m.village && !(m.angryRepT>0)){ addRep(m.village, -5); m.angryRepT = 20; crime(m.village, 'assault'); }
   for(const o of mobs) if(o.kind==='npc' && o.job==='guard' && !o.dead && Math.hypot(o.x-m.x,o.z-m.z)<32) o.angry = 30;
-  if(m.hp<=0){ m.dead = true; m.deadT = 0; m.path = null; if(m.village) addRep(m.village, -25); }
+  if(m.hp<=0){ m.dead = true; m.deadT = 0; m.path = null; if(m.village){ addRep(m.village, -25); crime(m.village, 'murder'); } }
 }
 // open a closed door the villager is about to walk through, and shut it again once they're past
 function npcDoors(m){
@@ -7530,6 +7575,8 @@ function updateNpc(m, dt){
     const dxp=player.x-m.x, dzp=player.z-m.z;
     if(Math.hypot(dxp,dzp)<1.5 && Math.abs(player.y-m.y)<1.6){ m.moving=false; m.yaw=Math.atan2(dxp,-dzp); if(m.atkCd<=0){ hurt(3); m.atkCd = 1.1; m.swing = 1; } }
     else walking = npcChase(m, player.x, player.y, player.z, dt);
+  } else if(guard && bountyOf(m.village)>0 && !craftOpen && !dead && performance.now()>arrestUntil && Math.hypot(player.x-m.x,player.z-m.z)<14 && Math.abs(player.y-m.y)<4){      // you are wanted here: the guard comes for you
+    if(Math.hypot(player.x-m.x,player.z-m.z)<2.4){ m.moving = false; openArrest(m); } else walking = npcChase(m, player.x, player.y, player.z, dt);
   } else if(m.foe){                                                                    // a hostile creature in the village
     const o = m.foe, dxp=o.x-m.x, dzp=o.z-m.z;
     if(Math.hypot(dxp,dzp)<1.6 && Math.abs(o.y-m.y)<1.6){
@@ -9275,6 +9322,9 @@ function updateTreeFalls(dt){
 }
 function breakNow(hit, tool){
   const natural = !placedDel(hit.x,hit.y,hit.z);
+  if(natural && worldGen>=2 && !IS_PLANT[hit.b] && !IS_LEAF[hit.b] && !IS_LOG[hit.b] && hit.b!==TALL_GRASS && !IS_FLOWER[hit.b] && !isUnder(hit.z)){      // smashing a village's buildings
+    const rx = Math.floor(hit.x/VREG), rz = Math.floor(hit.z/VREG), v = villageAt(rx,rz);
+    if(v && v.rects && hit.y > colInfo(hit.x,hit.z).h && inVillageRects(v,hit.x,hit.z,0) && witnessAt(hit.x,hit.y,hit.z)){ crime([rx,rz], 'vandal'); addRep([rx,rz], -1); } }
   if(natural && tool && TOOLS[tool].kind==='pick' && REQ_TIER[hit.b]!==undefined){
     trainSkill('mining');
     // a skilled miner gets more out of every block: up to two extra of whatever it gives (cobble, coal, ore), and sometimes a lump of coal from plain rock
@@ -9454,8 +9504,14 @@ function renderChest(){
     }
   };
   const items = chestOpen.items;
-  fill(document.getElementById('chestGrid'), items, 18, id=>{ if(id===GOLD){ gold += items[id]; skillToast('+'+items[id]+' gold'); } else inv[id] = Math.min(999, (inv[id]||0) + items[id]); delete items[id]; if(!HOTBAR.includes(id)){ const e = HOTBAR.indexOf(0); if(e>=0) HOTBAR[e] = id; } });
+  fill(document.getElementById('chestGrid'), items, 18, id=>{ chestTheft(id, items[id]); if(id===GOLD){ gold += items[id]; skillToast('+'+items[id]+' gold'); } else inv[id] = Math.min(999, (inv[id]||0) + items[id]); delete items[id]; if(!HOTBAR.includes(id)){ const e = HOTBAR.indexOf(0); if(e>=0) HOTBAR[e] = id; } });
   fill(document.getElementById('chestInv'), inv, 27, id=>{ items[id] = (items[id]||0) + inv[id]; inv[id] = 0; const hb = HOTBAR.indexOf(id); if(hb>=0) HOTBAR[hb] = 0; });
+}
+// taking from a chest in a villager's house is theft: a crime if someone is near enough to see, practice for a sneak if not
+function chestTheft(id, n){
+  if(!chestOpen || worldGen<2) return; const { x, y, z } = chestOpen, rx = Math.floor(x/VREG), rz = Math.floor(z/VREG), v = villageAt(rx,rz);
+  if(!v || !v.chests || v.chests.get(x+','+y+','+z)!=='house') return;
+  if(witnessAt(x,y,z)) crime([rx,rz], 'theft', Math.round((id===GOLD ? n : (PRICE[id]||2)*n)/2)); else trainSkill('stealth');
 }
 // a broken chest spills what it held
 function spillChest(x,y,z){

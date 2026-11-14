@@ -546,3 +546,9 @@ DONE  GUILDS: Fighters Guild (guards), Mages Guild (scholars), Temple (clerics).
       Perks per rank: members paid +8% for guild work; lessons from that guild 10% cheaper and 8 skill points further; Mages: spells 10% cheaper
       and +2 magicka; Temple: healing 15% cheaper (to 90%). Shown under STANDING on the sheet; joins and promotions go in the journal. Saved.
       Skills gate nothing (his rule): rank needs only standing. tests/guild.py added (35 scripts in the suite). Screenshot: proof/guilds_standing.png.
+DONE  THE LAW: a crime a villager sees puts a bounty on you in that village (assault 40, murder 300, theft from a house chest 30 + half its
+      worth, smashing buildings 6 a block). Witness range is 10 blocks, less when sneaking; an unseen theft trains Stealth instead.
+      While wanted: villagers refuse to talk business, and a guard who spots you within 14 blocks walks up and arrests you:
+      PAY THE FINE / GO TO THE CELLS (1 day per 60 gold, up to 7; days pass at once, quest timers keep running) / RESIST (+60 bounty,
+      guards attack). Closing the window counts as resisting. Bounty shows on the STANDING tab and everything goes in the journal. Saved.
+      Homesteads have no law. tests/law.py added (36 scripts in the suite). Screenshot: proof/arrest.png.

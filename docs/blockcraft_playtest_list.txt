@@ -35,6 +35,12 @@ GUILDS (ask a guard, a scholar or a cleric to join; see STANDING on the sheet)
 [ ] Are the perks worth having (better pay, cheaper lessons, cheaper spells and healing)? What else should rank give?
 [ ] Should there be a Thieves Guild, and what would its work be?
 
+THE LAW (hit a villager, or take from a house chest with someone nearby, then wait for a guard)
+[ ] Does being arrested feel fair? Fines: assault 40, theft 30 plus half the value, murder 300.
+[ ] Cells: 1 day per 60 gold of bounty, up to 7. Too light, too harsh?
+[ ] Sneaking and stealing unseen: does it feel like a thief's game?
+[ ] Is it annoying that breaking a village wall counts as a crime when someone sees it?
+
 SMALLER THINGS
 [ ] No class picker at the start: does a fresh character feel right without one?
 [ ] Adamantite is now the top metal, mithril below it.

@@ -24,7 +24,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 
 ## Run
 
-- `bash suite.sh`: the regression suite (36 scripts, about 20 minutes). Each line prints `name rc=<exit code>`
+- `bash suite.sh`: the regression suite (37 scripts, about 25 minutes). Each line prints `name rc=<exit code>`
   and the script's last output line. A failure is a non-zero exit, `ERR` (traceback), or page errors in the
   printed list. Many scripts also print values meant to be read, not only asserted.
 - `python3 gpu.py`: renders 6 scenes with the CPU renderer and the GPU renderer at the same size and fails if
@@ -42,6 +42,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 | gpu | GPU picture matches the CPU picture |
 | guild | guilds: joining, perks, ranks from guild work, journal, save and reload |
 | law | the law: bounty from witnessed crimes, refusal, arrest, fine / cells / resist, unseen theft, save and reload |
+| art | artifacts: the four named weapons and tools, their powers, and that most delve shrines hold one |
 | delve | delves: lifted world shape, every chamber and the master reachable on foot, master kill, chests, quest, map entry |
 | sh2, sh4, sh5, sc, bb | stairs, slabs and other shaped blocks, recipes |
 | fe | fences |

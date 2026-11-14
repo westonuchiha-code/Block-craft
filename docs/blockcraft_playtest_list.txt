@@ -32,6 +32,10 @@ THE HERMIT (in the Black Hideout: chamber 6, a camp with a bedroll and a lamp on
 [ ] Is finding a friendly voice down there a good moment? Are his prices and goods useful at that depth?
 [ ] His two kinds of work: kill the master below, or bring plain goods.
 
+ARTIFACTS (most delve shrines hold one in the first chest: Emberbrand, Stormcaller, Lifedrinker, Deepdelver)
+[ ] Is a named weapon a good enough prize for clearing a delve? Are they too strong or too weak next to adamantite?
+[ ] The always-burning and always-crackling blades: do they look good, or too busy?
+
 GUILDS (ask a guard, a scholar or a cleric to join; see STANDING on the sheet)
 [ ] Does joining and rising feel like becoming someone? Is two or three jobs a rank about right, slowing as you go up?
 [ ] Are the perks worth having (better pay, cheaper lessons, cheaper spells and healing)? What else should rank give?

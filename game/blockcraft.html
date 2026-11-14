@@ -3827,7 +3827,7 @@ let wkHeld = 0;                                                     // (in a ren
 function heldBoxes(id){
   if(!id) return [];
   const B = (x0,y0,z0,x1,y1,z1,c)=>({ x0,y0,z0,x1,y1,z1, solid:c });
-  const WOODC = [150,110,60], T = TOOLS[id], HEADC = T ? ({1:[176,134,76], 2:[136,136,144], 3:[196,198,206], 4:[176,210,248], 5:[72,158,118]})[T.tier] : null;
+  const WOODC = [150,110,60], T = TOOLS[id], HEADC = T ? (T.rgb ? T.rgb[1] : ({1:[176,134,76], 2:[136,136,144], 3:[196,198,206], 4:[176,210,248], 5:[72,158,118]})[T.tier]) : null;
   if(T){
     if(T.kind==='sword') return [B(-6.5,11.4,0.5,-5.5,12.6,3,WOODC), B(-7.6,11.2,3,-4.4,12.8,3.8,[90,70,40]), B(-6.35,11.2,3.8,-5.65,12.8,14,HEADC)];
     const haft = B(-6.5,11.5,-1,-5.5,12.5,10,WOODC);
@@ -6494,6 +6494,25 @@ const TOOLS = {
   [STONE_HOE]:    { kind:'hoe',    tier:2, speed:1,   dur:131 }
 };
 METALS.forEach((M,t)=>['pick','axe','shovel','sword','hoe'].forEach((k,i)=>{ TOOLS[MT(t,i)] = { kind:k, tier:M.tier, speed:1, dur:M.dur }; }));
+// ---- artifacts: named things of power, found only on the shrines at the bottom of delves (never made, never sold in shops) ----
+// Each is a tool like any other, with its own colours and one power. rgb: head light / mid / dark.
+const EMBERBRAND = 1138, STORMCALLER = 1139, LIFEDRINKER = 1140, DEEPDELVER = 1141;
+const ARTIFACT = {
+  [EMBERBRAND]:  { name:'Emberbrand',  kind:'sword', tier:4, dur:1400, fx:'fire',  rgb:[[255,214,120],[232,112,36],[130,40,14]],  lore:'A blade that never cools. Every blow burns (+3).' },
+  [STORMCALLER]: { name:'Stormcaller', kind:'sword', tier:4, dur:1400, fx:'shock', rgb:[[236,246,255],[120,170,255],[50,70,160]], lore:'Lightning sleeps in the steel. Every blow shocks (+4).' },
+  [LIFEDRINKER]: { name:'Lifedrinker', kind:'sword', tier:4, dur:1400, fx:'drain', rgb:[[230,150,170],[150,30,60],[60,10,26]],   lore:'It gives back a little of what it takes: half a heart mended with every blow.' },
+  [DEEPDELVER]:  { name:'Deepdelver',  kind:'pick',  tier:5, dur:3000, fx:'',      rgb:[[250,236,160],[214,170,60],[120,84,20]],  lore:'A pick of the old builders. It bites any rock and all but never wears out.' } };
+const ARTIFACT_IDS = Object.keys(ARTIFACT).map(Number);
+for(const id of ARTIFACT_IDS){ const A = ARTIFACT[id]; NAMES[id] = A.name; TOOLS[id] = { kind:A.kind, tier:A.tier, speed:1, dur:A.dur, rgb:A.rgb, art:1 }; }
+// what an artifact adds to a blow
+function artifactHit(m){
+  const id = HOTBAR[sel], A = ARTIFACT[id]; if(!A || !(inv[id]>0) || !A.fx) return 0;
+  const p = mobMid(m);
+  if(A.fx==='fire'){ fx.push({ kind:'boom', x:p[0], y:p[1], z:p[2], age:0, seed:Math.random()*1000, size:0.4 }); return 3; }
+  if(A.fx==='shock'){ fx.push({ kind:'bolt', pts:[[p[0],p[1]+0.9,p[2]], p, [p[0]+(Math.random()-0.5), m.y, p[2]+(Math.random()-0.5)]], age:0 }); return 4; }
+  if(A.fx==='drain'){ if(health>0 && health<maxHP()){ health = Math.min(maxHP(), health+1); vitalKey = ''; } return 1; }
+  return 0;
+}
 // which tool kind mines each block faster
 const KIND = { [SIGNPOST]:'axe', [SPELLMAKER]:'pick', [IRON_ORE]:'pick', [ADAM_ORE]:'pick', [MITH_ORE]:'pick', [ANDESITE]:'pick', [GRANITE]:'pick', [DIORITE]:'pick', [TUFF]:'pick', [MOSSROCK]:'pick', [COOK_TABLE]:'pick', [FURNACE]:'pick', [STONE_BRICK]:'pick', [MOSSY_BRICK]:'pick', [FLAGSTONE]:'pick', [PILLAR]:'pick', [CARVED]:'pick', [CUTTER]:'pick', [CHEST]:'axe', [FLESH]:'pick', [FLESH2]:'pick', [BONE]:'pick', [RUST]:'pick', [LAMP]:'pick', [GATE]:'pick', [EMBER]:'pick', [ICE]:'pick', [SANDSTONE]:'pick', [PALM_LOG]:'axe', [PALM_LEAF]:'sword', [BARREL]:'axe', [CRATE]:'axe', [SHROOM_STEM]:'axe', [CAP_R]:'axe', [CAP_T]:'axe', [DARKWOOD]:'axe', [SLATE]:'pick', [PLASTER]:'pick', [FRAME]:'axe', [FRAME_X]:'axe', [FRAME_D1]:'axe', [FRAME_D2]:'axe', [BEAM]:'axe', [SHINGLE]:'axe', [BOOKSHELF]:'axe', [PATH]:'shovel', [HEDGE]:'sword', [STONE]:'pick', [COBBLE]:'pick', [COAL]:'pick', [LOG]:'axe', [PLANKS]:'axe', [CRAFT_TABLE]:'axe',
                [TILLED]:'shovel', [TILLED_WET]:'shovel', [DIRT]:'shovel', [GRASS]:'shovel', [SNOW]:'shovel', [SAND]:'shovel', [GRAVEL]:'shovel', [LEAVES]:'sword' };
@@ -6772,6 +6791,7 @@ const PRICE = {};
   P(CATNIP_SEED, 20); P(CRAFT_TABLE, 8); P(COOK_TABLE, 25); P([FIRE_POTION, BOLT_POTION], 40); P(EMBER, 60); P(CROSSBOW, 150);
   P([WOOD_PICK,WOOD_AXE,WOOD_SHOVEL,WOOD_HOE], 15); P(WOOD_SWORD, 20); P([STONE_PICK,STONE_AXE,STONE_SHOVEL,STONE_HOE], 35); P(STONE_SWORD, 45);
   P(IRON_ORE, 8); P(IRON_INGOT, 15); P(MITH_ORE, 30); P(MITH_INGOT, 55); P(ADAM_ORE, 70); P(ADAM_INGOT, 120);
+  for(const id of ARTIFACT_IDS) PRICE[id] = 600;
   METALS.forEach((M,t)=>[3,3,1,2,2].forEach((n,i)=>{ PRICE[MT(t,i)] = Math.round(PRICE[M.ingot]*n*1.4 + 8 + (i===3 ? 10 : 0)); }));
   ARMOR_MATS.forEach((M,m)=>[5,8,7,4].forEach((n,k)=>{ PRICE[AR(m,k)] = Math.round((PRICE[M.mat]||10)*n*1.3 + 10); }));
   for(let w=0;w<4;w++){ P(tableId(w), 12); P(chairId(w,0), 8); P(benchId(w,0), 10); P(doorId(w,0,0,0), 10); P(fenceId(w,0), 3); P(gateId(w,0,0), 6); }
@@ -9277,7 +9297,7 @@ function punch(){
   const hit = target();
   { const {f} = camVectors(), mh = ratRay(player.x, player.y+1.6, player.z, f[0],f[1],f[2], 3.2);
     if(mh && (!hit || mh.t < Math.hypot(hit.x+0.5-player.x, hit.y+0.5-player.y-1.6, hit.z+0.5-player.z)-0.4)){      // a rat is in the way: hit it, not the block behind
-      { const armed = !!(TOOLS[HOTBAR[sel]] && inv[HOTBAR[sel]]>0); mobHit(mh.m, playerAttackDamage() + swordSpellHit(mh.m)); trainSkill(armed ? 'weapons' : 'unarmed'); } crack = null; return;
+      { const armed = !!(TOOLS[HOTBAR[sel]] && inv[HOTBAR[sel]]>0); mobHit(mh.m, playerAttackDamage() + swordSpellHit(mh.m) + artifactHit(mh.m)); trainSkill(armed ? 'weapons' : 'unarmed'); } crack = null; return;
     } }
   if(!hit || hit.b===BEDROCK || hit.b===OBSIDIAN){ crack = null; return; }
   const key = hit.x+','+hit.y+','+hit.z;
@@ -9518,7 +9538,9 @@ function chestItems(x,y,z){
   if(!c){
     c = {};
     const v = worldGen>=2 ? villageAt(Math.floor(x/VREG), Math.floor(z/VREG)) : null, tier = isUnder(z) ? 'under' : (v && v.chests.get(key)) || (worldGen>=4 && (()=>{ const P = cryptPlan(Math.floor(x/CRS), Math.floor(z/CRS)); return P && P.chestSet.has(key) ? 'crypt' : null; })()) || (worldGen>=5 && (()=>{ const P = delvePlan(Math.floor(x/DRS), Math.floor(z/DRS)); return P ? P.chests.get(key) : null; })());
-    if(tier){ const rnd = vRng(Math.floor(h3(x,y,z,SEED+440)*4294967295)); for(const [id,lo,hi,p] of LOOT[tier]) if(rnd()<p) c[id] = lo+Math.floor(rnd()*(hi-lo+1)); }
+    if(tier){ const rnd = vRng(Math.floor(h3(x,y,z,SEED+440)*4294967295)); for(const [id,lo,hi,p] of LOOT[tier]) if(rnd()<p) c[id] = lo+Math.floor(rnd()*(hi-lo+1));
+      if(tier==='delve2'){ const P = delvePlan(Math.floor(x/DRS), Math.floor(z/DRS)), c0 = P && P.nodes[P.heart].chests[0];      // the prize of a delve: on most shrines lies a thing of power
+        if(c0 && c0[0]===x && c0[1]===y && c0[2]===z && h3(x,y,z,SEED+441)<0.7) c[ARTIFACT_IDS[Math.floor(h3(x,y,z,SEED+442)*ARTIFACT_IDS.length)]] = 1; } }
     chests.set(key,c); scheduleSave();
   }
   return c;
@@ -9553,7 +9575,7 @@ function renderChest(){
     }
   };
   const items = chestOpen.items;
-  fill(document.getElementById('chestGrid'), items, 18, id=>{ chestTheft(id, items[id]); if(id===GOLD){ gold += items[id]; skillToast('+'+items[id]+' gold'); } else inv[id] = Math.min(999, (inv[id]||0) + items[id]); delete items[id]; if(!HOTBAR.includes(id)){ const e = HOTBAR.indexOf(0); if(e>=0) HOTBAR[e] = id; } });
+  fill(document.getElementById('chestGrid'), items, 18, id=>{ chestTheft(id, items[id]); if(ARTIFACT[id]){ skillToast(NAMES[id].toUpperCase()+'<br><small>'+ARTIFACT[id].lore+'</small>', true); logJournal('Took up '+NAMES[id]+'. '+ARTIFACT[id].lore); } if(id===GOLD){ gold += items[id]; skillToast('+'+items[id]+' gold'); } else inv[id] = Math.min(999, (inv[id]||0) + items[id]); delete items[id]; if(!HOTBAR.includes(id)){ const e = HOTBAR.indexOf(0); if(e>=0) HOTBAR[e] = id; } });
   fill(document.getElementById('chestInv'), inv, 27, id=>{ items[id] = (items[id]||0) + inv[id]; inv[id] = 0; const hb = HOTBAR.indexOf(id); if(hb>=0) HOTBAR[hb] = 0; });
 }
 // taking from a chest in a villager's house is theft: a crime if someone is near enough to see, practice for a sneak if not
@@ -10743,7 +10765,7 @@ function toolKind(id){ return ({pick:0, axe:1, shovel:2, sword:3, hoe:4})[TOOLS[
 function buildToolSprite(id){
   const kind=toolKind(id);
   const def = TOOL_MAPS[kind], MAP = def.rowsData;
-  const hr = HEAD_RGB[TOOLS[id].tier] || WOOD_HEAD_RGB;
+  const hr = TOOLS[id].rgb || HEAD_RGB[TOOLS[id].tier] || WOOD_HEAD_RGB;
   const pal = { D:WOOD_RGB[2], T:WOOD_RGB[0], d:hr[2], M:hr[1], L:hr[0], G:WOOD_RGB[1], P:WOOD_RGB[2], O:OUTLINE_RGB };
   const sp0 = new Array(256).fill(null);
   for(let r=0;r<MAP.length;r++) for(let c=0;c<MAP[r].length;c++){ const ch=MAP[r][c]; if(ch!=='.') sp0[(r+def.off)*16+c] = pal[ch]; }
@@ -10984,6 +11006,10 @@ function drawHandInner(){
   if(count>0){
     // holding something: held exactly as Minecraft holds it (see heldModel)
     drawHeldMC(ctx, id, m, sp, bob);
+    if(ARTIFACT[id] && (ARTIFACT[id].fx==='fire' || ARTIFACT[id].fx==='shock')){                // a blade of fire or storm never goes out
+      const M = heldMatrixMC(sp, bob), a = heldPoint(M, 6.5/16, 6.5/16, 0.5), b = heldPoint(M, 14.5/16, 15/16, 0.5);
+      drawSpellAura(ARTIFACT[id].fx, a[0], a[1], b[0], b[1], 0.09*(a[2]+b[2])/2);
+    } else
     if(swordSpell && spell && spellCharges>0 && TOOLS[id] && TOOLS[id].kind==='sword'){      // the loaded spell runs along the blade, from the guard to the tip
       const M = heldMatrixMC(sp, bob), a = heldPoint(M, 6.5/16, 6.5/16, 0.5), b = heldPoint(M, 14.5/16, 15/16, 0.5);
       drawSpellAura(spell, a[0], a[1], b[0], b[1], 0.13*(a[2]+b[2])/2);

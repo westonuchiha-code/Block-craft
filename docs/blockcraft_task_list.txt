@@ -570,3 +570,8 @@ DONE  BANDIT HIDEOUTS: a third kind of delve (about 28% of them; names end Den /
       Covered by tests/delve.py. Screenshot: proof/bandit_hideout.png.
 NOTE  Adding the third kind reshuffled which delve is which: on seed 12345 the delve nearest spawn (x 100, z -198) is now "the Black Hideout",
       a bandit den. Layouts did not change, only who lives there.
+DONE  ARTIFACTS: four named things of power, found only on delve shrines (70% of shrines hold one, in the first chest; never crafted or sold):
+      Emberbrand (sword, every blow burns +3, the blade is always aflame), Stormcaller (sword, +4 shock, always crackling),
+      Lifedrinker (sword, +1 and mends half a heart a blow), Deepdelver (top-tier pickaxe, 3000 uses). Own colours in the hand, on the hotbar
+      and in third person. Taking one shows its lore and writes it in the journal. Worth 600 gold. tests/art.py (37 scripts in the suite).
+      Screenshot: proof/artifacts_in_hand.png.

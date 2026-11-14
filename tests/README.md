@@ -24,7 +24,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 
 ## Run
 
-- `bash suite.sh`: the regression suite (34 scripts, about 15 minutes). Each line prints `name rc=<exit code>`
+- `bash suite.sh`: the regression suite (33 scripts, about 15 minutes). Each line prints `name rc=<exit code>`
   and the script's last output line. A failure is a non-zero exit, `ERR` (traceback), or page errors in the
   printed list. Many scripts also print values meant to be read, not only asserted.
 - `python3 gpu.py`: renders 6 scenes with the CPU renderer and the GPU renderer at the same size and fails if
@@ -47,9 +47,9 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 | cs | corner stairs with the multi-core renderer |
 | fu | furniture |
 | mg, mg2 | magic: magicka, casting, spell charges, saving |
-| gun | ranged weapons: still fires the leftover pistol code as well as the crossbow; update it if the pistol code is deleted |
+| gun | ranged weapons: the crossbow (and that the pistol is gone) |
 | old | old worlds (no villages) still load |
-| og2, tp3, wk2, wk5, wk7 | multi-core CPU renderer: worker frames vs single-thread frames |
+| og2, tp3, wk2, wk5, wk7 | multi-core CPU renderer: worker frames vs single-thread frames (fail on any difference or if workers make no frames) |
 | mino | minotaur |
 | ch | chests and their contents through save/load |
 | uw2, us3, bt | the Underworld: portal, lamps, chests, render |

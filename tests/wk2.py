@@ -1,10 +1,11 @@
 from playwright.sync_api import sync_playwright
 CMP="""async ()=>{
   const wait=async()=>{ const f=WK.frames||0; for(let i=0;i<400 && (WK.frames||0)<f+3;i++) await new Promise(r=>setTimeout(r,25)); };
-  await wait();
+  const f0=WK.frames||0; await wait(); if((WK.frames||0)<f0+3) throw new Error('workers produced no new frames (game loop frozen? paused='+paused+' craftOpen='+craftOpen+')');
   const a=new Uint8ClampedArray(img.data), da=new Float32Array(depthBuf);
   const on=WK.on; WK.on=false; R_Y0=0; R_STEP=1; render(); WK.on=on;
   let diff=0, dd=0; for(let i=0;i<a.length;i++) if(a[i]!==img.data[i]) diff++; for(let i=0;i<da.length;i++) if(da[i]!==depthBuf[i]) dd++;
+  if(typeof diff==='number' && diff>0) throw new Error('worker frame differs from the single-thread frame in '+diff+' values');
   return [diff, dd, WK.on, WK.err||null];
 }"""
 with sync_playwright() as p:
@@ -12,7 +13,7 @@ with sync_playwright() as p:
     ctx=b.new_context(viewport={'width':1100,'height':560})
     pg=ctx.new_page(); errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
     pg.goto('file:///home/claude/blockcraft_prototype.html'); pg.wait_for_timeout(2000)
-    pg.fill('#newName','wk'); pg.fill('#newSeed','12345'); pg.click('#newBtn'); pg.wait_for_timeout(3500)
+    pg.fill('#newName','wk'); pg.fill('#newSeed','12345'); pg.click('#newBtn'); pg.wait_for_timeout(3500); pg.evaluate("()=>{ if(document.getElementById('classMenu').classList.contains('show')){ classPick='warrior'; confirmClass(); } }"); pg.wait_for_timeout(500)
     # freeze the clock and the world
     pg.evaluate("()=>{ const t=performance.now(); performance.now=()=>t; update=function(){}; tod=0.2; const raf=requestAnimationFrame; window.requestAnimationFrame=cb=>raf(()=>cb(t)); }")
     print('plain', pg.evaluate(CMP))

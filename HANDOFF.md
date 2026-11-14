@@ -52,7 +52,7 @@ a bestiary, a spellmaker, travel by wagon, danger that rises with distance).
 
 ## 3. Current state (2026-11-14)
 
-All 34 tests in the suite pass on this build. Recent work, newest first:
+All 33 tests in the suite pass on this build. Recent work, newest first:
 1. **GPU renderer (WebGL2), full resolution.** The 3D picture used to be drawn per-pixel on the CPU at 288×180 by
    default (that is why the resolution was low). It is now a fragment-shader port of the same renderer and draws
    at the window's real resolution (e.g. 1728×1080 on a 1080p screen, capped at 2560 wide). Verified pixel-for-pixel
@@ -75,12 +75,11 @@ runs before optimising.
 
 - **GPU speed check** on his hardware; if needed add a resolution-scale setting (generic PC option).
 - **Aspect:** DONE 2026-11-14. The logical picture is 16:9 (`RES_LEVELS`); adamantite confirmed below mithril.
-- **`tp3` test** prints 153,880 differing values between worker-thread and single-thread CPU renders. Pre-existing
-  (same in builds before this work); `wk2`/`wk5`/`wk7` pass. Investigate.
+- **`tp3`/`og2` worker differences:** RESOLVED 2026-11-14. Test artefact (class picker left open, loop frozen). Tests fixed; 0 differences.
 - **Windows / Steam port** (planned, not started; e.g. Electron / Tauri / NW.js wrapper; saves currently live in
   `localStorage`).
-- Cleanup: leftover pistol code (`PISTOL` id 229, its model, firing branch, `GUN` entry, a price in the shop table)
-  can be deleted; keep the save-load line that strips it from old saves. The `gun` test's label still says "pistol".
+- Pistol cleanup: DONE 2026-11-14 (only the id and the save-load strip remain).
+- Held items in third person still use simple boxes (`heldBoxes`); first person was rebuilt (see trap 1).
 - Possibly open, check the code first: villages in snow and desert biomes; the adamantite/mithril order
   (confirm with him); a further efficiency pass.
 - `docs/blockcraft_task_list.txt` is a **chronological log**. Older `NEXT:` lines are mostly done; verify against
@@ -88,10 +87,11 @@ runs before optimising.
 
 ## 5. Traps that already cost time (read before editing)
 
-1. **Held items.** Every handheld tool uses ONE transform (`heldMatrixMC` / `drawHeldMC`, ~line 10357), copied from
-   Minecraft: arm translate (0.56, −0.52, −0.72); swing per ItemInHandRenderer; display translate (1.13, 3.2, 1.13)/16,
-   rotate Z 25° then Y **+90°** (Minecraft writes −90; our sprite x runs the other way), scale 0.68; 70° hand camera.
-   All tool sprites follow Minecraft's layout (handle bottom-left, head/tip top-right). Do not add per-tool tuning.
+1. **Held items.** Everything in the first-person hand goes through one pipeline: `heldModel(id)` (quads) → `drawHeldPosed` →
+   `drawHeldQuads`, with Minecraft's transforms. Tools and flat items: arm translate (0.56, −0.52, −0.72); swing per ItemInHandRenderer;
+   display translate (1.13, 3.2, 1.13)/16, rotate Z 25° then Y **+90°** (Minecraft writes −90; our sprite x runs the other way), scale 0.68.
+   Blocks and shaped blocks: rotate Y 45°, scale 0.4 (shaped ones are baked from `shapedHit`, centred, lifted 0.15). Empty hand:
+   `heldMatrixArm` (renderPlayerArm). 70° hand camera. The resting picture is cached (`HELD_SPR`). Do not add per-item pose tuning.
 2. **No phone layouts.** Headless Chrome without touch emulation stretched the old view over a tall screen, and
    "fixes" were built for a layout the user never sees. Test in landscape (e.g. 1100×560, 1920×1080).
 3. **Duplicate function names silently override** (one script, function declarations hoist). That is how
@@ -117,7 +117,7 @@ runs before optimising.
 
 - Needs Python 3 + Playwright and Chrome (tests use `/usr/bin/google-chrome` and the game at
   `/home/claude/blockcraft_prototype.html`; see `tests/README.md` to repoint them).
-- **Suite:** `bash tests/suite.sh` (34 scripts, ~15 min). It is a regression/smoke harness: a test fails on a
+- **Suite:** `bash tests/suite.sh` (33 scripts, ~15 min). It is a regression/smoke harness: a test fails on a
   non-zero exit, a Python traceback or page errors; many also print values to read. `gpu.py` compares GPU vs CPU
   pictures in 6 scenes and fails on mismatch. `sv.py` checks save → reload keeps edits.
 - **Conventions:** worlds are created via `#newName` / `#newSeed` / `#newBtn`, then the class picker must be

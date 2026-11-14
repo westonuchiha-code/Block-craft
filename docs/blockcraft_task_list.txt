@@ -451,3 +451,27 @@ DONE  Adamantite confirmed BELOW mithril (tier order unchanged). Ore depth: adam
       Measured over 900,000 cells per band: y 1-10 adamantite 688 / mithril 1003; y 11-20 adamantite 2278.
       NOTE: this is my reading of "same level in lower quantities"; existing worlds lose some unmined deep adamantite.
 OPEN  GPU speed on real hardware; tp3/og2 worker-vs-single difference counts; pistol code cleanup.
+
+== HELD ITEMS IN 3D, HAND MAGIC, PISTOL CLEANUP, TEST FIXES (2026-11-14) ==
+DONE  HELD ITEMS: everything in the hand now goes through ONE pipeline (heldModel -> drawHeldPosed -> drawHeldQuads) with Minecraft's
+      first-person transforms and the 70-degree hand camera. No more flat hotbar icons floating, no more fake isometric cube.
+      - blocks: the real block with the world's textures on every face (block.json: rotate Y 45, scale 0.4; lower half sits below the picture, as in Minecraft)
+      - shaped blocks (stairs, slabs, fences, gates, doors, beds, lanterns, windows, furniture...): the world's own boxes and colours,
+        baked from shapedHit, so they are the same object you place. Doors = both halves, beds = foot + head. Centred, sized to sit like a block,
+        held 0.15 higher (heldModel sets q.lift) because a full block's lower half is off the picture.
+      - flat items (ingots, food, potions, seeds, flowers, saplings, buckets, armour...): the icon as a 1-pixel-thick 3D slab, same transform as tools
+      - empty hand: a 3D arm box in the character's own skin (ItemInHandRenderer.renderPlayerArm numbers), replaces the flat rectangle
+      - tools unchanged (same transform as before); crossbow keeps its own aiming drawing
+      - at rest the hand picture is drawn once and reused (walk bob slides it); only swings are drawn quad by quad. 0.01 ms a frame at rest.
+      RULE unchanged: no per-item pose tuning. New kinds of thing get a model in heldModel, not a pose.
+DONE  HAND MAGIC (drawSpellAura replaces drawSpellHand): fire = blocky glow + tongues that start white-hot, rise, shrink and cool to red + embers;
+      shock = flickering glow, forked bolts, white core, sparks. On a sword it runs the whole blade from guard to tip and follows the swing.
+DONE  PISTOL: all leftover code deleted (model, icon, firing branch, flash/smoke/tracer, GUN entry, shop price). It was still dropping from
+      Underworld chests (15%) - removed. Kept: the id constant and the load line that strips it from old saves (now also clears it from the hotbar).
+DONE  SAVE BUG (found during the cleanup): on load, the code restoring villager state, quests, village standing, day number and quest counter
+      sat behind a "//" comment on the pistol line, so all five were lost on every reload. Fixed; sv.py now checks them.
+DONE  WORKER-VS-SINGLE "DIFFERENCES" (tp3 / og2 ~170,000): a test artefact, not a render bug. Those tests (and wk2, wk7) never answered the class
+      picker, the game loop stayed frozen, and they compared a stale frame. Tests now answer the picker and FAIL if workers make no new frames
+      or if any value differs. Result: 0 differences in tp3, og2, wk2, wk5, wk7.
+NOTE  The suite has 33 tests (the brief said 34).
+OPEN  GPU speed on real hardware. Held items in THIRD person still use the old simple boxes (heldBoxes) - not touched.

@@ -2,10 +2,11 @@ from playwright.sync_api import sync_playwright
 CMP="""async ()=>{
   const t=performance.now(); performance.now=()=>t; update=function(){}; const raf=requestAnimationFrame; window.requestAnimationFrame=cb=>raf(()=>cb(t));
   const wait=async()=>{ const f=WK.frames||0; for(let i=0;i<400 && (WK.frames||0)<f+3;i++) await new Promise(r=>setTimeout(r,25)); };
-  await wait();
+  const f0=WK.frames||0; await wait(); if((WK.frames||0)<f0+3) throw new Error('workers produced no new frames (game loop frozen? paused='+paused+' craftOpen='+craftOpen+')');
   const a=new Uint8ClampedArray(img.data);
   const on=WK.on; WK.on=false; R_Y0=0; R_STEP=1; render(); WK.on=on;
   let diff=0; for(let i=0;i<a.length;i++) if(a[i]!==img.data[i]) diff++;
+  if(typeof diff==='number' && diff>0) throw new Error('worker frame differs from the single-thread frame in '+diff+' values');
   return [diff, WK.on, WK.err||null, SEED];
 }"""
 with sync_playwright() as p:

@@ -1133,7 +1133,7 @@ const PLASTER=214, FRAME=215, FRAME_X=216, FRAME_D1=217, FRAME_D2=218, BEAM=219,
 const FLESH=232, FLESH2=233, GLOWMOSS=234, SHROOM_STEM=235, CAP_R=236, CAP_T=237, BONE=238, RUST=239, LAMP=240, GATE=241, DARKWOOD=242, EMBER=243, BARREL=244, CRATE=245, ICE=246, SANDSTONE=247, CACTUS=248, PALM_LOG=249, PALM_LEAF=250;   // the underworld's blocks
 const PORTAL0 = 526, VINE0 = 528;         // the glowing field of a lit gate (526 spans x, 527 spans z); hanging gold vine
 const CHEST = 231;                        // holds items; the ones in villages and dungeons come with loot
-const PISTOL = 229, CROSSBOW = 230;       // ranged weapon prototypes
+const PISTOL = 229, CROSSBOW = 230;       // ranged weapons. 229 was the pistol (removed from the game); the id is kept only so old saves can be cleaned on load
 const FIRE_POTION = 227, BOLT_POTION = 228;   // potions: drink one for 5 casts of its spell
 const BARS0 = 524;                        // iron bars: 524 along x, 525 along z
 const LANT_OFF0 = 1069, LAMP_OFF = 1071, ANDESITE = 1072, GRANITE = 1073, DIORITE = 1074, TUFF = 1075, MOSSROCK = 1076, WBP0 = 1077;   // the last five are natural rocks   // see the lantern block below
@@ -1170,7 +1170,7 @@ DISHES.forEach((d,i)=>{
   COOK_RECIPES.push({ name:d.name, out:[d.id,1], ing, list:d.ing.slice().sort((a,b)=>a-b), back: d.ing.includes(WATER_BUCKET) ? [WOOD_BUCKET,1] : null });
 });
 // potions are mixed at the cooking table too (the bucket comes back)
-NAMES[PISTOL] = 'old pistol (removed)'; NAMES[CROSSBOW] = 'crossbow'; FLAT_ITEMS.add(PISTOL); FLAT_ITEMS.add(CROSSBOW);
+NAMES[CROSSBOW] = 'crossbow'; FLAT_ITEMS.add(CROSSBOW);
 NAMES[FIRE_POTION] = 'fire potion'; NAMES[BOLT_POTION] = 'lightning potion'; FLAT_ITEMS.add(FIRE_POTION); FLAT_ITEMS.add(BOLT_POTION);
 for(const [id,name,ings] of [[FIRE_POTION,'fire potion (pepper)',[COAL_ITEM,PEPPER,WATER_BUCKET]], [FIRE_POTION,'fire potion (red flower)',[COAL_ITEM,FLOWER0+10,WATER_BUCKET]],
                              [BOLT_POTION,'lightning potion (glass)',[GLASS,STONE,WATER_BUCKET]], [BOLT_POTION,'lightning potion (sand)',[SAND,STONE,WATER_BUCKET]]]){
@@ -3308,7 +3308,9 @@ function loadWorld(id){
   cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9;
   trainedDay = meta.trained || {}; homesteads = meta.homesteads || []; homesteadId = meta.homesteadId || 1;
   gold = meta.gold || 0; playerClass = meta.cls || null; deathSacks = meta.sacks || []; placedMap = unpackPlaced(meta.placed);
-  if(meta.inv && meta.inv[PISTOL]) delete inv[PISTOL];          // the pistol is gone from the world villagerState = meta.villagers || {}; quests = meta.quests || []; villageRep = meta.rep || {}; dayNo = meta.dayNo || 0; questId = meta.questId || 1;
+  if(meta.inv && meta.inv[PISTOL]) delete inv[PISTOL];          // the pistol is gone from the world
+  for(let i=0;i<HOTBAR.length;i++) if(HOTBAR[i]===PISTOL) HOTBAR[i] = 0;
+  villagerState = meta.villagers || {}; quests = meta.quests || []; villageRep = meta.rep || {}; dayNo = meta.dayNo || 0; questId = meta.questId || 1;
   resetSkills(); if(meta.skills){ Object.assign(skills, meta.skills.v||{}); Object.assign(skillUses, meta.skills.u||{}); skillGained = meta.skills.g||0; }
   health = (meta.health === undefined ? maxHP() : meta.health);
   chests.clear(); if(meta.chests) for(const k in meta.chests) chests.set(k, meta.chests[k]);
@@ -3638,7 +3640,6 @@ function heldBoxes(id){
     if(T.kind==='shovel') return [haft, B(-7.4,11.6,10,-4.6,12.4,13.5,HEADC)];
     return [haft, B(-6.5,9.6,8.4,-5.5,12,9.6,HEADC)];                                    // hoe
   }
-  if(id===PISTOL) return [B(-6.6,10.2,0.5,-5.4,12.6,2.4,[118,78,42]), B(-6.5,11.6,2,-5.5,12.6,9.5,[84,86,96]), B(-6.6,11.5,5,-5.4,12.7,5.6,[200,164,72])];
   if(id===CROSSBOW) return [B(-6.6,11.4,-1,-5.4,12.6,9,[118,78,42]), B(-10.5,11.6,7,-1.5,12.4,8,[84,86,96]), B(-6.2,12.6,1,-5.8,13,9,[206,184,132])];
   if(COLORS[id] && !IS_SHAPED[id]) return [B(-7.8,10.2,1.5,-4.2,13.8,5.1,COLORS[id])];
   return [B(-7,11,1.5,-5,13,4.5, COLORS[id] || [208,196,160])];
@@ -3736,7 +3737,7 @@ canvas.width = RW; canvas.height = RH;
 const ctx = canvas.getContext('2d');
 const img = IS_WORKER ? { data:new Uint8ClampedArray(RW*RH*4) } : ctx.createImageData(RW,RH);
 const TAN0 = 0.7;
-let TAN = TAN0;                          // narrows a little while you aim a pistol or crossbow
+let TAN = TAN0;                          // narrows a little while you aim a crossbow
 const HIT_A = {x:0,y:0,z:0,b:0,t:0,face:0,nx:0,ny:0,nz:0}, HIT_B = {x:0,y:0,z:0,b:0,t:0,face:0,nx:0,ny:0,nz:0}, HIT_S = {x:0,y:0,z:0,b:0,t:0,face:0,nx:0,ny:0,nz:0};   // reused so the per-pixel rays don't create garbage
 
 // ---------- block textures: 16x16 patterns, generated per texel, same pattern for every block of a type ----------
@@ -6568,7 +6569,7 @@ const PRICE = {};
   P([SEEDS, ...CROPDEFS.map(d=>d.seed).filter(Boolean)], 2); P([WHEAT,CARROT,POTATO,ONION,TOMATO,PEPPER], 3); P([CORN_EAR,GRAPES,MELON_SLICE], 4); P(PUMPKIN, 6);
   P(FLOUR, 5); P(HAY, 6); P(STICK, 1); P(PLANKS, 2); P(COAL_ITEM, 4); P([COBBLE, SAND], 1); P([STONE, ANDESITE, GRANITE, DIORITE, TUFF], 2); P(GLASS, 4);
   P(BOOKSHELF, 30); P(CANDLE, 6); P(LANTERN0+1, 20); P(BARS0, 8); P(WOOD_BUCKET, 10); P(WATER_BUCKET, 12); P(BED0, 40); P(WOOL0, 6); P(LITTER, 1); P(BONE, 3);
-  P(CATNIP_SEED, 20); P(CRAFT_TABLE, 8); P(COOK_TABLE, 25); P([FIRE_POTION, BOLT_POTION], 40); P(EMBER, 60); P(CROSSBOW, 150); P(PISTOL, 220);
+  P(CATNIP_SEED, 20); P(CRAFT_TABLE, 8); P(COOK_TABLE, 25); P([FIRE_POTION, BOLT_POTION], 40); P(EMBER, 60); P(CROSSBOW, 150);
   P([WOOD_PICK,WOOD_AXE,WOOD_SHOVEL,WOOD_HOE], 15); P(WOOD_SWORD, 20); P([STONE_PICK,STONE_AXE,STONE_SHOVEL,STONE_HOE], 35); P(STONE_SWORD, 45);
   P(IRON_ORE, 8); P(IRON_INGOT, 15); P(ADAM_ORE, 30); P(ADAM_INGOT, 55); P(MITH_ORE, 70); P(MITH_INGOT, 120);
   METALS.forEach((M,t)=>[3,3,1,2,2].forEach((n,i)=>{ PRICE[MT(t,i)] = Math.round(PRICE[M.ingot]*n*1.4 + 8 + (i===3 ? 10 : 0)); }));
@@ -8848,7 +8849,7 @@ function updateSaplings(){
 }
 function punch(){
   if(dead) return;
-  if(heldGun()){ fireWeapon(); return; }                    // a pistol or crossbow shoots instead of punching
+  if(heldGun()){ fireWeapon(); return; }                    // a crossbow shoots instead of punching
   swingT = 1;
   const hit = target();
   { const {f} = camVectors(), mh = ratRay(player.x, player.y+1.6, player.z, f[0],f[1],f[2], 3.2);
@@ -9080,7 +9081,7 @@ const LOOT = {
   house:   [[GOLD,2,15,.6],[WHEAT,1,4,.7],[CARROT,1,3,.5],[POTATO,1,3,.5],[PLANKS,2,8,.6],[STICK,2,6,.6],[COAL_ITEM,1,3,.35],[GLASS,1,4,.25],[LANTERN0+1,1,1,.2],[LITTER,1,3,.3]],
   dungeon: [[GOLD,15,80,.85],[IRON_INGOT,1,4,.45],[ADAM_INGOT,1,1,.06],[COAL_ITEM,2,6,.8],[FIRE_POTION,1,2,.5],[BOLT_POTION,1,2,.5],[STONE_SWORD,1,1,.3],[CROSSBOW,1,1,.2],[BARS0,2,6,.4],[LANTERN0+1,1,2,.5],[STONE_BRICK,4,12,.5],[BOOKSHELF,1,2,.2]],
   crypt:   [[GOLD,25,90,.9],[IRON_INGOT,1,4,.5],[ADAM_INGOT,1,2,.14],[MITH_INGOT,1,1,.04],[FIRE_POTION,1,2,.4],[BOLT_POTION,1,2,.4],[CANDLE,1,3,.5],[BONE,2,5,.6],[AR(2,0),1,1,.12],[AR(2,3),1,1,.12],[AR(1,1),1,1,.1],[IRON_SWORD,1,1,.15],[CROSSBOW,1,1,.1]],
-  under:   [[GOLD,20,120,.8],[IRON_INGOT,2,5,.5],[ADAM_INGOT,1,2,.15],[MITH_INGOT,1,1,.05],[EMBER,1,3,.8],[FIRE_POTION,1,3,.6],[BOLT_POTION,1,3,.6],[GLOWMOSS,2,8,.6],[BONE,2,6,.4],[RUST,2,6,.4],[LANTERN0+1,1,3,.5],[CROSSBOW,1,1,.2],[PISTOL,1,1,.15],[COAL_ITEM,3,8,.5]]
+  under:   [[GOLD,20,120,.8],[IRON_INGOT,2,5,.5],[ADAM_INGOT,1,2,.15],[MITH_INGOT,1,1,.05],[EMBER,1,3,.8],[FIRE_POTION,1,3,.6],[BOLT_POTION,1,3,.6],[GLOWMOSS,2,8,.6],[BONE,2,6,.4],[RUST,2,6,.4],[LANTERN0+1,1,3,.5],[CROSSBOW,1,1,.2],[COAL_ITEM,3,8,.5]]
 };
 function chestItems(x,y,z){
   const key = x+','+y+','+z;
@@ -9162,7 +9163,7 @@ function placeBlock(){
   { const fb = HOTBAR[sel]; if(FOOD_VAL[fb] && inv[fb]>0) return; }
   { const ab = HOTBAR[sel]; if(ARMOR[ab] && inv[ab]>0){ equipArmor(ab); skillToast('wearing '+NAMES[ab]); swingT = 1; return; } }            // food is eaten by holding the button (see updateEating), never placed
   swingT = 1;
-  if(heldGun()) return;                                     // LT aims a pistol or crossbow (see updateGuns)
+  if(heldGun()) return;                                     // LT aims a crossbow (see updateGuns)
   { const hb = HOTBAR[sel]; if(hb===FIRE_POTION && inv[hb]>0){ const gh = target(); if(gh && gh.b===GATE && lightGate(gh.x,gh.y,gh.z)){ inv[hb]--; swingT = 1; return; } } }   // a fire potion thrown on a gate lights it
   { const hb = HOTBAR[sel]; if((hb===FIRE_POTION || hb===BOLT_POTION) && inv[hb]>0){ drinkPotion(hb); return; } }      // potions are drunk on the spot
   { const hb = HOTBAR[sel]; if(hb>=WOOD_BUCKET && hb<=LAVA_BUCKET && inv[hb]>0){ bucketUse(hb); return; } }
@@ -9470,10 +9471,6 @@ function paintFood(g, id){
     case CHITIN: paintIcon(g,(P,E)=>{ E(8,8.5,6.4,5.4,null,(x,y,dx,dy)=>{ return y%3===0 ? [110,66,30] : (dx<-0.3&&dy<-0.2 ? [210,150,76] : [170,110,50]); }); }); return true;
     case MEAT_STEW: paintIcon(g,(P,E)=>{ E(8,10.5,6.4,4.2,[150,90,60]); for(let x=2;x<14;x++) P(x,8,[176,110,74]); E(8,9.4,5.4,2.4,[132,74,42]);
               for(const [x,y,c] of [[5,9,[176,92,62]],[8,8,[230,210,150]],[10,9,[236,150,50]],[7,10,[176,92,62]],[11,8,[176,92,62]]]) P(x,y,c); P(6,4,[236,236,236]); P(7,3,[236,236,236]); P(10,5,[236,236,236]); }); return true;
-    case PISTOL: paintIcon(g,(P,E)=>{ const W=[118,78,42], S=[84,86,96], B=[200,164,72];
-              for(let x=2;x<=12;x++){ P(x,5,S); P(x,6,[60,62,70]); } P(2,4,B); for(let x=5;x<=11;x++) P(x,7,W); P(4,5,B); P(8,5,B);
-              P(11,4,S); P(12,3,[110,112,122]); P(12,2,[226,224,206]);
-              for(const [x,y] of [[11,8],[12,8],[12,9],[13,9],[12,10],[13,10],[13,11],[14,11],[13,12],[14,12]]) P(x,y,W); P(13,13,B); P(14,13,B); P(10,8,B); }); return true;
     case CROSSBOW: paintIcon(g,(P,E)=>{ const W=[118,78,42], S=[84,86,96], T=[226,222,206];
               for(let i=0;i<10;i++){ P(3+i,12-i,W); } for(let i=0;i<8;i++) P(4+i,12-i,[88,58,32]);
               for(const [x,y] of [[5,3],[6,3],[7,4],[8,5],[9,6],[10,7],[11,8],[12,9],[12,10],[4,3],[13,11]]) P(x,y,S);
@@ -9564,6 +9561,7 @@ function drawToolIcon(g, id){
     put(2,14,[84,60,36]); put(13,2,[176,136,84]);
     return;
   }
+  if(!TOOLS[id]) return;                                                // an id with no picture (something removed from the game) stays blank
   const sp = toolSprite(id);                                            // the same pixel art as the held tool
   for(let y=0;y<16;y++) for(let x=0;x<16;x++){
     const col = sp[y*16+x]; if(!col) continue;
@@ -10201,31 +10199,6 @@ function blockIcon(b, top){
   iconCache.set(key, cv);
   return cv;
 }
-// isometric block with textured faces; the face shading is applied by multiplying a gray over each face
-function drawCube(cx,cy,s,b,m){
-  const k=0.866, E=s*0.9;          // E = vertical edge length, so the cube reads as a block, not a slab
-  const Tp=[cx,cy-s*0.5], Rp=[cx+s*k,cy-s*0.25], Cp=[cx,cy], Lp=[cx-s*k,cy-s*0.25];
-  const topIcon = blockIcon(b,true), sideIcon = blockIcon(b,false);
-  ctx.imageSmoothingEnabled = false;
-  const faces = [
-    { img: topIcon,  shade: 1.0,  poly: [Tp,Rp,Cp,Lp],
-      t: [(Cp[0]-Lp[0])/16, (Cp[1]-Lp[1])/16, (Tp[0]-Lp[0])/16, (Tp[1]-Lp[1])/16, Lp[0], Lp[1]] },
-    { img: sideIcon, shade: 0.7,  poly: [Lp,Cp,[cx,cy+E],[cx-s*k,cy-s*0.25+E]],
-      t: [(Cp[0]-Lp[0])/16, (Cp[1]-Lp[1])/16, 0, E/16, Lp[0], Lp[1]] },
-    { img: sideIcon, shade: 0.55, poly: [Cp,Rp,[cx+s*k,cy-s*0.25+E],[cx,cy+E]],
-      t: [(Rp[0]-Cp[0])/16, (Rp[1]-Cp[1])/16, 0, E/16, Cp[0], Cp[1]] }
-  ];
-  for(const f of faces){
-    ctx.save();
-    ctx.transform(f.t[0], f.t[1], f.t[2], f.t[3], f.t[4], f.t[5]);
-    ctx.drawImage(f.img, 0, 0);
-    ctx.restore();
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = shadeRGB([255,255,255], m*f.shade);
-    fillPoly(f.poly);
-    ctx.globalCompositeOperation = 'source-over';
-  }
-}
 // ---------- tool sprites: 16x16 pixel art, built once per tool and used for the hotbar icon and the held tool ----------
 // The grip is cell (15,15) and the tool reaches up and to the left. Each cell is tested against the tool's shape,
 // then shaded (edges catch the light), given a mottled or grain texture, and outlined.
@@ -10374,33 +10347,41 @@ const m3Y = a=>{ const c=Math.cos(a), s=Math.sin(a); return [c,0,s,0, 0,1,0,0, -
 const m3Z = a=>{ const c=Math.cos(a), s=Math.sin(a); return [c,-s,0,0, s,c,0,0, 0,0,1,0]; };
 function heldMatrixMC(sp, bob){
   // sp: swing progress 0..1 (0 = at rest)
-  const r = Math.sqrt(sp), f = Math.sin(sp*sp*Math.PI), g = Math.sin(r*Math.PI);
-  let M = m3T(-0.4*Math.sin(r*Math.PI), 0.2*Math.sin(r*Math.PI*2) + bob, -0.2*Math.sin(sp*Math.PI));
-  M = m3mul(M, m3T(0.56, -0.52, -0.72));
-  M = m3mul(M, m3Y((45 - 20*f)*HMC_DEG)); M = m3mul(M, m3Z(-20*g*HMC_DEG)); M = m3mul(M, m3X(-80*g*HMC_DEG)); M = m3mul(M, m3Y(-45*HMC_DEG));
+  let M = heldArmSwing(sp, bob);
   M = m3mul(M, m3T(1.13/16, 3.2/16, 1.13/16));
   M = m3mul(M, m3Y(90*HMC_DEG)); M = m3mul(M, m3Z(25*HMC_DEG));      // Minecraft writes Y -90; its item model's x runs the other way from ours, so +90 here puts the tip away from you as in the game
   M = m3mul(M, m3S(0.68)); M = m3mul(M, m3T(-0.5,-0.5,-0.5));
   return M;
 }
-// draw it straight onto the picture (in picture pixels)
-function drawHeldMC(g, id, m, sp, bob){
-  let cells = HELD_CACHE.get(id); if(!cells){ cells = heldCells(id); HELD_CACHE.set(id, cells); }
-  const filled = new Set(cells.map(c => c.x + ',' + c.y));
-  const M = heldMatrixMC(sp, bob);
-  const F = (RH/2)/Math.tan(35*HMC_DEG), cx = RW/2, cy = RH/2;      // Minecraft's hand camera, on our one fixed picture
-  const P = (x,y,z)=>[M[0]*x+M[1]*y+M[2]*z+M[3], M[4]*x+M[5]*y+M[6]*z+M[7], M[8]*x+M[9]*y+M[10]*z+M[11]];
-  const N = (x,y,z)=>{ const a=M[0]*x+M[1]*y+M[2]*z, b=M[4]*x+M[5]*y+M[6]*z, c=M[8]*x+M[9]*y+M[10]*z, l=Math.hypot(a,b,c)||1; return [a/l,b/l,c/l]; };
-  const scr = q=>[cx + q[0]/(-q[2])*F, cy - q[1]/(-q[2])*F];
-  const L = [-0.35, 0.8, 0.5], Ln = Math.hypot(L[0],L[1],L[2]);
-  const faces = [], z0 = 7.5/16, z1 = 8.5/16;
-  const add = (cs, n, col)=>{
-    const W = cs.map(c=>P(c[0],c[1],c[2])), nn = N(n[0],n[1],n[2]);
-    const ctr = [(W[0][0]+W[2][0])/2, (W[0][1]+W[2][1])/2, (W[0][2]+W[2][2])/2];
-    if(nn[0]*ctr[0] + nn[1]*ctr[1] + nn[2]*ctr[2] >= 0) return;          // facing away from the eye
-    const lit = Math.max(0, (nn[0]*L[0]+nn[1]*L[1]+nn[2]*L[2])/Ln), sh = (0.62 + 0.38*lit)*m;
-    faces.push({ z:ctr[2], pts:W.map(scr), rgb:[col[0]*sh, col[1]*sh, col[2]*sh] });
-  };
+// ---- everything else in your hand, the way Minecraft holds it ----
+// One pipeline for every held thing: a model made of small coloured quads, placed by Minecraft's first-person transforms
+// and drawn in perspective through the same 70-degree hand camera.
+//   tools and flat items (ingots, food, seeds, flowers...): the 16x16 sprite as a 1-pixel-thick slab, "handheld"/"generated" transform (above)
+//   blocks: the real block, with the world's own textures on each face; block.json: rotate Y 45, scale 0.4
+//   shaped blocks (stairs, slabs, fences, doors, beds, furniture, lanterns...): the world's own boxes and colours (shapedHit), same block transform
+//   empty hand: the player's arm as a box wearing the character's skin; ItemInHandRenderer.renderPlayerArm
+const HELD_Q = new Map(); let HELD_Q_SEED = null, HELD_ARM = null;
+function heldAxisQuad(out, ax, sg, w, i, j, col, off){
+  const a0=i/16, a1=(i+1)/16, b0=j/16, b1=(j+1)/16;
+  const P = (a,b)=> ax===0 ? [w+off[0], b+off[1], a+off[2]] : ax===1 ? [a+off[0], w+off[1], b+off[2]] : [a+off[0], b+off[1], w+off[2]];
+  out.push({ c:[P(a0,b0),P(a1,b0),P(a1,b1),P(a0,b1)], n: ax===0 ? [sg,0,0] : ax===1 ? [0,sg,0] : [0,0,sg], col });
+}
+// one block cell as quads: looked at from each of its six sides on the 16x16 texel grid, exactly as the world draws it
+function heldBakeCell(out, id, off){
+  const shaped = IS_SHAPED[id];
+  for(let ax=0;ax<3;ax++) for(const sg of [-1,1]) for(let j=0;j<16;j++) for(let i=0;i<16;i++){
+    if(!shaped){ const c = texColor(id, ax, ax===1 ? sg : 0, i, j, 0); heldAxisQuad(out, ax, sg, sg>0 ? 1 : 0, i, j, [c[0],c[1],c[2]], off); continue; }
+    const a=(i+0.5)/16, b=(j+0.5)/16, o = ax===0 ? [0,b,a] : ax===1 ? [a,0,b] : [a,b,0], d = [0,0,0];
+    o[ax] = sg>0 ? 2 : -1; d[ax] = -sg;
+    const h = shapedHit(id,0,0,0, o[0],o[1],o[2], d[0],d[1],d[2], false);
+    if(!h || !h.col) continue;
+    heldAxisQuad(out, ax, sg, o[ax]+d[ax]*h.t, i, j, [h.col[0],h.col[1],h.col[2]], off);
+  }
+}
+// a sprite as a 1-pixel-thick slab (cells: {x, y, col}, rows run down)
+function heldSlabQuads(cells){
+  const out = [], z0 = 7.5/16, z1 = 8.5/16, filled = new Set(cells.map(c => c.x + ',' + c.y));
+  const add = (c,n,col)=>out.push({ c, n, col });
   for(const c of cells){
     const x0 = c.x/16, x1 = (c.x+1)/16, y0 = (15-c.y)/16, y1 = (16-c.y)/16;      // sprite rows run down, model y runs up
     const has = (dx,dy)=>filled.has((c.x+dx)+','+(c.y+dy));
@@ -10411,67 +10392,169 @@ function drawHeldMC(g, id, m, sp, bob){
     if(!has(0,-1)) add([[x0,y1,z0],[x0,y1,z1],[x1,y1,z1],[x1,y1,z0]], [0,1,0], c.col);
     if(!has(0,1))  add([[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1]], [0,-1,0], c.col);
   }
-  faces.sort((a,b)=>a.z-b.z);                                   // farthest (most negative z) first
-  const bq = P(10.5/16, 10.5/16, 0.5), bs = scr(bq), bw = 0.12/(-bq[2])*F;      // middle of the blade (sprite pixel 10,5), for a spell's glow
+  return out;
+}
+function heldIconCells(id){
+  const d = iconSrc(id).getContext('2d').getImageData(0,0,16,16).data, cells = [];
+  for(let y=0;y<16;y++) for(let x=0;x<16;x++){ const i=(y*16+x)*4; if(d[i+3]>=128) cells.push({ x, y, col:[d[i],d[i+1],d[i+2]] }); }
+  return cells;
+}
+// what kind of model an item is held as: 'tool', 'block' (a real block or shaped block) or 'item' (a sprite slab)
+function heldKind(id){
+  if(TOOLS[id]) return 'tool';
+  if(IS_SHAPED[id]) return 'block';
+  if(COLORS[id] && !FLAT_ITEMS.has(id) && !IS_SAP[id] && !IS_FLOWER[id]) return 'block';
+  return 'item';
+}
+function heldModel(id){
+  if(HELD_Q_SEED !== SEED){ HELD_Q.clear(); HELD_Q_SEED = SEED; }      // block textures change with the world seed
+  let q = HELD_Q.get(id); if(q) return q;
+  const kind = heldKind(id);
+  if(kind==='tool') q = heldSlabQuads(heldCells(id));
+  else if(kind==='item') q = heldSlabQuads(heldIconCells(id));
+  else {
+    q = [];
+    if(IS_DOOR[id]){ heldBakeCell(q, id, [0,0,0]); heldBakeCell(q, id+1, [0,1,0]); }                    // a door is both of its halves
+    else if(IS_BED[id]){ heldBakeCell(q, id, [0,0,0]); heldBakeCell(q, id+1, [BED_DIR[0][0],0,BED_DIR[0][1]]); }   // a bed is foot and head
+    else heldBakeCell(q, id, [0,0,0]);
+    // shaped things are centred on the middle of the cell; ones bigger than a block are shrunk and small ones enlarged, so each sits in the hand like a block
+    if(q.length && IS_SHAPED[id]){
+      let lo=[1e9,1e9,1e9], hi=[-1e9,-1e9,-1e9];
+      for(const f of q) for(const p of f.c) for(let k=0;k<3;k++){ if(p[k]<lo[k]) lo[k]=p[k]; if(p[k]>hi[k]) hi[k]=p[k]; }
+      const big = Math.max(hi[0]-lo[0], hi[1]-lo[1], hi[2]-lo[2]), s = big>1.001 ? 1.5/big : big<0.75 ? 0.75/big : 1;
+      for(const f of q) for(const p of f.c) for(let k=0;k<3;k++) p[k] = 0.5 + (p[k]-(lo[k]+hi[k])/2)*s;
+      q.lift = 0.15;                 // and are held a little higher than a full block, whose lower half sits below the picture as in Minecraft
+    }
+  }
+  q.kind = kind;
+  HELD_Q.set(id, q);
+  return q;
+}
+// Minecraft's swing and arm offset, shared by every held item (applyItemArmAttackTransform + applyItemArmTransform)
+function heldArmSwing(sp, bob){
+  const r = Math.sqrt(sp), f = Math.sin(sp*sp*Math.PI), g = Math.sin(r*Math.PI);
+  let M = m3T(-0.4*Math.sin(r*Math.PI), 0.2*Math.sin(r*Math.PI*2) + bob, -0.2*Math.sin(sp*Math.PI));
+  M = m3mul(M, m3T(0.56, -0.52, -0.72));
+  M = m3mul(M, m3Y((45 - 20*f)*HMC_DEG)); M = m3mul(M, m3Z(-20*g*HMC_DEG)); M = m3mul(M, m3X(-80*g*HMC_DEG)); M = m3mul(M, m3Y(-45*HMC_DEG));
+  return M;
+}
+// block.json, firstperson_righthand: rotate Y 45, scale 0.4
+function heldMatrixBlock(sp, bob, lift){
+  let M = heldArmSwing(sp, bob);
+  if(lift) M = m3mul(M, m3T(0, lift, 0));
+  M = m3mul(M, m3Y(45*HMC_DEG)); M = m3mul(M, m3S(0.4)); M = m3mul(M, m3T(-0.5,-0.5,-0.5));
+  return M;
+}
+// the empty hand: ItemInHandRenderer.renderPlayerArm (right arm), then the arm's own pivot
+function heldMatrixArm(sp, bob){
+  const r = Math.sqrt(sp), k = Math.sin(sp*sp*Math.PI), l = Math.sin(r*Math.PI);
+  let M = m3T(-0.3*Math.sin(r*Math.PI) + 0.64, 0.4*Math.sin(r*Math.PI*2) - 0.6 + bob, -0.4*Math.sin(sp*Math.PI) - 0.72);
+  M = m3mul(M, m3Y(45*HMC_DEG)); M = m3mul(M, m3Y(l*70*HMC_DEG)); M = m3mul(M, m3Z(k*-20*HMC_DEG));
+  M = m3mul(M, m3T(-1, 3.6, 3.5));
+  M = m3mul(M, m3Z(120*HMC_DEG)); M = m3mul(M, m3X(200*HMC_DEG)); M = m3mul(M, m3Y(-135*HMC_DEG));
+  M = m3mul(M, m3T(5.6, 0, 0));
+  M = m3mul(M, m3T(-5/16, 2/16, 0));
+  return M;
+}
+// the right arm of the character: Minecraft's arm box (4 x 12 x 4 pixels, y runs down from the shoulder) in the character's own skin
+function heldArmModel(){
+  const key = JSON.stringify(CHAR);
+  if(HELD_ARM && HELD_ARM.key===key) return HELD_ARM;
+  const T = ccPaint(CHAR), q = [];
+  const tex = (face,u,v)=>{ const r = ccReg('rarm',face), x = Math.min(r[2]-1,Math.max(0,u)), y = Math.min(r[3]-1,Math.max(0,v)), i = ((r[1]+y)*64 + r[0]+x)*4; return [T[i],T[i+1],T[i+2]]; };
+  const X0=-3, Y0=-2, Z0=-2, S=1/16, V=(x,y,z)=>[(X0+x)*S,(Y0+y)*S,(Z0+z)*S];
+  for(let y=0;y<12;y++) for(let i=0;i<4;i++){
+    q.push({ c:[V(i,y,0),V(i+1,y,0),V(i+1,y+1,0),V(i,y+1,0)], n:[0,0,-1], col:tex('front',i,y) });
+    q.push({ c:[V(i,y,4),V(i+1,y,4),V(i+1,y+1,4),V(i,y+1,4)], n:[0,0,1],  col:tex('back',3-i,y) });
+    q.push({ c:[V(0,y,i),V(0,y,i+1),V(0,y+1,i+1),V(0,y+1,i)], n:[-1,0,0], col:tex('right',3-i,y) });
+    q.push({ c:[V(4,y,i),V(4,y,i+1),V(4,y+1,i+1),V(4,y+1,i)], n:[1,0,0],  col:tex('left',i,y) });
+  }
+  for(let z=0;z<4;z++) for(let x=0;x<4;x++){
+    q.push({ c:[V(x,0,z),V(x+1,0,z),V(x+1,0,z+1),V(x,0,z+1)], n:[0,-1,0], col:tex('top',x,z) });
+    q.push({ c:[V(x,12,z),V(x+1,12,z),V(x+1,12,z+1),V(x,12,z+1)], n:[0,1,0], col:tex('bottom',x,z) });
+  }
+  q.key = key;
+  return HELD_ARM = q;
+}
+// draw a model straight onto the picture (in picture pixels); returns where model point `mark` lands: [x, y, pixels per model unit there]
+function drawHeldQuads(g, quads, M, m, mark, box){
+  const F = (RH/2)/Math.tan(35*HMC_DEG), cx = RW/2, cy = RH/2;      // Minecraft's hand camera, on our one fixed picture
+  const P = (x,y,z)=>[M[0]*x+M[1]*y+M[2]*z+M[3], M[4]*x+M[5]*y+M[6]*z+M[7], M[8]*x+M[9]*y+M[10]*z+M[11]];
+  const N = (x,y,z)=>{ const a=M[0]*x+M[1]*y+M[2]*z, b=M[4]*x+M[5]*y+M[6]*z, c=M[8]*x+M[9]*y+M[10]*z, l=Math.hypot(a,b,c)||1; return [a/l,b/l,c/l]; };
+  const scr = q=>[cx + q[0]/(-q[2])*F, cy - q[1]/(-q[2])*F];
+  const L = [-0.35, 0.8, 0.5], Ln = Math.hypot(L[0],L[1],L[2]);
+  const faces = [];
+  for(const f of quads){
+    const W = f.c.map(c=>P(c[0],c[1],c[2])), nn = N(f.n[0],f.n[1],f.n[2]);
+    const ctr = [(W[0][0]+W[2][0])/2, (W[0][1]+W[2][1])/2, (W[0][2]+W[2][2])/2];
+    if(nn[0]*ctr[0] + nn[1]*ctr[1] + nn[2]*ctr[2] >= 0) continue;          // facing away from the eye
+    if(W[0][2]>-0.05 || W[1][2]>-0.05 || W[2][2]>-0.05 || W[3][2]>-0.05) continue;      // behind the eye
+    const lit = Math.max(0, (nn[0]*L[0]+nn[1]*L[1]+nn[2]*L[2])/Ln), sh = (0.62 + 0.38*lit)*m;
+    faces.push({ z:ctr[0]*ctr[0]+ctr[1]*ctr[1]+ctr[2]*ctr[2], pts:W.map(scr), rgb:[f.col[0]*sh, f.col[1]*sh, f.col[2]*sh] });
+  }
+  faces.sort((a,b)=>b.z-a.z);                                   // farthest first
   for(const f of faces){
     g.beginPath(); g.moveTo(f.pts[0][0], f.pts[0][1]); for(let i=1;i<4;i++) g.lineTo(f.pts[i][0], f.pts[i][1]); g.closePath();
     const css = `rgb(${f.rgb[0]|0},${f.rgb[1]|0},${f.rgb[2]|0})`; g.fillStyle = css; g.fill(); g.strokeStyle = css; g.lineWidth = 0.6; g.stroke();
+    if(box) for(const q of f.pts){ if(q[0]<box[0]) box[0]=q[0]; if(q[1]<box[1]) box[1]=q[1]; if(q[0]>box[2]) box[2]=q[0]; if(q[1]>box[3]) box[3]=q[1]; }
   }
-  return [bs[0], bs[1], bw];
+  const bq = P(mark[0],mark[1],mark[2]), bs = scr(bq);
+  return [bs[0], bs[1], F/(-bq[2])];
 }
-// the held item is laid out for a 224 x 140 frame; scale it evenly to the picture's height and pin it to the right edge
-function drawHand(){ const s = RH/140; ctx.save(); ctx.translate(RW-224*s, 0); ctx.scale(s, s); drawHandInner(); ctx.restore(); }
+// A model at rest looks the same every frame, so its picture is drawn once and kept; the walk bob only slides that picture up and down.
+// Only a swing (a quarter of a second) is drawn quad by quad each frame.
+const HELD_SPR = { key:null, cv:null, full:null, x:0, y:0, mark:null };
+function drawHeldPosed(g, key, quads, matFn, m, sp, bob, mark){
+  if(sp>0 || g!==ctx) return drawHeldQuads(g, quads, matFn(sp, bob), m, mark);
+  const S = HELD_SPR, W = canvas.width, H = canvas.height, mq = Math.round(m*64)/64, k = key+'|'+mq+'|'+W+'x'+H+'|'+RW+'|'+SEED;
+  if(S.key!==k){
+    const off = S.full || (S.full = document.createElement('canvas')); if(off.width!==W || off.height!==H){ off.width = W; off.height = H; }
+    const og = off.getContext('2d'); og.setTransform(1,0,0,1,0,0); og.clearRect(0,0,W,H); og.setTransform(W/RW, 0, 0, H/RH, 0, 0);
+    const box = [1e9,1e9,-1e9,-1e9];
+    S.mark = drawHeldQuads(og, quads, matFn(0, 0), mq, mark, box);
+    const x0 = Math.max(0, Math.floor(box[0]*W/RW)-2), y0 = Math.max(0, Math.floor(box[1]*H/RH)-2), x1 = Math.min(W, Math.ceil(box[2]*W/RW)+2), y1 = Math.min(H, Math.ceil(box[3]*H/RH)+2);
+    if(x1>x0 && y1>y0){ S.cv = document.createElement('canvas'); S.cv.width = x1-x0; S.cv.height = y1-y0; S.cv.getContext('2d').drawImage(off, x0, y0, x1-x0, y1-y0, 0, 0, x1-x0, y1-y0); }
+    else S.cv = null;
+    S.x = x0; S.y = y0; S.key = k;
+  }
+  const dy = -bob/0.72*(RH/2)/Math.tan(35*HMC_DEG);          // the bob, in picture pixels, at the hand's distance
+  if(S.cv){ g.save(); g.setTransform(1,0,0,1,0,0); g.drawImage(S.cv, S.x, S.y + Math.round(dy*H/RH)); g.restore(); }
+  return [S.mark[0], S.mark[1]+dy, S.mark[2]];
+}
+// where a point of a held model lands on the picture: [x, y, pixels per model unit there]
+function heldPoint(M, x, y, z){
+  const F = (RH/2)/Math.tan(35*HMC_DEG), q = [M[0]*x+M[1]*y+M[2]*z+M[3], M[4]*x+M[5]*y+M[6]*z+M[7], M[8]*x+M[9]*y+M[10]*z+M[11]];
+  return [RW/2 + q[0]/(-q[2])*F, RH/2 - q[1]/(-q[2])*F, F/(-q[2])];
+}
+function drawHeldMC(g, id, m, sp, bob){
+  const q = heldModel(id), b = drawHeldPosed(g, 'i'+id, q, q.kind==='block' ? (s,o)=>heldMatrixBlock(s, o, q.lift) : heldMatrixMC, m, sp, bob, [10.5/16, 10.5/16, 0.5]);
+  return [b[0], b[1], 0.12*b[2]];      // middle of the blade (sprite pixel 10,5), for a spell's glow
+}
+// the held thing is drawn in picture pixels; only the crossbow keeps its own 224 x 140 layout (scaled evenly, pinned to the right edge)
+function drawHand(){
+  ctx.save(); ctx.setTransform(canvas.width/RW, 0, 0, canvas.height/RH, 0, 0);
+  drawHandInner();
+  ctx.restore();
+}
 function drawHandInner(){
   const id = HOTBAR[sel];
   const count = inv[id]||0;
   const dl = clamp01((Math.sin(tod*Math.PI*2)+0.2)*3);   // lit by daylight
   const m = 0.4 + 0.6*dl;
-  const bobY = -Math.abs(Math.sin(walkPhase))*3;          // vertical walk bob only
-  const punch = Math.sin((1-swingT)*Math.PI);             // 0 at rest, peaks mid-punch
-  if(count>0 && GUN[id]){ drawGunHand(id, m, bobY); return; }
-  if(count>0 && COLORS[id] && !FLAT_ITEMS.has(id)){          // flat items (ingots, leather, food...) are held as icons, below
-    // holding a block: the block replaces the hand, large in the bottom-right corner
-    ctx.save();
-    // punch: the block drives up and toward the center of the screen, then returns
-    ctx.translate(224*0.86 - punch*18, 140*0.9 - punch*34 + bobY);
-    ctx.rotate(0.3 - punch*0.2);
-    const sc = 1 + punch*0.12;
-    ctx.scale(sc, sc);
-    drawCube(0, 0, 40, id, m);
-    ctx.restore();
+  const sp = swingT>0 ? 1-swingT : 0, bob = -Math.abs(Math.sin(walkPhase))*0.025;      // swing progress, vertical walk bob
+  if(count>0 && GUN[id]){ const s = RH/140; ctx.translate(RW-224*s, 0); ctx.scale(s, s); drawGunHand(id, m, -Math.abs(Math.sin(walkPhase))*3); return; }
+  if(count>0){
+    // holding something: held exactly as Minecraft holds it (see heldModel)
+    drawHeldMC(ctx, id, m, sp, bob);
+    if(swordSpell && spell && spellCharges>0 && TOOLS[id] && TOOLS[id].kind==='sword'){      // the loaded spell runs along the blade, from the guard to the tip
+      const M = heldMatrixMC(sp, bob), a = heldPoint(M, 6.5/16, 6.5/16, 0.5), b = heldPoint(M, 14.5/16, 15/16, 0.5);
+      drawSpellAura(spell, a[0], a[1], b[0], b[1], 0.13*(a[2]+b[2])/2);
+    }
     return;
   }
-  if(count>0 && TOOLS[id]){
-    // holding a tool: held exactly as Minecraft holds one (see drawHeldMC), drawn in picture pixels rather than the 224x140 frame
-    ctx.save(); ctx.setTransform(canvas.width/RW, 0, 0, canvas.height/RH, 0, 0);
-    const blade = drawHeldMC(ctx, id, m, swingT>0 ? 1-swingT : 0, -Math.abs(Math.sin(walkPhase))*0.025);
-    if(swordSpell && spell && spellCharges>0 && TOOLS[id].kind==='sword' && swingT<=0) drawSpellHand(spell, blade[0], blade[1], blade[2]);      // the loaded spell glows on the blade
-    ctx.restore();
-    return;
-  }
-  if(count>0 && (FLAT_ITEMS.has(id) || IS_SHAPED[id] || IS_SAP[id] || IS_FLOWER[id] || (id>=WOOD_BUCKET && id<=LAVA_BUCKET))){
-    // holding a stick: its flat icon, in the same spot as the block
-    ctx.save();
-    ctx.imageSmoothingEnabled = false;
-    ctx.translate(224*0.84 - punch*18, 140*0.86 - punch*34 + bobY);
-    ctx.rotate(0.5 - punch*0.35);
-    ctx.scale(2.5 + punch*0.25, 2.5 + punch*0.25);
-    ctx.drawImage(iconSrc(id), -8, -8);
-    ctx.restore();
-    return;
-  }
-  // empty hand: a short arm coming in from the bottom-right corner
-  ctx.save();
-  ctx.translate(224*0.95 - punch*12, 140+15 - punch*38 + bobY);
-  ctx.rotate(-0.35 - punch*0.25);
-  const _sk = CC_SKIN[CHAR.skin] || CC_SKIN[2], _sr = [parseInt(_sk.slice(1,3),16), parseInt(_sk.slice(3,5),16), parseInt(_sk.slice(5,7),16)];
-  ctx.fillStyle = shadeRGB(_sr, m);
-  // arm runs well past the screen edge, so no gap shows underneath when it moves
-  ctx.fillRect(-17, -55, 34, 130);
-  ctx.fillStyle = shadeRGB([_sr[0]*0.8|0,_sr[1]*0.8|0,_sr[2]*0.8|0], m);
-  ctx.fillRect(-17, -55, 9, 130);
-  ctx.restore();
-  if(spell && spellCharges>0) drawSpellHand(spell, 194 - punch*18, 106 - punch*36 + bobY, 42);
+  // empty hand: your own arm, as in Minecraft
+  const arm = heldArmModel(), fist = drawHeldPosed(ctx, 'arm'+arm.key, arm, heldMatrixArm, m, sp, bob, [-1/16, 9/16, 0]);
+  if(spell && spellCharges>0) drawSpellAura(spell, fist[0], fist[1], fist[0], fist[1], 0.3*fist[2]);
 }
 
 // ---------- magic ----------
@@ -10778,7 +10861,7 @@ function drawFx(){
   const P = p=>projectPt(p, CAM.f, CAM.r, CAM.u, CAM.x, CAM.y, CAM.z);
   const tick = Math.floor(fxClock*22);
   for(const e of fx){
-    if(e.kind==='tracer' || e.kind==='arrow' || e.kind==='stuck'){ drawGunFx(e, P); continue; }
+    if(e.kind==='arrow' || e.kind==='stuck'){ drawGunFx(e, P); continue; }
     if(e.kind==='ball'){
       for(let i=0;i<e.trail.length;i++) fxBlob(P(e.trail[i]), 0.05+0.022*i, i%2 ? 'rgba(255,110,20,0.55)' : 'rgba(255,170,40,0.55)');
       const pr = P([e.x,e.y,e.z]), fl = 0.9+0.2*h3(tick,1,2,77);
@@ -10820,32 +10903,56 @@ function drawFx(){
   }
 }
 // the spell on your hand (or sword) in first person: flames licking up round it, or small arcs crawling over it
-function drawSpellHand(kind, hx, hy, wide){
-  const t = fxClock;
+// The spell you have ready, burning or crackling around your fist (a and b the same point) or along a blade (from a to b), in picture pixels.
+// wide: how broad the fist or blade is there. Everything is square-cornered: a soft blocky glow, then tongues of flame that are born
+// white-hot, rise, shrink and cool to red, with embers above; or a flickering knot of forked lightning with a white core and sparks.
+function drawSpellAura(kind, ax, ay, bx, by, wide){
+  const t = fxClock, u = RH/180, len = Math.hypot(bx-ax, by-ay), line = len>1;
+  const R = (x,y,w,h)=>ctx.fillRect(Math.round(x), Math.round(y), Math.max(1,Math.round(w)), Math.max(1,Math.round(h)));
+  const along = k=>[ax+(bx-ax)*k, ay+(by-ay)*k];
+  const gN = line ? Math.max(1, Math.round(len/(wide*0.45))) : 0;
+  ctx.save();
   if(kind==='fire'){
-    const n = Math.round(wide/3);
+    const pulse = 0.88 + 0.12*Math.sin(t*11) + 0.07*Math.sin(t*23.7);
+    ctx.globalCompositeOperation = 'lighter';
+    for(let j=0;j<=gN;j++){ const g = along(gN ? j/gN : 0);
+      for(const [s,a,gr] of [[1.9,0.05,70],[1.35,0.07,110],[0.85,0.10,150]]){ const w = wide*s*pulse; ctx.fillStyle = `rgba(255,${gr},30,${a})`; R(g[0]-w/2, g[1]-w*0.66, w, w); } }
+    ctx.globalCompositeOperation = 'source-over';
+    const n = Math.round(34 + (line ? len/u*0.8 : 0)), P = [];
     for(let i=0;i<n;i++){
-      const bx = hx - wide/2 + i*3, edge = 1 - Math.abs(i-(n-1)/2)/(n/2+1);
-      const h = (5 + 15*Math.abs(Math.sin(t*9 + i*1.9)) + 5*Math.abs(Math.sin(t*23 + i*0.7))) * (0.35+0.65*edge);
-      ctx.fillStyle = '#e8500c'; ctx.fillRect(bx, hy-h, 3, h+4);
-      ctx.fillStyle = '#ff8c1a'; ctx.fillRect(bx, hy-h*0.72, 3, h*0.72+4);
-      ctx.fillStyle = '#ffd24a'; ctx.fillRect(bx, hy-h*0.42, 3, h*0.42+4);
-      if(edge>0.5){ ctx.fillStyle = '#fff6cc'; ctx.fillRect(bx, hy-h*0.16, 3, h*0.16+4); }
+      const ph = t*(1.2+1.0*h3(i,7,3,131)) + h3(i,1,2,132), k = ph%1, gen = Math.floor(ph);
+      const p = along(line ? h3(i,5,gen,133) : 0.5);
+      const spread = (h3(i,2,gen,134)-0.5)*wide*(line ? 0.42 : 0.9), rise = wide*(0.3+1.1*h3(i,3,gen,135))*k*(line ? 0.75 : 1.15);
+      P.push([k, p[0] + spread*(1-0.65*k) + Math.sin(t*7+i*2.3)*wide*0.06*k, p[1] - rise, Math.max(u, (1-k*0.85)*wide*(0.17+0.13*h3(i,6,gen,136))*(line ? 0.55 : 1))]);
     }
-    for(let i=0;i<5;i++){ const k = (t*1.3 + i*0.37)%1; ctx.fillStyle = k<0.5 ? '#ffd24a' : '#e8500c'; ctx.fillRect(hx + (h3(i,1,2,111)-0.5)*wide*1.2, hy - 12 - k*26, 2, 2); }
+    P.sort((a,b)=>b[0]-a[0]);                                       // the cool tips first, the white-hot roots on top
+    for(const [k,x,y,s] of P){ ctx.fillStyle = k<0.13 ? '#fff8d8' : k<0.32 ? '#ffe066' : k<0.56 ? '#ff9a1f' : k<0.8 ? '#e8500c' : '#8a2408'; R(x-s/2, y-s/2, s, s); }
+    for(let i=0;i<8;i++){ const ph = t*0.75 + i*0.139, k = ph%1, p = along(line ? h3(i,8,Math.floor(ph),137) : 0.5), s = u*(k<0.55 ? 2 : 1);
+      ctx.fillStyle = k<0.5 ? '#ffd24a' : '#e8500c'; R(p[0] + (h3(i,1,Math.floor(ph),138)-0.5)*wide*1.4 + Math.sin(t*3+i)*3*u, p[1] - wide*0.6 - k*wide*1.7, s, s); }
   } else {
-    const tick = Math.floor(t*18);
-    for(const [w,style] of [[3,'rgba(90,150,255,0.5)'],[1,'#f2f8ff']]){
-      ctx.fillStyle = style;
-      for(let a=0;a<4;a++){
-        let x = hx + (h3(a,1,tick,121)-0.5)*wide, y = hy + 4 - h3(a,2,tick,122)*8;
-        for(let s=0;s<4;s++){
-          const nx = x + (h3(a,s,tick,123)-0.5)*14, ny = y - 3 - h3(a,s,tick,124)*8;
-          fxLine(x,y,nx,ny,w); x = nx; y = ny;
-        }
-      }
+    const tick = Math.floor(t*16), fl = h3(tick,1,1,141), big = h3(tick,2,2,142)>0.8;
+    ctx.globalCompositeOperation = 'lighter';
+    for(let j=0;j<=gN;j++){ const g = along(gN ? j/gN : 0);
+      for(const [s,a] of [[2.0,0.05],[1.4,0.08],[0.8,0.13]]){ const w = wide*s*(0.75+0.45*fl)*(big ? 1.25 : 1); ctx.fillStyle = `rgba(90,150,255,${a})`; R(g[0]-w/2, g[1]-w/2, w, w); } }
+    ctx.globalCompositeOperation = 'source-over';
+    const arcs = [], nA = line ? 3 + Math.round(len/(wide*1.1)) : 5 + (big ? 2 : 0);
+    for(let a=0;a<nA;a++){
+      const p = along(line ? h3(a,0,tick,143) : 0.5), pts = [[p[0] + (h3(a,1,tick,144)-0.5)*wide*0.3, p[1] + (h3(a,2,tick,145)-0.5)*wide*0.3]];
+      let ang = h3(a,3,tick,146)*Math.PI*2; const L = wide*(0.45+0.75*h3(a,4,tick,147))*(big ? 1.3 : 1), nS = 5;
+      for(let s=0;s<nS;s++){ ang += (h3(a,s,tick,148)-0.5)*1.9; const q = pts[pts.length-1]; pts.push([q[0]+Math.cos(ang)*L/nS, q[1]+Math.sin(ang)*L/nS]);
+        if(s===2 && h3(a,9,tick,149)<0.45){ const fa = ang + (h3(a,8,tick,150)<0.5 ? 1 : -1)*0.9; arcs.push([q, [q[0]+Math.cos(fa)*L*0.3, q[1]+Math.sin(fa)*L*0.3]]); } }      // a fork
+      arcs.push(pts);
     }
+    if(line){ const nx = -(by-ay)/len, ny = (bx-ax)/len, pts = [], nS = Math.max(4, Math.round(len/(6*u)));      // one bolt crawling along the blade
+      for(let s=0;s<=nS;s++){ const p = along(s/nS), o = (s===0 || s===nS) ? 0 : (h3(s,5,tick,151)-0.5)*wide*0.7; pts.push([p[0]+nx*o, p[1]+ny*o]); }
+      arcs.push(pts); }
+    for(const [w,style] of [[3,'rgba(80,140,255,0.5)'],[1,'#f4f9ff']]){ ctx.fillStyle = style; const ww = Math.max(1, Math.round(w*u));
+      for(const pts of arcs) for(let i=1;i<pts.length;i++) fxLine(pts[i-1][0], pts[i-1][1], pts[i][0], pts[i][1], ww); }
+    if(!line){ const c = wide*(0.2+0.14*fl); ctx.fillStyle = 'rgba(150,200,255,0.85)'; R(ax-c*0.8, ay-c*0.8, c*1.6, c*1.6); ctx.fillStyle = '#ffffff'; R(ax-c/2, ay-c/2, c, c); }      // the white-hot knot in the fist
+    for(let i=0;i<7;i++){ const p = along(line ? h3(i,6,tick,152) : 0.5), s = u*(h3(i,7,tick,153)<0.4 ? 2 : 1);
+      ctx.fillStyle = i%3 ? '#f4f9ff' : '#9cc4ff'; R(p[0] + (h3(i,8,tick,154)-0.5)*wide*1.9, p[1] + (h3(i,9,tick,155)-0.5)*wide*1.9, s, s); }
   }
+  ctx.restore();
 }
 
 // ---------- the cyclops: a one-eyed ogre two and a half times your height ----------
@@ -11123,11 +11230,11 @@ function ogreSiteOk(x,z){
   return hi-lo<=5;
 }
 
-// ---------- ranged weapons: flintlock pistol and crossbow ----------
+// ---------- ranged weapons: the crossbow ----------
 // Prototypes: no ammo and no reloading yet. RT fires, LT aims (a little zoom, slower turning). The shot always goes exactly
-// where the crosshair points: the pistol hits at once, the crossbow bolt flies fast and straight.
-let aimK = 0, aimSens = 1, gunCool = 0, gunKick = 0, gunFlash = 0, gunSmoke = 0, bowT = 1;
-const GUN = { [PISTOL]:{ dmg:8, cool:0.55, range:70 }, [CROSSBOW]:{ dmg:6, cool:0.6, range:60, speed:60 } };
+// where the crosshair points: the crossbow bolt flies fast and straight.
+let aimK = 0, aimSens = 1, gunCool = 0, gunKick = 0, bowT = 1;
+const GUN = { [CROSSBOW]:{ dmg:6, cool:0.6, range:60, speed:60 } };
 function heldGun(){ const id = HOTBAR[sel]; return GUN[id] && inv[id]>0 ? id : 0; }
 function fireWeapon(){
   const id = heldGun();
@@ -11148,21 +11255,12 @@ function fireWeapon(){
   const mh = ratRay(ex,ey,ez,f[0],f[1],f[2],bt), at = mh && mh.m.kind ? mh.t : bt;
   const aim = [ex+f[0]*at, ey+f[1]*at, ez+f[2]*at];
   const k = 1-aimK, muzzle = [ex+f[0]*0.7+r[0]*0.3*k, ey+f[1]*0.7-0.22*k-0.06, ez+f[2]*0.7+r[2]*0.3*k];
-  if(id===PISTOL){
-    gunFlash = 0.07; gunSmoke = 0.7;
-    fx.push({ kind:'tracer', a:muzzle, b:aim, age:0 });
-    if(mh && mh.m.kind){ spellDamage(mh.m, G.dmg*skillMul('weapons')); trainSkill('weapons'); }
-    if(at<G.range) fx.push({ kind:'boom', x:aim[0]-f[0]*0.1, y:aim[1]-f[1]*0.1, z:aim[2]-f[2]*0.1, age:0, seed:Math.random()*1000, size:0.16, dust:!(mh && mh.m.kind) });
-  } else {
-    bowT = 0;
-    const dx = aim[0]-muzzle[0], dy = aim[1]-muzzle[1], dz = aim[2]-muzzle[2], d = Math.hypot(dx,dy,dz)||1;
-    fx.push({ kind:'arrow', x:muzzle[0], y:muzzle[1], z:muzzle[2], dx:dx/d, dy:dy/d, dz:dz/d, speed:G.speed, dmg:G.dmg, left:at<G.range ? d : G.range, age:0 });
-  }
+  bowT = 0;
+  const dx = aim[0]-muzzle[0], dy = aim[1]-muzzle[1], dz = aim[2]-muzzle[2], d = Math.hypot(dx,dy,dz)||1;
+  fx.push({ kind:'arrow', x:muzzle[0], y:muzzle[1], z:muzzle[2], dx:dx/d, dy:dy/d, dz:dz/d, speed:G.speed, dmg:G.dmg, left:at<G.range ? d : G.range, age:0 });
 }
 function updateGuns(dt){
   if(gunCool>0) gunCool -= dt;
-  if(gunFlash>0) gunFlash -= dt;
-  if(gunSmoke>0) gunSmoke -= dt;
   gunKick = Math.max(0, gunKick - dt*5);
   if(bowT<1) bowT = Math.min(1, bowT + dt/0.5);
   const want = (heldGun() && placeHeld && !dead) ? 1 : 0;
@@ -11170,8 +11268,7 @@ function updateGuns(dt){
   TAN = TAN0*(1-0.3*aimK); aimSens = 1-0.5*aimK;
   for(let i=fx.length-1; i>=0; i--){
     const e = fx[i];
-    if(e.kind==='tracer'){ if(e.age>0.07) fx.splice(i,1); }
-    else if(e.kind==='stuck'){ if(e.age>8) fx.splice(i,1); }
+    if(e.kind==='stuck'){ if(e.age>8) fx.splice(i,1); }
     else if(e.kind==='arrow'){
       // the bolt flies straight to the point that was under the crosshair; anything that steps into its way is hit
       let step = e.speed*dt, done = false, hitM = null;
@@ -11192,8 +11289,7 @@ function drawGunFx(e, P){
   const seg = (a,b,w,style)=>{ const A = P(a), B = P(b); if(A.zc<0.25 || B.zc<0.25) return;
     const ix = Math.floor(B.px), iy = Math.floor(B.py); if(ix>=0 && iy>=0 && ix<RW && iy<RH && depthAt(ix,iy) < B.zc-0.7) return;
     ctx.fillStyle = style; fxLine(A.px,A.py,B.px,B.py,w); };
-  if(e.kind==='tracer') seg(e.a, e.b, 1, 'rgba(255,240,190,0.85)');
-  else {
+  {
     const L = e.kind==='stuck' ? 0.45 : 0.7, tail = [e.x-e.dx*L, e.y-e.dy*L, e.z-e.dz*L], tip = [e.x,e.y,e.z], mid = [e.x-e.dx*0.12, e.y-e.dy*0.12, e.z-e.dz*0.12];
     seg(tail, mid, 1, '#c8b07a'); seg(mid, tip, 1, '#d8dce4');
     seg(tail, [tail[0]+e.dx*0.12, tail[1]+e.dy*0.12, tail[2]+e.dz*0.12], 2, '#b43c2c');
@@ -11207,44 +11303,20 @@ function drawGunHand(id, m, bobY){
   const R = (x,y,w,h,c,k)=>{ ctx.fillStyle = C(c,k); ctx.fillRect(x,y,w,h); };
   const WOOD = [118,78,42], STEEL = [84,86,96], BRASS = [200,164,72];
   ctx.save();
-  ctx.translate(170 + (112-170)*a, 126 + (132-126)*a + bobY*(1-a) + kick*(id===PISTOL ? 9 : 4));
-  ctx.rotate((-0.5)*(1-a) - kick*(id===PISTOL ? 0.28 : 0.06)*(1-a*0.5));
-  if(id===PISTOL){
-    const BL = 58 - 26*a;                                   // the barrel looks shorter when you sight along it
-    R(-11,6,22,60,sk); R(-11,6,6,60,sk,0.8);                // wrist and arm
-    R(-7,-BL*0.52,14,BL*0.52+6,WOOD); R(-7,-BL*0.52,4,BL*0.52+6,WOOD,0.75);
-    R(-5,-BL,10,BL+2,STEEL); R(-5,-BL,3,BL+2,STEEL,1.35); R(2,-BL,3,BL+2,STEEL,0.7);
-    R(-6,-BL-2,12,4,STEEL,0.6); R(-3,-BL-2,6,2,[16,16,18]);
-    R(-6,-BL*0.7,12,3,BRASS); R(-6,-BL*0.36,12,3,BRASS);
-    R(-1,-BL-5,2,4,BRASS,1.1);                              // front sight
-    R(5,-14,6,11,STEEL,0.9); R(8,-23,4,11,STEEL,1.2); R(8,-26,4,4,[226,224,206]); R(4,-4,8,3,BRASS);   // lock, hammer, flint, pan
-    R(-7,2,14,10,WOOD); R(-5,10,14,10,WOOD,0.92); R(-3,18,14,12,WOOD,0.84); R(-3,28,14,4,BRASS);
-    R(-10,8,19,5,sk,0.94); R(-10,14,19,5,sk,0.86); R(-10,20,19,5,sk,0.78); R(6,2,6,8,sk);               // fingers and thumb
-    if(gunFlash>0){
-      const s = 1+gunFlash*8;
-      ctx.fillStyle = '#ff9a1f'; ctx.fillRect(-9*s,-BL-4-16*s,18*s,16*s);
-      ctx.fillStyle = '#ffe680'; ctx.fillRect(-6*s,-BL-4-22*s,12*s,20*s); ctx.fillRect(-15*s,-BL-10*s,30*s,6*s);
-      ctx.fillStyle = '#fffbe6'; ctx.fillRect(-3*s,-BL-4-12*s,6*s,12*s);
-    }
-    if(gunSmoke>0){
-      const t = 1-gunSmoke/0.7;
-      for(let i=0;i<5;i++){ const g = 120+i*18; ctx.fillStyle = 'rgba('+g+','+g+','+g+','+(0.5*(1-t)).toFixed(2)+')';
-        const sz = 5+t*10+i*1.5; ctx.fillRect(-sz/2 + Math.sin(i*2.1+t*3)*6*t*2, -BL-6-t*(22+i*7)-i*3, sz, sz); }
-    }
-  } else {
-    const pull = bowT<0.3 ? 0 : Math.min(1,(bowT-0.3)/0.6);         // after a shot the string is drawn back and a new bolt drops in
-    R(-10,18,20,50,sk); R(-10,18,6,50,sk,0.8);
-    R(-5,-44,10,74,WOOD); R(-5,-44,3,74,WOOD,0.75); R(-1,-44,2,50,WOOD,0.55);
-    R(-36,-42,72,5,STEEL); R(-36,-42,72,2,STEEL,1.35);
-    R(-40,-40,6,5,STEEL,0.9); R(34,-40,6,5,STEEL,0.9); R(-43,-37,5,8,STEEL,0.8); R(38,-37,5,8,STEEL,0.8);
-    R(-6,-49,12,3,STEEL,0.7); R(-6,-52,2,5,STEEL,0.7); R(4,-52,2,5,STEEL,0.7);                          // stirrup
-    const sy = -36 + 26*pull;
-    ctx.fillStyle = C([226,222,206]); fxLine(-41,-31,0,sy,1); fxLine(41,-31,0,sy,1);
-    R(-3,sy-1,6,4,STEEL,1.2);
-    if(pull>0.85){ R(-1,-50,2,sy+50,[206,184,132]); R(-2,-55,4,6,STEEL,1.4); R(-3,sy-9,6,7,[180,60,44]); }
-    R(-5,6,10,5,BRASS);
-    R(-9,22,18,5,sk,0.94); R(-9,28,18,5,sk,0.86); R(-9,34,18,5,sk,0.78);
-  }
+  ctx.translate(170 + (112-170)*a, 126 + (132-126)*a + bobY*(1-a) + kick*4);
+  ctx.rotate((-0.5)*(1-a) - kick*0.06*(1-a*0.5));
+  const pull = bowT<0.3 ? 0 : Math.min(1,(bowT-0.3)/0.6);         // after a shot the string is drawn back and a new bolt drops in
+  R(-10,18,20,50,sk); R(-10,18,6,50,sk,0.8);
+  R(-5,-44,10,74,WOOD); R(-5,-44,3,74,WOOD,0.75); R(-1,-44,2,50,WOOD,0.55);
+  R(-36,-42,72,5,STEEL); R(-36,-42,72,2,STEEL,1.35);
+  R(-40,-40,6,5,STEEL,0.9); R(34,-40,6,5,STEEL,0.9); R(-43,-37,5,8,STEEL,0.8); R(38,-37,5,8,STEEL,0.8);
+  R(-6,-49,12,3,STEEL,0.7); R(-6,-52,2,5,STEEL,0.7); R(4,-52,2,5,STEEL,0.7);                          // stirrup
+  const sy = -36 + 26*pull;
+  ctx.fillStyle = C([226,222,206]); fxLine(-41,-31,0,sy,1); fxLine(41,-31,0,sy,1);
+  R(-3,sy-1,6,4,STEEL,1.2);
+  if(pull>0.85){ R(-1,-50,2,sy+50,[206,184,132]); R(-2,-55,4,6,STEEL,1.4); R(-3,sy-9,6,7,[180,60,44]); }
+  R(-5,6,10,5,BRASS);
+  R(-9,22,18,5,sk,0.94); R(-9,28,18,5,sk,0.86); R(-9,34,18,5,sk,0.78);
   ctx.restore();
 }
 

@@ -6817,6 +6817,12 @@ function talkNews(m){
   if(best){ const ang = Math.atan2(best[0]-hc[0], -(best[1]-hc[1])), k = ((Math.round(ang/(Math.PI/4))%8)+8)%8;          // -z is north
     lines.push(`${best.length>2 ? best[2] : 'The nearest village'} lies about ${Math.round(bd/10)*10} paces to the ${DIR8[k]}.`); }
   else lines.push('No other village for many days\' walk, they say.');
+  // a rumour: the nearest delve or barrow you have not heard of yet is told to you, and marked on your map
+  { const R = [...cryptNear(hc[0], hc[1], 500), ...delveNear(hc[0], hc[1], 800)].filter(P=>!cryptSeen.has(P.key)).sort((p,q)=>Math.hypot(p.ex-hc[0],p.ez-hc[1])-Math.hypot(q.ex-hc[0],q.ez-hc[1]))[0];
+    if(R && m.rumourDay!==dayNo){ m.rumourDay = dayNo; const d = Math.hypot(R.ex-hc[0], R.ez-hc[1]), isD = R.key[0]==='D';      // one rumour a day from each person
+      lines.push(isD ? `They say there is an old gate in the hills about ${Math.round(d/10)*10} paces to the ${dirWord(hc[0],hc[1],R.ex,R.ez)}: ${R.name}. Caverns under it, and worse. I have marked it for you.`
+                     : `The ${R.name} lies about ${Math.round(d/10)*10} paces to the ${dirWord(hc[0],hc[1],R.ex,R.ez)}. The dead do not rest there. I have marked it for you.`);
+      cryptSeen.add(R.key); logJournal(`${m.name} told of ${isD ? R.name+', a delve' : 'the '+R.name}, ${Math.round(d/10)*10} paces ${dirWord(hc[0],hc[1],R.ex,R.ez)} of ${here ? villageName(rx,rz) : 'here'}.`); } }
   const kinds = new Set(); for(const o of mobs) if(BEAST[o.kind] && Math.hypot(o.x-m.x,o.z-m.z)<70) kinds.add(o.kind);
   const nm = { daedra:'fire daedra', daedroth:'a daedroth', bat:'giant bats', fish:'slaughterfish', bear:'a grizzly bear', tiger:'a sabertooth', spider:'giant spiders', scorpion:'a giant scorpion', skeleton:'walking skeletons', zombie:'the walking dead', ghost:'a ghost', cryptlord:'a Crypt Lord' };
   if(kinds.size) lines.push(`Folk have seen ${[...kinds].map(k=>nm[k]).join(' and ')} close by. Be careful out there.`);
@@ -7005,7 +7011,7 @@ function journalSheet(){
   const far = (x,z)=>{ const d = Math.hypot(x-player.x,z-player.z); return d<15 ? 'right here' : `${Math.round(d/10)*10} paces ${dirWord(player.x,player.z,x,z)}`; };
   let h = '';
   const sites = [...cryptSeen].map(k=>[k, siteByKey(k)]).filter(e=>e[1]).sort((a,b)=>Math.hypot(a[1].ex-player.x,a[1].ez-player.z)-Math.hypot(b[1].ex-player.x,b[1].ez-player.z));
-  if(sites.length){ h += '<div class="tkHd" style="margin-top:14px">DELVES AND BARROWS FOUND</div>';
+  if(sites.length){ h += '<div class="tkHd" style="margin-top:14px">DELVES AND BARROWS KNOWN</div>';
     for(const [k,P] of sites){ const cl = cryptState[k] && cryptState[k].cleared, nm = P.name[0].toUpperCase()+P.name.slice(1);
       h += `<div class="skRow"><div class="skHead"><b style="color:${cl ? '#8a8a9a' : k[0]==='D' ? '#e0a050' : '#b07ae0'}">${nm}</b><span>${cl ? 'cleared' : k[0]==='D' ? 'a delve' : 'a barrow'}</span></div><div class="skDesc">${far(P.ex,P.ez)}${cl ? '' : k[0]==='D' ? '. Its master still lives.' : '. Its Crypt Lord still walks.'}</div></div>`; } }
   h += '<div class="tkHd" style="margin-top:14px">THE RECORD</div>';

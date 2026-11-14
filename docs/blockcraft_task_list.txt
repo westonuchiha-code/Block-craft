@@ -552,3 +552,6 @@ DONE  THE LAW: a crime a villager sees puts a bounty on you in that village (ass
       PAY THE FINE / GO TO THE CELLS (1 day per 60 gold, up to 7; days pass at once, quest timers keep running) / RESIST (+60 bounty,
       guards attack). Closing the window counts as resisting. Bounty shows on the STANDING tab and everything goes in the journal. Saved.
       Homesteads have no law. tests/law.py added (36 scripts in the suite). Screenshot: proof/arrest.png.
+DONE  Suite checkpoint on guilds + law build: 36 of 36 pass (proof/suite_guilds_law.log).
+DONE  RUMOURS: ASK FOR NEWS now also tells you of the nearest delve (within 800) or barrow (within 500) you have not heard of, marks it on the
+      map and writes it in the journal. One rumour a day from each person.

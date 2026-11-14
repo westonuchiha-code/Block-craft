@@ -74,8 +74,7 @@ runs before optimising.
 ## 4. Open items
 
 - **GPU speed check** on his hardware; if needed add a resolution-scale setting (generic PC option).
-- **Aspect:** the logical picture is 16:10 (`RES_LEVELS`), so 16:9 monitors show thin side bars. Switching the
-  logical aspect to 16:9 is a small change (everything derives from `RW`/`RH`); ask him first.
+- **Aspect:** DONE 2026-11-14. The logical picture is 16:9 (`RES_LEVELS`); adamantite confirmed below mithril.
 - **`tp3` test** prints 153,880 differing values between worker-thread and single-thread CPU renders. Pre-existing
   (same in builds before this work); `wk2`/`wk5`/`wk7` pass. Investigate.
 - **Windows / Steam port** (planned, not started; e.g. Electron / Tauri / NW.js wrapper; saves currently live in

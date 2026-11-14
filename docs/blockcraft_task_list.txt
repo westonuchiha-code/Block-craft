@@ -440,3 +440,14 @@ DONE  Suite: new 'gpu' test (forces GPU, compares 6 scenes). All 34 pass.
 OPEN  GPU speed is unverified here (sandbox has only a software GPU). Check on the S21 Ultra and a PC. If needed: a render-scale option.
 OPEN  Picture is still 16:10 (thin side bars on 16:9 monitors). Switching the logical aspect to 16:9 is a small change.
 OPEN  tp3 prints 153880 differing values worker-vs-single (pre-existing, same in older builds); wk2/wk5/wk7 pass. Investigate.
+
+== 16:9 PICTURE + ADAMANTITE DEPTH (2026-11-14) ==
+DONE  Picture is now 16:9 (was 16:10): fills a 16:9 monitor with no side bars. CPU sharpness levels are now 256x144, 320x180 (default),
+      368x207, 432x243, 512x288, 576x324 (each at least as tall as the level it replaces; the extra width is extra view to the sides).
+      GPU renders 1920x1080 on a 1080p screen. Empty hand / held block / held flat item keep their shape and corner position
+      (scaled evenly, pinned to the right edge); tools still use the one Minecraft transform.
+DONE  Adamantite confirmed BELOW mithril (tier order unchanged). Ore depth: adamantite's own band is y 11..20; it also appears at mithril's
+      level (y <= 10) but thinner there: a third of its normal rate, a little rarer than mithril (was full rate, 2.5x mithril).
+      Measured over 900,000 cells per band: y 1-10 adamantite 688 / mithril 1003; y 11-20 adamantite 2278.
+      NOTE: this is my reading of "same level in lower quantities"; existing worlds lose some unmined deep adamantite.
+OPEN  GPU speed on real hardware; tp3/og2 worker-vs-single difference counts; pistol code cleanup.

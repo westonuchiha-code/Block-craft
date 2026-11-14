@@ -992,10 +992,10 @@ const NIGHT_SEC = 600; // real seconds of night (10 minutes)
 let tod = 0.15;        // time of day, 0 to 1 (0.25 = noon, 0.75 = midnight)
 let SEED = 12345;      // changes when a world is loaded
 // render resolution (scaled up by CSS). Pick a sharpness level from the menu; more pixels look cleaner but cost more per frame.
-const RES_LEVELS = [[224,140],[288,180],[320,200],[384,240],[448,280],[512,320]];
+const RES_LEVELS = [[256,144],[320,180],[368,207],[432,243],[512,288],[576,324]];      // all exactly 16:9
 let resLevel = 1;
 try{ const v = parseInt(localStorage.getItem('bc_res'),10); if(v>=0 && v<RES_LEVELS.length) resLevel = v; }catch(e){}
-const RW = RES_LEVELS[resLevel][0], RH = RES_LEVELS[resLevel][1];      // one fixed 16:10 picture; any window letterboxes it
+const RW = RES_LEVELS[resLevel][0], RH = RES_LEVELS[resLevel][1];      // one fixed 16:9 picture; any window letterboxes it
 
 const AIR=0, GRASS=1, DIRT=2, STONE=3, COBBLE=4, SAND=5, GRAVEL=6,
       LOG=7, PLANKS=8, LEAVES=9, GLASS=10, GLOW=11, COAL=12, BEDROCK=14;
@@ -1872,10 +1872,11 @@ function blockAt(x,y,z){
 }
 // ore veins: small clumps (a few blocks in a 2x2x2 cell). Iron is found anywhere below y 48; adamantite only below 20; mithril
 // only down by the lava, below 11. Roughly: iron 1 block in 150 of deep rock, adamantite 1 in 600, mithril 1 in 1500.
+// Adamantite's own band is y 11..20; it also turns up down at mithril's level, but thinner there (a third as much, a little rarer than mithril).
 function oreAt(x,y,z){
   const cx = x>>1, cy = y>>1, cz = z>>1;
   if(y<=10 && h3(cx,cy,cz,SEED+93)<0.0012*1.6 && h3(x,y,z,SEED+94)<0.55) return MITH_ORE;
-  if(y<=20 && h3(cx,cy,cz,SEED+91)<0.003*1.6 && h3(x,y,z,SEED+92)<0.55) return ADAM_ORE;
+  if(y<=20 && h3(cx,cy,cz,SEED+91)<(y<=10 ? 0.001 : 0.003)*1.6 && h3(x,y,z,SEED+92)<0.55) return ADAM_ORE;
   if(y<=48 && h3(cx,cy,cz,SEED+89)<0.0075*1.6 && h3(x,y,z,SEED+90)<0.55) return IRON_ORE;
   return 0;
 }
@@ -5976,7 +5977,7 @@ function gpuSync(budget){
   return sent;
 }
 function gpuTouch(c){ if(c) c.gv = (c.gv|0) + 1; }
-// the picture's size in device pixels: the window's 16:10 picture area (as the CPU picture is shown), at full resolution
+// the picture's size in device pixels: the window's 16:9 picture area (as the CPU picture is shown), at full resolution
 function gpuPictureSize(){
   if(GPU.force) return GPU.force;
   const v = document.getElementById('view'), dpr = Math.min(window.devicePixelRatio||1, 3);
@@ -10418,8 +10419,8 @@ function drawHeldMC(g, id, m, sp, bob){
   }
   return [bs[0], bs[1], bw];
 }
-// the held item is laid out for a 224 x 140 picture; scale it to whatever sharpness level is in use
-function drawHand(){ ctx.save(); ctx.scale(RW/224, RH/140); drawHandInner(); ctx.restore(); }
+// the held item is laid out for a 224 x 140 frame; scale it evenly to the picture's height and pin it to the right edge
+function drawHand(){ const s = RH/140; ctx.save(); ctx.translate(RW-224*s, 0); ctx.scale(s, s); drawHandInner(); ctx.restore(); }
 function drawHandInner(){
   const id = HOTBAR[sel];
   const count = inv[id]||0;

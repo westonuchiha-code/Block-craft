@@ -6898,6 +6898,10 @@ function questOffer(m){
   }
   if(kind==='crypt'){
     const C = [...cryptNear(vc[0], vc[1], 420), ...delveNear(vc[0], vc[1], 560)].filter(P=>!(cryptState[P.key] && cryptState[P.key].cleared)).sort((p,q)=>Math.hypot(p.ex-vc[0],p.ez-vc[1])-Math.hypot(q.ex-vc[0],q.ez-vc[1]))[rnd()<0.5 ? 0 : 1] || null;
+    if(C && C.key[0]==='D' && rnd()<0.3){ const d = Math.hypot(C.ex-vc[0], C.ez-vc[1]), reward = 300 + Math.round(d/3), days = 8;       // someone is lost down there
+      const c = C.nodes.map((N,i)=>i).filter(i=>i>0 && i!==C.heart && i!==C.camp && C.nodes[i].dep>=2), ni = c.length ? c[Math.floor(rnd()*c.length)] : 1, who = NPC_FIRST[Math.floor(rnd()*NPC_FIRST.length)];
+      return { kind:'rescue', delve:1, crypt:C.key, cname:C.name, at:[C.ex,C.ez], ni, who, days, reward, rep:25,
+               text:`${who} went down into ${C.name} three days ago, looking for ore, and has not come back. The gate is about ${Math.round(d/10)*10} paces ${dirWord(vc[0],vc[1],C.ex,C.ez)} of here. Find ${who} and bring them up to the gate alive, within ${days} days. ${reward} gold, everything we can spare.` }; }
     if(C && C.key[0]==='D' && rnd()<0.5){ const d = Math.hypot(C.ex-vc[0], C.ez-vc[1]), reward = 260 + Math.round(d/3), days = 8;
       return { kind:'fetch', relic:1, item:HEIRLOOM, n:1, crypt:C.key, cname:C.name, at:[C.ex,C.ez], days, reward, rep:20,
                text:`My grandfather went down into ${C.name} and never came up. He carried our family's cup, a gold one with a red stone. The gate is about ${Math.round(d/10)*10} paces ${dirWord(vc[0],vc[1],C.ex,C.ez)} of here. They say such things end up on the shrine at the very bottom. Bring it back to me within ${days} days and ${reward} gold is yours.` }; }
@@ -7009,7 +7013,7 @@ function guildSheet(){
 let journal = [];
 function logJournal(t){ journal.push({ d:dayNo, t }); if(journal.length>150) journal.splice(0, journal.length-150); scheduleSave(); }
 function questTitle(q){
-  return q.relic ? 'bring back the heirloom from '+q.cname : q.kind==='crypt' ? (q.delve ? 'kill what rules '+q.cname : 'destroy the Crypt Lord of the '+q.cname) : q.kind==='hunt' ? 'hunt a '+BEAST_NAME[q.beast] : q.kind==='deliver' ? 'carry a parcel to '+q.toName
+  return q.kind==='rescue' ? 'bring '+q.who+' out of '+q.cname : q.relic ? 'bring back the heirloom from '+q.cname : q.kind==='crypt' ? (q.delve ? 'kill what rules '+q.cname : 'destroy the Crypt Lord of the '+q.cname) : q.kind==='hunt' ? 'hunt a '+BEAST_NAME[q.beast] : q.kind==='deliver' ? 'carry a parcel to '+q.toName
        : q.kind==='build' ? 'building work' : (q.order ? 'make ' : 'bring ')+q.n+' '+NAMES[q.item];
 }
 function journalSheet(){
@@ -7035,11 +7039,11 @@ function acceptQuest(m, q){
   if(q.kind==='deliver'){ inv[PARCEL] = (inv[PARCEL]||0)+1; autoFillHotbar(PARCEL); }
   if(q.relic){ const P = siteByKey(q.crypt), c = P && P.nodes[P.heart].chests[0]; if(c){ const it = chestItems(c[0],c[1],c[2]); it[HEIRLOOM] = (it[HEIRLOOM]||0)+1; } }      // the heirloom waits in a chest on the shrine
   quests.push(q); logJournal(`Took work from ${q.giverName}: ${questTitle(q)}. ${q.reward} gold if done within ${q.days} days.`);
-  return q.relic ? 'Bless you. Look on the shrine, at the very bottom.' : q.kind==='deliver' ? 'Here is the parcel. Don\'t open it.' : q.kind==='hunt' ? 'Good luck. Bring me word when it is dead.' : 'I\'ll be waiting.';
+  return q.kind==='rescue' ? 'Go quickly. Please.' : q.relic ? 'Bless you. Look on the shrine, at the very bottom.' : q.kind==='deliver' ? 'Here is the parcel. Don\'t open it.' : q.kind==='hunt' ? 'Good luck. Bring me word when it is dead.' : 'I\'ll be waiting.';
 }
 function finishQuest(q, ok){
   quests.splice(quests.indexOf(q),1);
-  { const gid = guildOfJob(q.giverJob); if(gid) guildGain(gid, ok ? (q.kind==='crypt' || q.kind==='hunt' ? 12 : 8) : -6); }
+  { const gid = guildOfJob(q.giverJob); if(gid) guildGain(gid, ok ? (q.kind==='crypt' || q.kind==='hunt' || q.kind==='rescue' ? 12 : 8) : -6); }
   logJournal(ok ? `Finished the work for ${q.giverName} (${questTitle(q)}) and was paid ${q.reward} gold.` : `Failed the work for ${q.giverName} (${questTitle(q)}): out of time.`);
   if(ok){ gold += q.reward; addRep(q.village, q.rep); if(q.kind==='deliver') addRep(q.to.split(':')[0].split(',').map(Number), 4); skillToast('QUEST DONE<br><small>+'+q.reward+' gold</small>', true); }
   else { addRep(q.village, -5); if(q.kind==='deliver' && inv[PARCEL]>0) inv[PARCEL]--; if(q.relic && inv[HEIRLOOM]>0) inv[HEIRLOOM]--; skillToast('QUEST FAILED<br><small>'+q.giverName+' is disappointed</small>', true); }
@@ -7072,9 +7076,10 @@ function renderQuests(){
     else if(q.kind==='deliver') goal = `Take the parcel to ${q.toName} (${(JOB_TITLE[q.toJob]||'villager').toLowerCase()}), ${far(q.tvc[0],q.tvc[1])}.`;
     else if(q.kind==='crypt') goal = q.delve ? (q.state==='done' ? `The master of ${q.cname} is dead. Return to ${q.giverName} (${gv}).` : `Go down into ${q.cname} and kill what rules it, at the very bottom. Its gate is ${far(q.at[0],q.at[1])}.`) : q.state==='done' ? `The Crypt Lord is destroyed. Return to ${q.giverName} (${gv}).` : `Destroy the Crypt Lord in the ${q.cname}, ${far(q.at[0],q.at[1])}.`;
     else if(q.kind==='build'){ const J = BUILD_JOBS.find(j=>j.key===q.job); goal = q.state==='done' ? `Done. Tell ${q.giverName} (${gv}).` : `Place ${q.n} ${J.what} in ${q.giverName}'s village (${gv}). ${q.got||0} of ${q.n} so far.`; }
+    else if(q.kind==='rescue') goal = q.state==='done' ? `${q.who} is safe. Tell ${q.giverName} (${gv}).` : q.found ? `Lead ${q.who} up to the gate of ${q.cname} (${far(q.at[0],q.at[1])}). Stay close.` : `Find ${q.who}, lost somewhere in ${q.cname}. Its gate is ${far(q.at[0],q.at[1])}.`;
     else if(q.relic) goal = (inv[HEIRLOOM]||0)>0 ? `You have the heirloom. Take it to ${q.giverName} (${gv}).` : `Find the family's gold cup in ${q.cname}: look in the chests on the shrine at the very bottom. Its gate is ${far(q.at[0],q.at[1])}.`;
     else goal = `${q.order ? 'Make' : 'Bring'} ${q.n} ${NAMES[q.item]} for ${q.giverName} (${gv}). You have ${inv[q.item]||0}.`;
-    h += `<div class="skRow"><div class="skHead"><b>${q.kind==='crypt'?(q.delve?'Delve':'Crypt'):q.kind==='hunt'?'Hunt':q.kind==='deliver'?'Delivery':q.kind==='build'?'Building':q.relic?'Heirloom':q.order?'Order':'Supplies'} for ${q.giverName}</b><span>${q.reward}g</span></div><div class="skDesc" style="color:#d8cfb8">${goal}</div><div class="skDesc">${left>0 ? left+(left===1?' day':' days')+' left' : 'due today'}</div></div>`;
+    h += `<div class="skRow"><div class="skHead"><b>${q.kind==='rescue'?'Rescue':q.kind==='crypt'?(q.delve?'Delve':'Crypt'):q.kind==='hunt'?'Hunt':q.kind==='deliver'?'Delivery':q.kind==='build'?'Building':q.relic?'Heirloom':q.order?'Order':'Supplies'} for ${q.giverName}</b><span>${q.reward}g</span></div><div class="skDesc" style="color:#d8cfb8">${goal}</div><div class="skDesc">${left>0 ? left+(left===1?' day':' days')+' left' : 'due today'}</div></div>`;
   }
   // every village you've found, or done work for, by name: your standing there and how far it is
   const keys = new Set([...visitedV, ...Object.keys(villageRep).filter(k=>villageRep[k] && k[0]!=='h'), ...quests.filter(q=>q.village && q.village[0]!=='h').map(q=>vkey(q.village))]);
@@ -7140,6 +7145,9 @@ function renderTalk(){
   let h = '';
   document.getElementById('talkGold').textContent = gold + ' gold \u00b7 ' + repWord(repOf(m.village));
   const shunned = repOf(m.village) <= -30;
+  if(m.rescue){ const q = quests.find(q=>q.id===m.rescue);
+    el.innerHTML = `<div class="tkLine">\u201c${m.follow ? 'I am right behind you. Do not go too fast.' : q && q.found ? 'I will wait here. Do not leave me long.' : 'A living face! I thought I would die down here. Please, lead me out.'}\u201d</div><div class="tkBtns"><button data-a="follow">${m.follow ? 'WAIT HERE' : 'FOLLOW ME'}</button><button data-a="bye">LEAVE</button></div>`;
+    return; }
   if(talkView==='talk' && m.job==='guard' && bountyOf(m.village)>0 && !talkOffer){      // speak to a guard while wanted and he arrests you
     talkView = 'arrest'; arrestOpen = true; talkLine = `Halt! You are wanted in ${villageName(m.village[0], m.village[1])}. The fine is ${fineOf(m.village)} gold. Pay it, or come quietly.`; }
   if(talkView==='arrest'){ const b = fineOf(m.village), d = jailDays(bountyOf(m.village));
@@ -7152,9 +7160,9 @@ function renderTalk(){
     h += `<div class="tkLine">\u201c${shunned ? 'We don\'t deal with your kind here. Leave.' : talkLine}\u201d</div><div class="tkBtns">`;
     if(talkOffer) h += `<button data-a="accept">ACCEPT</button><button data-a="decline">DECLINE</button>`;
     else if(!shunned){
-    const del = quests.find(q=>q.kind==='deliver' && q.to===m.home && inv[PARCEL]>0), back = quests.find(q=>q.giver===m.home && (q.kind==='hunt' || q.kind==='build' || q.kind==='crypt' ? q.state==='done' : q.kind==='fetch' && (inv[q.item]||0)>=q.n));
+    const del = quests.find(q=>q.kind==='deliver' && q.to===m.home && inv[PARCEL]>0), back = quests.find(q=>q.giver===m.home && (q.kind==='hunt' || q.kind==='build' || q.kind==='crypt' || q.kind==='rescue' ? q.state==='done' : q.kind==='fetch' && (inv[q.item]||0)>=q.n));
     if(del) h += `<button data-a="deliver">GIVE PARCEL</button>`;
-    if(back) h += `<button data-a="turnin">${back.kind==='build' ? 'REPORT THE WORK' : back.kind==='hunt' || back.kind==='crypt' ? 'REPORT THE KILL' : 'HAND OVER '+back.n+' '+NAMES[back.item].toUpperCase()}</button>`;
+    if(back) h += `<button data-a="turnin">${back.kind==='rescue' ? 'TELL THEM THE NEWS' : back.kind==='build' ? 'REPORT THE WORK' : back.kind==='hunt' || back.kind==='crypt' ? 'REPORT THE KILL' : 'HAND OVER '+back.n+' '+NAMES[back.item].toUpperCase()}</button>`;
     h += `<button data-a="work">ASK FOR WORK</button>`;
     { const gid = guildOfJob(m.job); if(gid && guildRank(gid)<0 && !(GUILDS[gid].secret && thefts<3)) h += `<button data-a="join">${GUILDS[gid].secret ? 'A WORD IN PRIVATE' : 'JOIN THE '+GUILDS[gid].name.toUpperCase()}</button>`; }
     if(TRAINS[m.job]) h += `<button data-a="train">TRAIN ${SKILLS.find(k=>k.id===TRAINS[m.job]).name.toUpperCase()} (${trainCost(TRAINS[m.job], m.job)}g)</button>`;
@@ -7190,6 +7198,7 @@ function talkAction(a){
   else if(a==='jail'){ arrestEnd(m, 'jail'); return; }
   else if(a==='resist'){ arrestEnd(m, 'resist'); return; }
   else if(a==='bye'){ closeTalk(); return; }
+  else if(a==='follow'){ m.follow = !m.follow; const q = quests.find(q=>q.id===m.rescue); if(q && !q.found){ q.found = 1; logJournal('Found '+q.who+' alive in '+q.cname+'.'); } closeTalk(); return; }
   else if(a==='trade'){ talkView = 'trade'; }
   else if(a==='back'){ talkView = 'talk'; }
   else if(a==='news'){ talkLine = talkNews(m); }
@@ -7221,6 +7230,7 @@ function talkAction(a){
   else if(a==='turnin'){ const q = quests.find(q=>q.giver===m.home);
     if(q && q.kind==='hunt' && q.state==='done'){ finishQuest(q, true); talkLine = `You killed it? The village owes you. ${q.reward} gold, as promised.`; }
     else if(q && q.kind==='crypt' && q.state==='done'){ finishQuest(q, true); talkLine = q.delve ? `You went to the bottom of ${q.cname} and came back? Then it is true, the thing is dead. ${q.reward} gold, and our thanks with it.` : `The Crypt Lord is gone? Then the dead will rest. ${q.reward} gold, with our thanks.`; }
+    else if(q && q.kind==='rescue' && q.state==='done'){ finishQuest(q, true); talkLine = `${q.who} is alive? Out of that place? You have given us back more than gold can pay for. Here: ${q.reward} gold, all the same.`; }
     else if(q && q.kind==='build' && q.state==='done'){ finishQuest(q, true); talkLine = `I saw it with my own eyes. Fine work! ${q.reward} gold, as promised.`; }
     else if(q && q.kind==='fetch' && (inv[q.item]||0)>=q.n){ inv[q.item] -= q.n; finishQuest(q, true); talkLine = q.relic ? `Grandfather's cup. You found it. I never thought to hold it again. ${q.reward} gold, and my family's thanks.` : `Just what I needed. ${q.reward} gold, as promised.`; } }
   else if(a==='heal'){
@@ -7456,7 +7466,7 @@ function drawMap(){
     if(label){ g.fillStyle = 'rgba(0,0,0,.65)'; const w = g.measureText(label).width; g.fillRect(sx-w/2-3, sy-20, w+6, 13); g.fillStyle = col; g.fillText(label, sx, sy-10); } };
   for(const p of knownPlaces()) mark(p.x, p.z, p.kind==='h' ? '#8fdc6a' : '#e3cf95', p.name);
   for(const k of cryptSeen){ const P = siteByKey(k); if(P) mark(P.ex, P.ez, cryptState[k] && cryptState[k].cleared ? '#8a8a9a' : k[0]==='D' ? '#e0a050' : '#b07ae0', P.name); }
-  for(const q of quests){ const t = (q.kind==='hunt' || q.kind==='crypt' || q.relic) && q.state==='active' ? q.at : q.kind==='deliver' ? q.tvc : null; if(t) mark(t[0], t[1], '#e05040', q.kind==='hunt' ? BEAST_NAME[q.beast] : (q.kind==='crypt' || q.relic) ? q.cname : q.toName); }
+  for(const q of quests){ const t = (q.kind==='hunt' || q.kind==='crypt' || q.kind==='rescue' || q.relic) && q.state==='active' ? q.at : q.kind==='deliver' ? q.tvc : null; if(t) mark(t[0], t[1], '#e05040', q.kind==='hunt' ? BEAST_NAME[q.beast] : (q.kind==='crypt' || q.kind==='rescue' || q.relic) ? q.cname : q.toName); }
   for(const sk of deathSacks) mark(sk.x, sk.z, '#ffe28c', 'your belongings');
   // you: an arrow pointing the way you face
   const f = camVectors().f, a = Math.atan2(f[0], f[2]);
@@ -7586,6 +7596,12 @@ function updateNpc(m, dt){
     const dxp=player.x-m.x, dzp=player.z-m.z;
     if(Math.hypot(dxp,dzp)<1.5 && Math.abs(player.y-m.y)<1.6){ m.moving=false; m.yaw=Math.atan2(dxp,-dzp); if(m.atkCd<=0){ hurt(3); m.atkCd = 1.1; m.swing = 1; } }
     else walking = npcChase(m, player.x, player.y, player.z, dt);
+  } else if(m.follow){                                                                 // someone you are leading out: they keep close behind you
+    const d = Math.hypot(player.x-m.x, player.z-m.z);
+    if(d>26 || (d>10 && Math.abs(player.y-m.y)>8)){ const bx = Math.floor(player.x - Math.sin(player.yaw)*2), bz = Math.floor(player.z + Math.cos(player.yaw)*2), by = Math.floor(player.y);      // fell too far behind: they catch up
+      for(const [x,z] of [[bx,bz],[Math.floor(player.x),Math.floor(player.z)]]) if(npcCanStand(x,by,z)){ m.x = x+0.5; m.y = by; m.z = z+0.5; m.path = null; break; } }
+    else if(d>3) walking = npcChase(m, player.x, player.y, player.z, dt);
+    else { m.yaw = Math.atan2(player.x-m.x, -(player.z-m.z)); }
   } else if(guard && bountyOf(m.village)>0 && !craftOpen && !dead && performance.now()>arrestUntil && Math.hypot(player.x-m.x,player.z-m.z)<14 && Math.abs(player.y-m.y)<4){      // you are wanted here: the guard comes for you
     if(Math.hypot(player.x-m.x,player.z-m.z)<2.4){ m.moving = false; openArrest(m); } else walking = npcChase(m, player.x, player.y, player.z, dt);
   } else if(m.foe){                                                                    // a hostile creature in the village
@@ -8369,6 +8385,14 @@ function delveTick(){
   const px = Math.floor(player.x), pz = Math.floor(player.z), below = player.y < colInfo(px,pz).h-4;
   if(!cryptSeen.has(P.key) && (Math.hypot(P.ex-player.x, P.ez-player.z)<30 || (below && P.nodes.some(N=>Math.hypot(N.cx-player.x, N.cz-player.z)<N.a+6 && Math.abs(player.y-N.F)<N.Hc+4)))){
     cryptSeen.add(P.key); skillToast(P.name.toUpperCase()+'<br><small>discovered</small>', true); logJournal('Found the gate of '+P.name+', a delve.'); }
+  for(const q of quests){ if(q.kind!=='rescue' || q.crypt!==P.key || q.state!=='active') continue;
+    const hk = 'rescue:'+q.id, N = P.nodes[q.ni] || P.nodes[1]; let m = mobs.find(m=>m.home===hk);
+    if(!m && below && Math.hypot(N.cx-player.x, N.cz-player.z)<N.a+14){                              // the lost one waits where they gave up
+      let at = null; for(let t=0;t<30 && !at;t++){ const x = N.cx-2+(t%5), z = N.cz-2+Math.floor(t/5)%5; for(let y=N.F+2;y>=N.F;y--) if(npcCanStand(x,y,z)){ at = [x,y,z]; break; } }
+      if(at){ const ch = npcGenerate(vRng(q.id*7919+13), 'miner'); ch.name = q.who; m = newNpc(at[0],at[1],at[2],ch); m.home = hk; m.house = null; m.village = null; m.vc = [N.cx,N.cz]; m.hermit = 1; m.rescue = q.id; m.site = P.key; m.hp = 60; m.follow = !!q.found; mobs.push(m); } }
+    if(m && m.follow && Math.hypot(m.x-P.ex, m.z-P.ez)<7 && m.y>=P.h-2){                              // out through the gate: safe
+      q.state = 'done'; m.follow = false; m.rescue = 0; m.goneT = 6; skillToast(q.who.toUpperCase()+' IS SAFE<br><small>tell '+q.giverName+'</small>', true); logJournal('Brought '+q.who+' out of '+P.name+' alive.'); }
+  }
   const cleared = cryptState[P.key] && cryptState[P.key].cleared;
   P.nodes.forEach((N,i)=>{
     const k = P.key+':'+i, d = Math.hypot(N.cx-player.x, N.cz-player.z);
@@ -8809,7 +8833,7 @@ function updateMobs(){
     if(lavaHas(Math.floor(m.x), Math.floor(m.y+0.2), Math.floor(m.z), m.y+0.2)){ m.hp = 0; m.dead = true; m.deadT = 0; m.path = null; continue; }     // lava kills rats and cats at once
     const far = Math.hypot(m.x-player.x, m.z-player.z);
     if(IS_BRUTE(m.kind)){ if(far>BRUTE[m.kind].far) mobs.splice(i,1); else updateOgre(m,dt); continue; }
-    if(far>70 || Math.abs(m.y-player.y)>45){ mobs.splice(i,1); continue; }      // too far away to matter
+    if((far>70 || Math.abs(m.y-player.y)>45) && !m.follow){ mobs.splice(i,1); continue; }      // too far away to matter (someone following you catches up instead)
     if(m.kind==='rat' && !ratNight){                                              // morning: rats out in the open head home and burrow
       m.tgt = null;
       if(!ratAllowed(Math.floor(m.x),Math.round(m.y),Math.floor(m.z))){ m.surfT = (m.surfT||0)+dt; if(m.surfT>25 && far>16){ mobs.splice(i,1); continue; } } else m.surfT = 0;
@@ -8828,7 +8852,7 @@ function updateMobs(){
     if(m.kind==='cat'){ updateCat(m,dt); continue; }
     if(m.kind==='wb'){ updateWb(m,dt); continue; }
     if(BEAST[m.kind]){ if(updateBeast(m,dt)==='gone') mobs.splice(i,1); continue; }
-    if(m.kind==='npc'){ updateNpc(m,dt); continue; }
+    if(m.kind==='npc'){ if(m.goneT>0){ m.goneT -= dt; if(m.goneT<=0){ mobs.splice(i,1); continue; } } updateNpc(m,dt); continue; }
     const cx=Math.floor(m.x), cy=Math.round(m.y), cz=Math.floor(m.z);
     if(m.angry<=0){                                                         // rats and cats attack each other on sight
       const foe = foeOf(m,'cat',9);

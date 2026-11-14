@@ -24,7 +24,8 @@ DELVES (seed 12345: the Black Warren, gate at x 100, z -198, about 250 blocks no
 
 JOURNAL AND QUESTS
 [ ] Character sheet -> JOURNAL: is the record useful? Anything missing?
-[ ] The two delve jobs from villagers: kill the master, bring back the heirloom. Pay and time limit fair?
+[ ] The three delve jobs from villagers: kill the master, bring back the heirloom, rescue someone lost. Pay and time limit fair?
+[ ] Rescue: does the follower keep up through tunnels and up the stair, or get stuck? (Never watched by a person.)
 
 THE HERMIT (in the Black Warren: chamber 6, a camp with a bedroll and a lamp on a barrel)
 [ ] Is finding a friendly voice down there a good moment? Are his prices and goods useful at that depth?

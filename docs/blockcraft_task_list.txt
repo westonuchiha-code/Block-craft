@@ -558,3 +558,8 @@ DONE  RUMOURS: ASK FOR NEWS now also tells you of the nearest delve (within 800)
 DONE  THIEVES GUILD: hidden until you have stolen unseen three times (a toast tells you someone noticed). Then any commoner offers
       "A WORD IN PRIVATE" to join. Ranks Footpad to Kingpin, raised by doing commoners' work. Perks per rank: fines 10% lower (to 60%),
       commoners buy from you for 10% more, witnesses see you from 8% less far (to 48%). Covered by tests/guild.py.
+DONE  RESCUE QUEST (the lost miner): about a third of delve jobs are now "find <name>, lost in <delve>, and bring them up to the gate alive".
+      The lost one waits in a middle chamber; talk to them (FOLLOW ME / WAIT HERE). They keep close behind you, catch up if they fall more than
+      26 blocks behind, keep out of fights, and are safe once out through the gate; then tell the giver. 8 days, 300+ gold, counts as guild work.
+      Covered by tests/delve.py (found, talks, follows, keeps close, safe at the gate, walks off, hand-in).
+      Delve jobs are now a mix: rescue about 30%, heirloom about 35%, kill the master about 35%.

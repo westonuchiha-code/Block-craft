@@ -20,6 +20,9 @@ with sync_playwright() as p:
       o.later={rep:guilds.fighters.rep, rank:guildRank('fighters'), name:GUILDS.fighters.ranks[guildRank('fighters')], train:trainCost('weapons','guard'), cap:trainCap('guard')};
       const q=pay(guard); finishQuest(q[2],false); o.afterFail=guilds.fighters.rep;
       guilds.temple.rep=200; o.templeTop={rank:guildRank('temple'), cut:guildCut('temple',15,90)};
+      // the Thieves Guild: not offered until three unseen thefts; then lower fines, better prices from commoners
+      const com=Object.assign({},guard,{home:'v1',name:'Wulf',job:'villager'}); o.thievesHidden=!guildSheet().includes('Thieves Guild'); thefts=3; o.thievesShown=guildSheet().includes('Thieves Guild');
+      talkNpc=com; const s0=sellPrice(ADAM_INGOT); guildJoin("thieves"); o.thief={rank:guildRank("thieves"), sell:[s0, sellPrice(ADAM_INGOT)], cut:guildCut('thieves',10,60)}; talkNpc=null;
       o.journal=journal.filter(e=>/Guild|Temple/.test(e.t)).map(e=>e.t);
       saveWorld(); openSheet('standing'); return o; }""")
     print(json.dumps(r,indent=1))
@@ -30,7 +33,7 @@ with sync_playwright() as p:
     b_,j,l=r['before'],r['joined'],r['later']
     ok = (b_['rank']==-1 and r['payOutsider']==1 and r['repOutsider'] is None and j['rank']==0 and j['train']<b_['train'] and j['cap']==58 and j['mp']==b_['mp']+2 and j['spell']<b_['spell']
           and r['payMember']==1.08 and r['repAfterHunt']==12 and l['rank']==2 and l['cap']==74 and l['train']<j['train'] and r['afterFail']==l['rep']-6 and r['templeTop']['rank']==5 and abs(r['templeTop']['cut']-0.1)<1e-9
-          and len(r['journal'])>=5 and after==[2,0,5])
+          and r['thievesHidden'] and r['thievesShown'] and r['thief']['rank']==0 and r['thief']['sell'][1]>r['thief']['sell'][0] and abs(r['thief']['cut']-0.9)<1e-9 and len(r['journal'])>=5 and after==[2,0,5])
     if not ok: bad.append('guild numbers')
     b.close()
 print('GUILD TEST FAILED', bad) if bad else print('guilds ok')

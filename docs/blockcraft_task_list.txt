@@ -555,3 +555,6 @@ DONE  THE LAW: a crime a villager sees puts a bounty on you in that village (ass
 DONE  Suite checkpoint on guilds + law build: 36 of 36 pass (proof/suite_guilds_law.log).
 DONE  RUMOURS: ASK FOR NEWS now also tells you of the nearest delve (within 800) or barrow (within 500) you have not heard of, marks it on the
       map and writes it in the journal. One rumour a day from each person.
+DONE  THIEVES GUILD: hidden until you have stolen unseen three times (a toast tells you someone noticed). Then any commoner offers
+      "A WORD IN PRIVATE" to join. Ranks Footpad to Kingpin, raised by doing commoners' work. Perks per rank: fines 10% lower (to 60%),
+      commoners buy from you for 10% more, witnesses see you from 8% less far (to 48%). Covered by tests/guild.py.

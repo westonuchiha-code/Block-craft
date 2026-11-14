@@ -33,7 +33,8 @@ THE HERMIT (in the Black Warren: chamber 6, a camp with a bedroll and a lamp on 
 GUILDS (ask a guard, a scholar or a cleric to join; see STANDING on the sheet)
 [ ] Does joining and rising feel like becoming someone? Is two or three jobs a rank about right, slowing as you go up?
 [ ] Are the perks worth having (better pay, cheaper lessons, cheaper spells and healing)? What else should rank give?
-[ ] Should there be a Thieves Guild, and what would its work be?
+[ ] Thieves Guild: steal unseen three times, then a commoner offers a quiet word. Does that feel like being recruited?
+[ ] Rumours: ASK FOR NEWS marks a nearby delve or barrow on your map (one a day per person). Useful?
 
 THE LAW (hit a villager, or take from a house chest with someone nearby, then wait for a guard)
 [ ] Does being arrested feel fair? Fines: assault 40, theft 30 plus half the value, murder 300.

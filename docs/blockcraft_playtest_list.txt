@@ -1,4 +1,38 @@
 BLOCKCRAFT - PLAYTEST LIST
+
+== TO LOOK AT WHEN YOU ARE BACK (built 2026-11-14 onward, checked by scripts and screenshots only) ==
+Start a NEW world for all of this (old worlds keep the old low land and have no delves).
+
+HELD ITEMS
+[ ] Blocks, stairs, doors, beds, lanterns, food, ingots in the hand: do they sit right? Chairs and fences are thin and low.
+[ ] The 3D arm when the hand is empty, and its punch.
+[ ] Fire and lightning on the fist and along a sword: too much? Does the fire hide the blade?
+
+THE LIFTED WORLD
+[ ] Does the land feel the same as before, just higher? Sea level is 56, mountains reach about 115 (build ceiling 120).
+[ ] How long does it take to dig down to iron (below 48), mithril (below 20), adamantite (below 10)? Too far?
+[ ] GPU speed on the S21 Ultra and a PC (never measured on real hardware).
+
+DELVES (seed 12345: the Black Warren, gate at x 100, z -198, about 250 blocks north of spawn)
+[ ] Finding the gate; the walk down the stair.
+[ ] Size and mood of the caverns; is the glowing moss too much or too little light?
+[ ] Can you find your way to the shrine? Is it too easy, too confusing, too long?
+[ ] How many creatures, how hard, how good the chests feel for the effort.
+[ ] The master fight (brood mother or Crypt Lord).
+[ ] Digging shortcuts: fun or does it spoil it?
+[ ] Delves are about 1 per 9 regions of 256 blocks. Too rare?
+
+JOURNAL AND QUESTS
+[ ] Character sheet -> JOURNAL: is the record useful? Anything missing?
+[ ] The two delve jobs from villagers: kill the master, bring back the heirloom. Pay and time limit fair?
+
+SMALLER THINGS
+[ ] No class picker at the start: does a fresh character feel right without one?
+[ ] Adamantite is now the top metal, mithril below it.
+[ ] 16:9 picture on your screens.
+
+== OLDER LIST ==
+
 Things to check when you have time. Write notes next to each one.
 
 TOOL PROGRESSION (added 2026-11-08, not yet playtested)

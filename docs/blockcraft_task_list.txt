@@ -525,3 +525,13 @@ DONE  New worlds are worldGen 6: the land is shaped exactly as before and then l
 TESTED - 43 delves over 6 seeds in lifted worlds: every chamber and the master reachable on foot from the gate
       - GPU = CPU in all 8 scenes of tests/gpu.py (clouds included); CPU render time per frame about the same as an old-shape world
 NOTE  A world started on the previous preview build (gen 5) keeps its low shape, but its delves are laid out by the new rules, so they will differ.
+
+== WORK WHILE HE CANNOT PLAYTEST (from 2026-11-14, ~48 hours) ==
+RULE  He is at work and cannot playtest until about 2026-11-16. Do not ask him to try things. Build what can be verified by scripts and
+      screenshots, and keep the list of things for him to look at in docs/blockcraft_playtest_list.txt (new section at the top).
+DONE  tests/delve.py added to the suite (34 scripts now): lifted world shape, 6 delves walkable gate to master, master kill, chests, quests, map entry.
+DONE  JOURNAL: the sheet's QUESTS tab is now JOURNAL. Work in hand (as before), every delve and barrow found with distance and whether it is
+      cleared, and THE RECORD: dated entries for work taken / finished / failed, villages and delves found, masters killed, deaths.
+      Saved with the world (last 150 entries). Verified by script + screenshot (proof/journal.png) and through a save and reload.
+DONE  HEIRLOOM QUEST: half of the delve jobs are now "bring back my family's gold cup" (item 1137, old heirloom). Taking the job puts the cup in a
+      chest on the shrine at the bottom; carry it back within 8 days. Uses the existing hand-in flow; shown on the map and in the journal.

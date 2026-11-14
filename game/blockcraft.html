@@ -1615,6 +1615,173 @@ function cryptNear(x,z,r){
   for(let a=-R;a<=R;a++) for(let b=-R;b<=R;b++){ const P = cryptPlan(rx+a,rz+b); if(P && Math.hypot(P.ex-x,P.ez-z)<=r) out.push(P); }
   return out.sort((p,q)=>Math.hypot(p.ex-x,p.ez-z)-Math.hypot(q.ex-x,q.ez-z));
 }
+// ---------- delves: the dungeons of this world (worlds made from now on) ----------
+// A delve is a chain of great natural caverns under high ground, with the ruins of older builders inside: a gate on the surface, a stair
+// down, then a dozen chambers joined by rough tunnels, each lower than the last, to a shrine at the bottom where its master waits.
+// The deeper the chamber, the tougher what lives there and the better its chests. Walls can be dug like any rock: what makes it a
+// dungeon is its size, its dark and its inhabitants, not a maze. One per 256-block region at most, sited on the highest ground it can find.
+const DRS = 256;
+const DELVE_ADJ = ['Sunken','Hollow','Drowned','Shattered','Forgotten','Whispering','Blind','Black','Weeping','Howling','Silent','Broken'];
+const DELVE_NOUN = [['Hold','Halls','Vaults','Deeps'],['Nest','Warren','Maw','Burrows']];       // by kind: 0 held by the old dead, 1 a spider nest
+const delveByNum = new Map();
+let delveMemoRx = 1e9, delveMemoRz = 1e9, delveMemoP = null;
+function delvePlan(rx,rz){
+  if(rx===delveMemoRx && rz===delveMemoRz) return delveMemoP;
+  const nk = rx*131072 + rz; let P = delveByNum.get(nk);
+  if(P!==undefined){ delveMemoRx = rx; delveMemoRz = rz; delveMemoP = P; return P; }
+  P = null;
+  const z0 = rz*DRS, z1 = z0+DRS-1;
+  if(worldGen>=5 && !isUnder(z0) && !isUnder(z1) && !isTestZ(z0) && !isTestZ(z1) && h3(rx,71,rz,SEED+900) < 0.9){
+    let best = null;
+    for(let t=0;t<18;t++){
+      const ex = rx*DRS + 80 + Math.floor(h3(rx,72+t,rz,SEED+901)*(DRS-160)), ez = rz*DRS + 24 + Math.floor(h3(rx,92+t,rz,SEED+902)*(DRS-190));
+      const ci = colInfo(ex,ez), h = ci.h;
+      if(ci.open || h<25 || h>TOP_BUILD-8 || !(ci.top===GRASS || ci.top===SNOW || ci.top===SAND || ci.top===STONE || ci.top===DIRT)) continue;
+      let ok = true; for(let a=-3;a<=3 && ok;a+=3) for(let b=-3;b<=3;b+=3) if(Math.abs(colInfo(ex+a,ez+b).h-h)>3){ ok = false; break; }
+      if(!ok || villageNoTree(ex,ez) || nearRoad(ex,ez)) continue;
+      for(let a=-60;a<=60 && ok;a+=60) for(let b=0;b<=150;b+=50) if(nearVillage(ex+a,ez+b)){ ok = false; break; }
+      if(!ok || cryptNear(ex,ez+70,130).length) continue;
+      const score = h + (colInfo(ex,ez+50).h + colInfo(ex,ez+100).h)/2;               // thick rock over the caverns
+      if(!best || score>best.score) best = { ex, ez, h, score };
+    }
+    if(best){
+      const { ex, ez, h } = best, rnd = vRng(Math.floor(h3(rx,97,rz,SEED+903)*4294967295));
+      const D = Math.max(9, Math.min(13 + Math.floor(rnd()*3), h-13)), F1 = h+1-D, zc = ez + 2*D;               // the stair runs from z = ez+1 to zc, dropping D blocks
+      const nodes = [], surfMin = (cx,cz,a,b)=>Math.min(colInfo(cx,cz).h, colInfo(cx-Math.round(a*0.7),cz).h, colInfo(cx+Math.round(a*0.7),cz).h, colInfo(cx,cz-Math.round(b*0.7)).h, colInfo(cx,cz+Math.round(b*0.7)).h);
+      { const a = 8+Math.floor(rnd()*3), b = 8+Math.floor(rnd()*3), cz = zc+b-1, Hc = Math.max(5, Math.min(8, surfMin(ex,cz,a,b)-5-F1));
+        nodes.push({ cx:ex, cz, F:F1, a, b, Hc, par:-1, dep:0 }); }
+      const want = 9 + Math.floor(rnd()*4);
+      for(let tries=0; tries<220 && nodes.length<want; tries++){
+        const pi = rnd()<0.62 ? nodes.length-1 : Math.floor(rnd()*nodes.length), par = nodes[pi];
+        const a = 10+Math.floor(rnd()*10), b = 10+Math.floor(rnd()*10), ang = rnd()<0.45 ? (rnd()-0.5)*2.2 : rnd()*Math.PI*2;      // mostly onward (+z), sometimes any way
+        const dist = Math.max(par.a,par.b)*0.8 + Math.max(a,b)*0.8 + 3 + rnd()*10;
+        const cx = Math.round(par.cx + Math.sin(ang)*dist), cz = Math.round(par.cz + Math.cos(ang)*dist), F = Math.max(10, par.F - 1 - Math.floor(rnd()*4));
+        if(Math.abs(cx-ex)>58 || cz<zc+12 || cz>ez+132) continue;
+        const surf = surfMin(cx,cz,a,b); if(surf<=SEA+1) continue;
+        const Hc = Math.min(9+Math.floor(rnd()*12), surf-5-F); if(Hc<5) continue;
+        let clash = false; for(let i=0;i<nodes.length;i++){ if(i===pi) continue; const o = nodes[i]; if(Math.hypot(o.cx-cx,o.cz-cz) < (Math.max(a,b)+Math.max(o.a,o.b))*0.8){ clash = true; break; } }
+        if(clash) continue;
+        { let open = true; const n = Math.ceil(dist/3);                                   // the tunnel between them must have rock over it all the way (no valley or lake cutting it)
+          for(let i=0;i<=n && open;i++){ const k = i/n, tx = Math.round(par.cx+(cx-par.cx)*k), tz = Math.round(par.cz+(cz-par.cz)*k), ty = par.F+(F-par.F)*k+2, th = colInfo(tx,tz).h;
+            if(th<=SEA+1 || th-4 < ty+2) open = false; }
+          if(!open) continue; }
+        nodes.push({ cx, cz, F, a, b, Hc, par:pi, dep:par.dep+1 });
+      }
+      if(nodes.length>=4){
+        let hi = 1; for(let i=2;i<nodes.length;i++) if(nodes[i].dep>nodes[hi].dep || (nodes[i].dep===nodes[hi].dep && nodes[i].F<nodes[hi].F)) hi = i;      // the heart: the chamber furthest in
+        const maxDep = nodes[hi].dep, tuns = [], kind = h3(rx,98,rz,SEED+904)<0.6 ? 0 : 1, chests = new Map();
+        let x0=ex-4, x1=ex+4, zz0=ez-3, zz1=zc, yLo=Math.min(...nodes.map(N=>N.F))-3, yHi=h+6;
+        nodes.forEach((N,i)=>{
+          N.tier = i===hi ? 2 : Math.min(2, Math.floor(N.dep/(maxDep+1)*3));
+          if(N.par>=0){ const A = nodes[N.par]; tuns.push([A.cx, A.F+2, A.cz, N.cx-A.cx, N.F-A.F, N.cz-A.cz, Math.min(A.cx,N.cx)-4, Math.max(A.cx,N.cx)+4, Math.min(A.F,N.F)-2, Math.max(A.F,N.F)+6, Math.min(A.cz,N.cz)-4, Math.max(A.cz,N.cz)+4]); }
+          const r = rnd();
+          N.decor = i===hi ? 'shrine' : i===0 ? 'pillars' : (N.a>=9 && N.b>=8 && r<0.36) ? 'hall' : r<0.58 ? 'pillars' : r<0.74 ? 'pool' : 'bare';
+          N.chests = N.decor==='shrine' ? [[N.cx-1,N.F+1,N.cz+2],[N.cx+1,N.F+1,N.cz+2]] : N.decor==='hall' ? [[N.cx,N.F,N.cz+3]] : [];
+          for(const c of N.chests) chests.set(c.join(','), 'delve'+N.tier);
+          x0 = Math.min(x0, N.cx-N.a-3); x1 = Math.max(x1, N.cx+N.a+3); zz0 = Math.min(zz0, N.cz-N.b-3); zz1 = Math.max(zz1, N.cz+N.b+3); yHi = Math.max(yHi, N.F+N.Hc+3);
+        });
+        const adj = DELVE_ADJ[Math.floor(h3(rx,99,rz,SEED+905)*DELVE_ADJ.length)], nouns = DELVE_NOUN[kind];
+        P = { key:'D'+rx+','+rz, ex, ez, h, D, F1, zc, nodes, tuns, heart:hi, kind, chests, name:'the '+adj+' '+nouns[Math.floor(h3(rx,100,rz,SEED+906)*nouns.length)],
+              boss:[nodes[hi].cx, nodes[hi].F+1, nodes[hi].cz-1], bb:[x0,x1,yLo,yHi,zz0,zz1] };
+      }
+    }
+  }
+  delveByNum.set(nk,P); delveMemoRx = rx; delveMemoRz = rz; delveMemoP = P; return P;
+}
+// what the delve puts at a spot: a block, or -1 for "not mine" (ordinary rock or whatever else the world makes there)
+function delveBlock(x,y,z){
+  if(worldGen<5) return -1;
+  const P = delvePlan(Math.floor(x/DRS), Math.floor(z/DRS)); if(!P) return -1;
+  const B = P.bb; if(x<B[0]||x>B[1]||y<B[2]||y>B[3]||z<B[4]||z>B[5]) return -1;
+  const ex = P.ex, ez = P.ez, h = P.h;
+  // the gate on the surface: two leaning posts, a lintel and a lamp, on a flagstone threshold
+  if(z>=ez-2 && z<=ez && Math.abs(x-ex)<=2 && y>=h && y<=h+4){
+    if(y===h) return (x+z)%3 ? FLAGSTONE : MOSSY_BRICK;
+    if(z===ez){
+      if(Math.abs(x-ex)===2 && y<=h+3) return h3(x,y,z,SEED+915)<0.4 ? MOSSY_BRICK : STONE_BRICK;
+      if(y===h+4) return h3(x,y,z,SEED+915)<0.5 ? MOSSY_BRICK : STONE_BRICK;
+      if(x===ex && y===h+3) return LANTERN0;
+    }
+    return AIR;
+  }
+  // the stair down: slab half-steps, three wide
+  if(z>ez && z<=P.zc && Math.abs(x-ex)<=1){
+    const s2 = 2*(h+1) - (z-ez), top = s2>>1, half = s2&1;
+    if(y<top) return y>=top-1 ? (h3(x,y,z,SEED+916)<0.3 ? MOSSY_BRICK : STONE_BRICK) : -1;
+    if(y===top) return half ? slabId(6,0) : AIR;
+    if(y<=top+3) return AIR;
+    return -1;
+  }
+  let air = false, floor = false, tun = false;
+  // the tunnels between chambers come first: nothing a chamber grows (stalagmites, moss, humps) may block one
+  for(const T of P.tuns){ if(x<T[6]||x>T[7]||y<T[8]||y>T[9]||z<T[10]||z>T[11]) continue;
+    const vx = T[3], vy = T[4], vz = T[5];
+    let k = ((x-T[0])*vx + (y-T[1])*vy + (z-T[2])*vz)/(vx*vx+vy*vy+vz*vz); k = k<0 ? 0 : k>1 ? 1 : k;
+    const dx = x-(T[0]+vx*k), dy = y-(T[1]+vy*k), dz = z-(T[2]+vz*k), d2 = dx*dx + dy*dy*1.2 + dz*dz;
+    if(d2>24) continue;
+    const r = 2.5 + (vnoise3(x/5, y/5, z/5, SEED+924)-0.5)*1.4;
+    if(d2 < r*r && y <= colInfo(x,z).h-4){ tun = true; break; }
+    if(dy<0 && d2 < (r+1.7)*(r+1.7)) floor = true; }                                             // and a sound floor under every tunnel
+  for(const N of P.nodes){
+    const dy = y-N.F; if(dy<-2 || dy>N.Hc+1) continue;
+    const u = x-N.cx, w = z-N.cz, q = (u/N.a)*(u/N.a) + (w/N.b)*(w/N.b); if(q>1.6) continue;
+    const ruin = N.decor!=='bare' && N.decor!=='pool' && Math.abs(u)<=6 && Math.abs(w)<=7;
+    if(tun && !ruin && !(N.decor==='pool' && q<0.2)) continue;
+    if(N.decor==='pool' && q<0.14 && dy===-1) return WATER;                                        // a still pool in the middle
+    const fl = (!ruin && !(N.decor==='pool' && q<0.2) && vnoise(x/8, z/8, SEED+911)>0.66) ? 1 : 0;    // the floor rises in low humps
+    if(dy<fl){
+      if(dy===fl-1 && q<0.92){
+        if(N.decor==='hall' && Math.abs(u)<=5 && Math.abs(w)<=4) return h3(x,3,z,SEED+917)<0.3 ? MOSSY_BRICK : FLAGSTONE;
+        if(N.decor==='pillars' && Math.abs(u)<=1 && Math.abs(w)<=7) return h3(x,3,z,SEED+917)<0.25 ? COBBLE : FLAGSTONE;
+        if(N.decor==='shrine' && Math.abs(u)<=5 && Math.abs(w)<=5) return h3(x,3,z,SEED+917)<0.25 ? MOSSY_BRICK : STONE_BRICK;
+        if(N.tier>=1 && !ruin && vnoise(x/5, z/5, SEED+918)>0.8) return GLOWMOSS;               // deep chambers glow faintly underfoot
+      }
+      if(q<1.3) floor = true;                                                                      // a sound floor: no natural cave opens a pit under a chamber (a tunnel leaving downward still cuts through)
+      continue;
+    }
+    const t = dy/N.Hc, s = 1 - t*t*0.9, n = (vnoise3(x/6, y/5, z/6, SEED+910)-0.5)*0.45, lim = s*(1+n);
+    if(q >= lim){ if(q < lim+0.16 && dy>=1 && vnoise3(x/4, y/4, z/4, SEED+925) > (N.tier ? 0.73 : 0.8) && y <= colInfo(x,z).h-5) return GLOWMOSS; continue; }      // patches of glowing moss on the walls and roof
+    if(y > colInfo(x,z).h-4) continue;                                                             // never breaks out through the surface
+    // --- inside the chamber ---
+    for(const c of N.chests) if(c[0]===x && c[1]===y && c[2]===z) return CHEST;
+    if(N.decor==='hall'){
+      const au = Math.abs(u), aw = Math.abs(w);
+      if(au===5 && aw===4) return dy<=3 ? PILLAR : (dy===4 && u>0 && w>0) ? LANTERN0+1 : AIR;                   // corner posts, a lamp still burning on one
+      if((au===5 && aw<4) || (aw===4 && au<5)){ if(w===-4 && au<=1) return AIR; return dy < Math.floor(h3(x,7,z,SEED+919)*4) ? (h3(x,y,z,SEED+920)<0.35 ? MOSSY_BRICK : STONE_BRICK) : AIR; }      // broken walls, a doorway
+      if(au<5 && aw<4 && dy===0 && h3(x,8,z,SEED+921)<0.05) return BONE;
+      return AIR;
+    }
+    if(N.decor==='pillars' && Math.abs(u)===3 && (((w%4)+4)%4)===2 && Math.abs(w)<=7){
+      const top = h3(x,9,z,SEED+922)<0.4 ? 99 : 2+Math.floor(h3(x,10,z,SEED+923)*4);              // some still reach the roof, most are stumps
+      if(dy<top) return PILLAR;
+    }
+    if(N.decor==='shrine'){
+      const au = Math.abs(u), aw = Math.abs(w);
+      if(au<=3 && aw<=3 && dy===0) return (au===3 || aw===3) ? STONE_BRICK : CARVED;                           // the dais
+      if(au===3 && aw===3) return dy<=5 ? PILLAR : dy===6 ? GLOW : AIR;                                          // four pillars with lamps on top
+      if(u===0 && w===3 && dy>=1 && dy<=2) return CARVED;                                                       // the altar stone, a chest either side
+      return AIR;
+    }
+    if(!ruin){
+      const hs = h3(x,5,z,SEED+912);
+      if(hs<0.02 && dy < fl+1+Math.floor(h3(x,6,z,SEED+913)*4)) return -1;                        // a stalagmite: the rock is left standing
+      if(hs>0.972){ const yc = N.F + N.Hc*Math.sqrt(Math.max(0,(1-q)/0.9)); if(y > yc-1-Math.floor(h3(x,6,z,SEED+914)*4)) return -1; }      // a stalactite
+    }
+    air = true; break;
+  }
+  if(tun) air = true;
+  return air ? AIR : floor ? rockAt(x,y,z) : -1;
+}
+function delveNear(x,z,r){
+  const out = [], R = Math.ceil(r/DRS)+1, rx = Math.floor(x/DRS), rz = Math.floor(z/DRS);
+  for(let a=-R;a<=R;a++) for(let b=-R;b<=R;b++){ const P = delvePlan(rx+a,rz+b); if(P && Math.hypot(P.ex-x,P.ez-z)<=r) out.push(P); }
+  return out;
+}
+// a crypt or a delve, from its saved key (delve keys start with D)
+function siteByKey(key){
+  if(key[0]==='D'){ const p = key.slice(1).split(','); return delvePlan(+p[0], +p[1]); }
+  const p = key.split(','); return cryptPlan(+p[0], +p[1]);
+}
 // dungeon hall for region (rx,rz): returns a block type, or -1 if this block isn't part of a hall
 function hallBlock(x,y,z){
   const rx=Math.floor(x/RS), rz=Math.floor(z/RS);
@@ -1849,6 +2016,7 @@ function blockAt(x,y,z){
   const hb = hallBlock(x,y,z);
   if(hb===-1){ const cb = cryptBlock(x,y,z); if(cb!==-1) return cb; }
   if(hb!==-1) return hb;
+  { const db = delveBlock(x,y,z); if(db!==-1) return db; }
   const ci = colInfo(x,z), h = ci.h;
   if(y>h){
     if(y===SEA && worldGen>=4 && !ci.open && roadAt(x,z)) return PLANK_IDS[0];                    // where a road meets water it crosses on a plank bridge
@@ -2297,7 +2465,7 @@ function portalTick(dt){
 // ---------- villages ----------
 // The world is cut into regions of VREG x VREG blocks; some regions hold one village. A village is planned once from the world seed
 // (where the plaza, houses, farms and paths go, and every block they are made of) and then stamped into chunks as they are built.
-let worldGen = 2;                        // 1 = a world from before villages existed (it gets none), 2 = villages, 4 = roads and signposts between them
+let worldGen = 2;                        // 1 = a world from before villages existed (it gets none), 2 = villages, 4 = roads and signposts between them, 5 = delves (great caverns with ruins)
 const VREG = 192;
 const villageCache = new Map();
 function vRng(seed){ let a = seed>>>0; return ()=>{ a = (a+0x6D2B79F5)>>>0; let t = a; t = Math.imul(t^(t>>>15), t|1); t ^= t+Math.imul(t^(t>>>7), t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
@@ -2744,6 +2912,7 @@ function signAt(x,z){ if(worldGen<4) return null; const cx = Math.floor(x/CS), c
 function villageNoTree(x,z){
   if(worldGen<2) return false;
   if(worldGen>=4){ const P = cryptByNum.get(Math.floor(x/CRS)*131072 + Math.floor(z/CRS)); if(P && Math.abs(x-P.ex)<=7 && Math.abs(z-P.ez)<=7) return true; }
+  if(worldGen>=5){ const P = delveByNum.get(Math.floor(x/DRS)*131072 + Math.floor(z/DRS)); if(P && Math.abs(x-P.ex)<=5 && z>=P.ez-6 && z<=P.zc+2) return true; }      // no trees on a delve's gate and stair
   const v = villageAt(Math.floor(x/VREG), Math.floor(z/VREG));
   if(!v) return false;
   for(const R of v.rects) if(x>=R.x0-5 && x<=R.x1+5 && z>=R.z0-5 && z<=R.z1+5) return true;
@@ -3306,7 +3475,7 @@ function loadWorld(id){
   explored = new Set(meta.explored || []); visitedV = new Set(meta.visited || []); mapTiles.clear(); roadEdgeCache.clear(); roadChunkCache.clear(); roadMemoCx = 1e9;
   fires.clear(); for(const f of (meta.fires||[])) fires.set(f.x+','+f.y+','+f.z, f);
   book = meta.book || []; bookSel = meta.bookSel || 0; mp = meta.mp===undefined ? 10 : meta.mp; wardT = wardPts = swiftT = swiftK = 0;
-  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9;
+  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
   trainedDay = meta.trained || {}; homesteads = meta.homesteads || []; homesteadId = meta.homesteadId || 1;
   gold = meta.gold || 0; playerClass = meta.cls || null; deathSacks = meta.sacks || []; placedMap = unpackPlaced(meta.placed);
   if(meta.inv && meta.inv[PISTOL]) delete inv[PISTOL];          // the pistol is gone from the world
@@ -6681,7 +6850,10 @@ function questOffer(m){
     }
   }
   if(kind==='crypt'){
-    const C = cryptNear(vc[0], vc[1], 420).find(P=>!(cryptState[P.key] && cryptState[P.key].cleared));
+    const C = [...cryptNear(vc[0], vc[1], 420), ...delveNear(vc[0], vc[1], 560)].filter(P=>!(cryptState[P.key] && cryptState[P.key].cleared)).sort((p,q)=>Math.hypot(p.ex-vc[0],p.ez-vc[1])-Math.hypot(q.ex-vc[0],q.ez-vc[1]))[rnd()<0.5 ? 0 : 1] || null;
+    if(C && C.key[0]==='D'){ const d = Math.hypot(C.ex-vc[0], C.ez-vc[1]), reward = 320 + Math.round(d/3), days = 8, what = C.kind===0 ? 'The dead have a lord down there' : 'A brood mother is breeding down there';
+      return { kind:'crypt', delve:1, crypt:C.key, cname:C.name, at:[C.ex,C.ez], days, reward, rep:25,
+               text:`There is an old gate in the hills about ${Math.round(d/10)*10} paces ${dirWord(vc[0],vc[1],C.ex,C.ez)} of here, and under it ${C.name}: caverns that go down and down. ${what}, at the very bottom. Go down, find it and kill it within ${days} days. ${reward} gold, and no one here will forget it.` }; }
     if(C){ const d = Math.hypot(C.ex-vc[0], C.ez-vc[1]), reward = 160 + Math.round(d/4), days = 5;
       return { kind:'crypt', crypt:C.key, cname:C.name, at:[C.ex,C.ez], days, reward, rep:15,
                text:`The dead are walking out of the ${C.name}, about ${Math.round(d/10)*10} paces ${dirWord(vc[0],vc[1],C.ex,C.ez)} of here. Something commands them: a Crypt Lord, the old stories say. Go down and destroy it within ${days} days. ${reward} gold, and every family here in your debt.` }; }
@@ -6883,7 +7055,7 @@ function talkAction(a){
   else if(a==='deliver'){ const q = quests.find(q=>q.kind==='deliver' && q.to===m.home); if(q && inv[PARCEL]>0){ inv[PARCEL]--; finishQuest(q, true); talkLine = `Ah, from ${q.giverName}! Thank you. Here's ${q.reward} gold.`; } }
   else if(a==='turnin'){ const q = quests.find(q=>q.giver===m.home);
     if(q && q.kind==='hunt' && q.state==='done'){ finishQuest(q, true); talkLine = `You killed it? The village owes you. ${q.reward} gold, as promised.`; }
-    else if(q && q.kind==='crypt' && q.state==='done'){ finishQuest(q, true); talkLine = `The Crypt Lord is gone? Then the dead will rest. ${q.reward} gold, with our thanks.`; }
+    else if(q && q.kind==='crypt' && q.state==='done'){ finishQuest(q, true); talkLine = q.delve ? `You went to the bottom of ${q.cname} and came back? Then it is true, the thing is dead. ${q.reward} gold, and our thanks with it.` : `The Crypt Lord is gone? Then the dead will rest. ${q.reward} gold, with our thanks.`; }
     else if(q && q.kind==='build' && q.state==='done'){ finishQuest(q, true); talkLine = `I saw it with my own eyes. Fine work! ${q.reward} gold, as promised.`; }
     else if(q && q.kind==='fetch' && (inv[q.item]||0)>=q.n){ inv[q.item] -= q.n; finishQuest(q, true); talkLine = `Just what I needed. ${q.reward} gold, as promised.`; } }
   else if(a==='heal'){
@@ -7118,7 +7290,7 @@ function drawMap(){
   const mark = (x,z,col,label,sq)=>{ const [sx,sy] = toS(x,z); if(sx<-40||sy<-20||sx>W+40||sy>Hh+20) return; g.fillStyle = '#000'; g.fillRect(sx-5,sy-5,10,10); g.fillStyle = col; g.fillRect(sx-4,sy-4,8,8);
     if(label){ g.fillStyle = 'rgba(0,0,0,.65)'; const w = g.measureText(label).width; g.fillRect(sx-w/2-3, sy-20, w+6, 13); g.fillStyle = col; g.fillText(label, sx, sy-10); } };
   for(const p of knownPlaces()) mark(p.x, p.z, p.kind==='h' ? '#8fdc6a' : '#e3cf95', p.name);
-  for(const k of cryptSeen){ const P = cryptCache.get(k); if(P) mark(P.ex, P.ez, cryptState[k] && cryptState[k].cleared ? '#8a8a9a' : '#b07ae0', P.name); }
+  for(const k of cryptSeen){ const P = siteByKey(k); if(P) mark(P.ex, P.ez, cryptState[k] && cryptState[k].cleared ? '#8a8a9a' : k[0]==='D' ? '#e0a050' : '#b07ae0', P.name); }
   for(const q of quests){ const t = (q.kind==='hunt' || q.kind==='crypt') && q.state==='active' ? q.at : q.kind==='deliver' ? q.tvc : null; if(t) mark(t[0], t[1], '#e05040', q.kind==='hunt' ? BEAST_NAME[q.beast] : q.kind==='crypt' ? q.cname : q.toName); }
   for(const sk of deathSacks) mark(sk.x, sk.z, '#ffe28c', 'your belongings');
   // you: an arrow pointing the way you face
@@ -8018,11 +8190,46 @@ const BEAST = {
 const BEAST_TOTAL = 4;
 let beastSpawnT = 8;
 let cryptState = {}, cryptSeen = new Set(), cryptPop = new Set();
+const delvePop = new Set();
+// who lives in a delve, by its kind and how deep the chamber is
+const DELVE_FOLK = [[['skeleton','zombie','bat'],['skeleton','zombie','ghost','skeleton'],['ghost','skeleton','zombie','ghost']],
+                    [['spider','bat','bat'],['spider','spider','bat'],['spider','spider','spider']]];
+// Things wake chamber by chamber as you come near, more of them and stronger the deeper you are; the master waits at the shrine.
+function delveTick(){
+  if(worldGen<5 || testWorld || isUnder(player.z)) return;
+  const P = delvePlan(Math.floor(player.x/DRS), Math.floor(player.z/DRS)); if(!P) return;
+  const px = Math.floor(player.x), pz = Math.floor(player.z), below = player.y < colInfo(px,pz).h-4;
+  if(!cryptSeen.has(P.key) && (Math.hypot(P.ex-player.x, P.ez-player.z)<30 || (below && P.nodes.some(N=>Math.hypot(N.cx-player.x, N.cz-player.z)<N.a+6 && Math.abs(player.y-N.F)<N.Hc+4)))){
+    cryptSeen.add(P.key); skillToast(P.name.toUpperCase()+'<br><small>discovered</small>', true); scheduleSave(); }
+  const cleared = cryptState[P.key] && cryptState[P.key].cleared;
+  P.nodes.forEach((N,i)=>{
+    const k = P.key+':'+i, d = Math.hypot(N.cx-player.x, N.cz-player.z);
+    if(d>110){ delvePop.delete(k); return; }
+    if(delvePop.has(k) || d>N.a+26 || !below || Math.abs(player.y-N.F)>N.Hc+14) return;
+    const folk = DELVE_FOLK[P.kind][N.tier], want = cleared ? 1 : Math.min(6, 2 + N.tier + (N.a*N.b>130 ? 1 : 0) + (i===P.heart ? 1 : 0));
+    const lvl = Math.min(7, dangerAt(N.cx,N.F,N.cz) + N.tier);
+    let made = 0;
+    for(let n=0, tries=0; n<want && tries<40; tries++){
+      const a = Math.random()*6.283, r = Math.sqrt(Math.random())*0.7, x = Math.floor(N.cx + Math.cos(a)*r*N.a), z = Math.floor(N.cz + Math.sin(a)*r*N.b);
+      if(Math.hypot(x-player.x, z-player.z)<7) continue;
+      let y = -1; for(let yy=N.F+2; yy>=N.F; yy--) if(ratCanStand(x,yy,z) && PASS[ratGet(x,yy+1,z)]){ y = yy; break; }
+      if(y<0) continue;
+      const m = newBeast(folk[(n+i)%folk.length], x, y, z, lvl); m.crypt = P.key; mobs.push(m); n++; made++;
+    }
+    if(i===P.heart && !cleared && ratCanStand(P.boss[0],P.boss[1],P.boss[2])){
+      const bl = Math.max(lvl+1, Math.floor(playerLevel()/4));
+      const L = P.kind===0 ? newBeast('cryptlord', P.boss[0], P.boss[1], P.boss[2], bl) : newBeast('spider', P.boss[0], P.boss[1], P.boss[2], bl+4);
+      if(P.kind===1) L.hp *= 3;                                                                  // a brood mother takes far more killing than her brood
+      L.crypt = P.key; L.master = 1; mobs.push(L); made++;
+    }
+    if(made) delvePop.add(k);
+  });
+}
 function cryptCleared(key){
   if(!key || (cryptState[key] && cryptState[key].cleared)) return;
   cryptState[key] = { cleared:1 };
   for(const q of quests) if(q.kind==='crypt' && q.crypt===key && q.state==='active') q.state = 'done';
-  const P = cryptCache.get(key);
+  const P = siteByKey(key);
   skillToast((P ? P.name.toUpperCase() : 'THE CRYPT')+'<br><small>falls silent</small>', true); scheduleSave();
 }
 function cryptTick(){
@@ -8088,6 +8295,7 @@ function beastHit(m, dmg){
     if(K.gold) spawnGold(x,y,z,Math.round(roll(K.gold[0],K.gold[1])*(1+0.25*L)));
     if(m.kind==='daedroth' && Math.random()<0.35) spawnDrop(x,y,z, Math.random()<0.2 ? ADAM_INGOT : MITH_INGOT);
     if(m.kind==='cryptlord'){ spawnDrop(x,y,z, Math.random()<0.25 ? ADAM_INGOT : MITH_INGOT); spawnDrop(x,y,z, MITH_INGOT); cryptCleared(m.crypt); }
+    else if(m.master && m.crypt){ spawnDrop(x,y,z, MITH_INGOT); spawnGold(x,y,z,60+Math.round(20*L)); cryptCleared(m.crypt); }      // the master of a delve that is not a Crypt Lord (a brood mother)
   }
 }
 // ---- giant bats and slaughterfish: they move freely in air or water instead of walking ----
@@ -8414,7 +8622,7 @@ function updateMobs(){
   if(catSpawnT<=0){ catSpawnT = catnipHere ? 4.5 : 9; if(!underNow) trySpawnCats(); }
   ogreSpawnT -= dt; if(ogreSpawnT<=0){ ogreSpawnT = 20; if(!underNow){ trySpawnOgre(); trySpawnMino(); } else { trySpawnBeetles(); if(isUnder(player.z)) trySpawnDaedra(); } }
   if(NPCS_IN_WORLD){ npcSpawnT -= dt; if(npcSpawnT<=0){ npcSpawnT = 3; trySpawnNpcs(); questTick(); } }
-  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); lavaFireTick(); }
+  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); lavaFireTick(); }
   const pcx=Math.floor(player.x), pcy=Math.floor(player.y), pcz=Math.floor(player.z);
   const inRatZone = ratAllowed(pcx,pcy,pcz);
   for(let i=mobs.length-1;i>=0;i--){
@@ -9082,6 +9290,9 @@ const LOOT = {
   house:   [[GOLD,2,15,.6],[WHEAT,1,4,.7],[CARROT,1,3,.5],[POTATO,1,3,.5],[PLANKS,2,8,.6],[STICK,2,6,.6],[COAL_ITEM,1,3,.35],[GLASS,1,4,.25],[LANTERN0+1,1,1,.2],[LITTER,1,3,.3]],
   dungeon: [[GOLD,15,80,.85],[IRON_INGOT,1,4,.45],[MITH_INGOT,1,1,.06],[COAL_ITEM,2,6,.8],[FIRE_POTION,1,2,.5],[BOLT_POTION,1,2,.5],[STONE_SWORD,1,1,.3],[CROSSBOW,1,1,.2],[BARS0,2,6,.4],[LANTERN0+1,1,2,.5],[STONE_BRICK,4,12,.5],[BOOKSHELF,1,2,.2]],
   crypt:   [[GOLD,25,90,.9],[IRON_INGOT,1,4,.5],[MITH_INGOT,1,2,.14],[ADAM_INGOT,1,1,.04],[FIRE_POTION,1,2,.4],[BOLT_POTION,1,2,.4],[CANDLE,1,3,.5],[BONE,2,5,.6],[AR(2,0),1,1,.12],[AR(2,3),1,1,.12],[AR(1,1),1,1,.1],[IRON_SWORD,1,1,.15],[CROSSBOW,1,1,.1]],
+  delve0:  [[GOLD,10,60,.85],[IRON_INGOT,1,3,.4],[COAL_ITEM,2,6,.7],[FIRE_POTION,1,2,.35],[BOLT_POTION,1,2,.35],[BONE,1,4,.5],[CANDLE,1,3,.4],[STONE_SWORD,1,1,.25],[LANTERN0+1,1,2,.4]],
+  delve1:  [[GOLD,30,110,.9],[IRON_INGOT,2,5,.55],[MITH_INGOT,1,2,.16],[FIRE_POTION,1,3,.45],[BOLT_POTION,1,3,.45],[AR(2,0),1,1,.12],[AR(2,2),1,1,.1],[IRON_SWORD,1,1,.18],[CROSSBOW,1,1,.12],[BONE,2,5,.4]],
+  delve2:  [[GOLD,80,220,1],[IRON_INGOT,3,6,.7],[MITH_INGOT,1,3,.45],[ADAM_INGOT,1,2,.14],[FIRE_POTION,2,4,.6],[BOLT_POTION,2,4,.6],[AR(2,1),1,1,.25],[AR(4,0),1,1,.08],[MITH_SWORD,1,1,.1],[CROSSBOW,1,1,.2]],
   under:   [[GOLD,20,120,.8],[IRON_INGOT,2,5,.5],[MITH_INGOT,1,2,.15],[ADAM_INGOT,1,1,.05],[EMBER,1,3,.8],[FIRE_POTION,1,3,.6],[BOLT_POTION,1,3,.6],[GLOWMOSS,2,8,.6],[BONE,2,6,.4],[RUST,2,6,.4],[LANTERN0+1,1,3,.5],[CROSSBOW,1,1,.2],[COAL_ITEM,3,8,.5]]
 };
 function chestItems(x,y,z){
@@ -9089,7 +9300,7 @@ function chestItems(x,y,z){
   let c = chests.get(key);
   if(!c){
     c = {};
-    const v = worldGen>=2 ? villageAt(Math.floor(x/VREG), Math.floor(z/VREG)) : null, tier = isUnder(z) ? 'under' : (v && v.chests.get(key)) || (worldGen>=4 && (()=>{ const P = cryptPlan(Math.floor(x/CRS), Math.floor(z/CRS)); return P && P.chestSet.has(key) ? 'crypt' : null; })());
+    const v = worldGen>=2 ? villageAt(Math.floor(x/VREG), Math.floor(z/VREG)) : null, tier = isUnder(z) ? 'under' : (v && v.chests.get(key)) || (worldGen>=4 && (()=>{ const P = cryptPlan(Math.floor(x/CRS), Math.floor(z/CRS)); return P && P.chestSet.has(key) ? 'crypt' : null; })()) || (worldGen>=5 && (()=>{ const P = delvePlan(Math.floor(x/DRS), Math.floor(z/DRS)); return P ? P.chests.get(key) : null; })());
     if(tier){ const rnd = vRng(Math.floor(h3(x,y,z,SEED+440)*4294967295)); for(const [id,lo,hi,p] of LOOT[tier]) if(rnd()<p) c[id] = lo+Math.floor(rnd()*(hi-lo+1)); }
     chests.set(key,c); scheduleSave();
   }
@@ -12018,7 +12229,7 @@ document.getElementById('newBtn').addEventListener('click', ()=>{
              : isNaN(Number(seedIn)) ? seedFromName(seedIn)
              : Number(seedIn);
   const id = newWorldId();
-  localStorage.setItem(wkey(id,'world'), JSON.stringify({ format: SAVE_FORMAT, version: SAVE_VERSION, name, seed, gen:4, inv:{}, tod:0.15, player:null }));
+  localStorage.setItem(wkey(id,'world'), JSON.stringify({ format: SAVE_FORMAT, version: SAVE_VERSION, name, seed, gen:5, inv:{}, tod:0.15, player:null }));
   loadWorld(id);
 });
 document.getElementById('testBtn').addEventListener('click', ()=>{

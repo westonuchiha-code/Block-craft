@@ -73,6 +73,11 @@ runs before optimising.
 
 ## 4. Open items
 
+- **Delves (cavern dungeons), prototype 2026-11-14.** New worlds (`worldGen` 5) get great caverns with ruins: `delvePlan` / `delveBlock` /
+  `delveTick` beside the crypt code; keys start with `D` and share `cryptState` / `cryptSeen` (`siteByKey`). See the task log for what is
+  in and what is not (no cave dwellers or fetch quests yet). Design direction and the later "dungeon dimension" idea are in
+  `docs/blockcraft_game_plan.txt`. Tools in the session scratch were not kept; `tests/gpu.py` has `delve` and `k_delve` scenes.
+
 - **GPU speed check** on his hardware; if needed add a resolution-scale setting (generic PC option).
 - **Aspect:** DONE 2026-11-14. The logical picture is 16:9 (`RES_LEVELS`).
 - **`tp3`/`og2` worker differences:** RESOLVED 2026-11-14. Test artefact (class picker left open, loop frozen). Tests fixed; 0 differences.

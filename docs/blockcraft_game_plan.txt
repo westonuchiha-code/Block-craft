@@ -75,3 +75,17 @@ PHASE 9: LATER CONTENT
 - More biomes (the autumn biome is the first)
 - Mobs, water, lava, and sound
 - Multiplayer (last)
+
+
+DESIGN DIRECTION (2026-11-14, from him)
+
+- DUNGEONS = DELVES: large natural caverns in the main world (Caves-and-Cliffs scale) with old ruins built into them, named on the map,
+  typed by who lives there, harder and richer the deeper you go, and the place quests send you. Walled mazes do not work in a world
+  where every wall can be dug through, so the classic crypt maze is NOT the main dungeon. The small crypts stay as minor surface tombs.
+- LATER IDEA (not started): a DUNGEON DIMENSION. A special portal you build takes you to a separate realm that is one gigantic
+  Daggerfall-style maze dungeon, randomly generated each time. You must find the way out; there is a reward inside. When you come out
+  the portal explodes, so each dungeon world can be visited once; build another portal for a different one. This is the game's
+  answer to the End portal, and the final boss could live there. (The Underworld already works as a separate realm through a portal,
+  so the mechanism exists.)
+- THE BIGGER GOAL: it must not feel like a slightly modded Minecraft. Minecraft's functions and look, but a world with a society:
+  named places, factions, standing, law, rumours, a journal, and people who want things from you.

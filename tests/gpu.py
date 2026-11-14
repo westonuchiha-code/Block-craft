@@ -1,7 +1,7 @@
 from playwright.sync_api import sync_playwright
 from PIL import Image
 import json, sys, base64, io
-SCENES = sys.argv[1].split(',') if len(sys.argv)>1 else ['field','village','water','under','k_beasts','k_third']
+SCENES = sys.argv[1].split(',') if len(sys.argv)>1 else ['field','village','water','under','k_beasts','k_third','delve','k_delve']
 bad = []
 CMP = r"""async (scene)=>{
   const sleep=t=>new Promise(r=>setTimeout(r,t));
@@ -12,6 +12,9 @@ CMP = r"""async (scene)=>{
   if(scene==='night'){ const v=nearestVillage(2); go(v.cx,v.cz+12,0,-0.05,0.8); }
   if(scene==='water'){ let L=null; for(let x=-400;x<400&&!L;x+=6) for(let z=-400;z<400;z+=6){ const c=colInfo(x,z); if(c.h<SEA-4 && getB(x,SEA,z)!==AIR){ L=[x,z]; break; } } player.x=L[0]-6.5; player.z=L[1]+0.5; player.y=SEA+2; player.yaw=1.57; player.pitch=-0.35; tod=0.35; }
   if(scene==='under'){ let P=null; for(let x=0;x<400&&!P;x+=4){ const z=UNDER_Z+40, c=underCol(x,z); if(c.hf>UNDER_LAVA+3 && c.hc-c.hf>14) P=[x,z,c.hf]; } player.x=P[0]+0.5; player.z=P[1]+0.5; player.y=P[2]+1; player.yaw=0.3; player.pitch=-0.15; }
+  if(scene==='delve' || scene==='k_delve'){ let P=null; for(let a=-4;a<=4&&!P;a++) for(let b=-4;b<=4&&!P;b++) P=delvePlan(a,b);      // the shrine at the bottom of a delve: caverns, ruins, glow moss, lamps
+    const N=P.nodes[P.heart]; player.x=N.cx+0.5; player.z=N.cz-4.5; player.y=N.F+0.01; player.yaw=Math.PI; player.pitch=0.12; lastPCX=null; updateChunks();
+    if(scene==='k_delve'){ await sleep(3500); player.x=N.cx+0.5; player.z=N.cz-4.5; player.y=N.F+0.01; mobs.forEach(m=>{ m.idleT=999; m.angry=0; }); } }
   const flat=()=>{ for(let x=-200;x<200;x+=5) for(let z=-200;z<200;z+=5){ const c=colInfo(x,z); if(c.top!==GRASS||c.open||c.h<=SEA+2||nearVillage(x,z)) continue; let ok=true; for(let a=-6;a<=6&&ok;a+=3) for(let b=-6;b<=6;b+=3){ const q=colInfo(x+a,z+b); if(Math.abs(q.h-c.h)>1||q.top!==GRASS){ ok=false; break; } } if(ok) return [x,z,c.h]; } };
   if(scene==='k_beasts'){ mobs.length=0; const [x,z,h]=flat(); player.x=x-6.5; player.z=z+0.5; player.y=h+1; player.yaw=Math.PI/2; player.pitch=-0.15; tod=0.3; await sleep(2500);
     for(let i=-2;i<=2;i++) for(let j=-4;j<=4;j++) for(let k=h+1;k<h+6;k++) setB(x+i+1,k,z+j,AIR);

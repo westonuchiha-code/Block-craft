@@ -492,3 +492,21 @@ DONE  He corrected the earlier answer: adamantite is ABOVE mithril, as in Dagger
       - prices (ingot 120 vs 55), smelting coal (3 vs 2), chest odds and boss drops swapped to match. Tool head colours follow the metal.
       Existing worlds: gear keeps its name and swaps strength; unmined deep ore swaps type.
       Cosmetic, not done: recipe lists still show adamantite before mithril.
+
+== DELVES: CAVERN DUNGEONS, FIRST PROTOTYPE (2026-11-14) ==
+WHY   He found the walled crypt boring: a maze does not work where every wall can be dug. Dungeons are now great caverns in the main world.
+DONE  New worlds are worldGen 5 and have DELVES (delvePlan / delveBlock, next to the crypt code). Old worlds are untouched.
+      - one per 256-block region at most, on the highest ground it can find (about 1 region in 9 gets one; the test seed has one ~200 blocks from spawn)
+      - a ruined gate with a lamp on the surface, a slab stair 9-15 blocks down, then 4-12 chambers joined by rough tunnels, each lower than the last
+      - chambers are up to 38 blocks across and up to 20 high, with humped floors, stalagmites and stalactites, still pools, and glowing moss on walls and roof
+      - ruins inside: pillared halls, broken-walled halls with a lamp and a chest, and a SHRINE in the furthest chamber (dais, four lamp pillars, altar, two chests)
+      - two kinds so far: held by the old dead (skeletons, zombies, ghosts; master = a Crypt Lord) or a spider nest (spiders, bats; master = a brood mother)
+      - creatures wake chamber by chamber as you approach; more of them and higher level the further in (tier 0/1/2), chests delve0/1/2 likewise
+      - killing the master clears the delve for good (reuses the crypt bookkeeping: keys start with "D"); named on the map (orange marker); discovery toast
+      - villagers' "crypt" job can now send you into the nearest uncleared delve instead: kill its master within 8 days, bigger reward
+      - walls are ordinary rock: digging is allowed. Floors under chambers and tunnels are made sound so natural caves cannot open pits in the route.
+TESTED - 38 delves over 5 seeds: every chamber and the master can be reached on foot from the gate without digging (walk check: step up 1, drop up to 3)
+      - GPU picture = CPU picture in a delve (tests/gpu.py has two new scenes, max difference 1 level); multi-core = single-thread (0 differences)
+      - master kill -> cleared -> quest done; chests fill from the delve loot tables; chunk generation inside a delve ~5 ms (same as elsewhere)
+LIMIT The world is only ~25-35 blocks deep under most land (sea 16, bedrock 0), so caverns cannot be Caves-and-Cliffs tall. Truly vast ones need a taller world.
+NOT YET  cave dwellers (hermit / trader / lost miner), fetch-an-item quests, more delve kinds, a delve journal entry. Not playtested by a person.

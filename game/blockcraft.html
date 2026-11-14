@@ -1183,7 +1183,8 @@ for(const [id,name,ings] of [[FIRE_POTION,'3 fire potions (ember)',[EMBER,WATER_
 }
 NAMES[COOK_TABLE] = 'cooking table'; COLORS[COOK_TABLE] = [104,100,98];
 // ---- what the wild beasts leave behind (Daggerfall's bestiary: grizzly bears, sabertooth tigers, giant spiders, giant scorpions) ----
-// ---- metals: iron, adamantite and mithril (the rarest and best). Ores lie deeper the better they are; smelt them into ingots. ----
+// ---- metals, in Daggerfall's order: iron, then mithril, then adamantite (the rarest and best). Ores lie deeper the better they are; smelt them into ingots.
+// (The ids keep their old numbering - adamantite 1091/1094 and tools 1101.., mithril 1092/1095 and tools 1106.. - so saves still mean the same things; only the ranking is set here.) ----
 const IRON_ORE = 1090, ADAM_ORE = 1091, MITH_ORE = 1092, IRON_INGOT = 1093, ADAM_INGOT = 1094, MITH_INGOT = 1095;
 const METAL_TOOL0 = 1096;          // 1096..1110: iron, adamantite, mithril x pick, axe, shovel, sword, hoe
 const MT = (tier3, k)=>METAL_TOOL0 + tier3*5 + k;          // tier3: 0 iron, 1 adamantite, 2 mithril; k: 0 pick, 1 axe, 2 shovel, 3 sword, 4 hoe
@@ -1191,8 +1192,8 @@ const IRON_PICK = MT(0,0), IRON_AXE = MT(0,1), IRON_SHOVEL = MT(0,2), IRON_SWORD
 const ADAM_PICK = MT(1,0), ADAM_AXE = MT(1,1), ADAM_SHOVEL = MT(1,2), ADAM_SWORD = MT(1,3), ADAM_HOE = MT(1,4);
 const MITH_PICK = MT(2,0), MITH_AXE = MT(2,1), MITH_SHOVEL = MT(2,2), MITH_SWORD = MT(2,3), MITH_HOE = MT(2,4);
 const METALS = [ { key:'iron', name:'iron', ore:IRON_ORE, ingot:IRON_INGOT, tier:3, dur:250 },
-                 { key:'adam', name:'adamantite', ore:ADAM_ORE, ingot:ADAM_INGOT, tier:4, dur:900 },
-                 { key:'mith', name:'mithril', ore:MITH_ORE, ingot:MITH_INGOT, tier:5, dur:1600 } ];
+                 { key:'adam', name:'adamantite', ore:ADAM_ORE, ingot:ADAM_INGOT, tier:5, dur:1600 },
+                 { key:'mith', name:'mithril', ore:MITH_ORE, ingot:MITH_INGOT, tier:4, dur:900 } ];
 NAMES[IRON_ORE] = 'iron ore'; NAMES[ADAM_ORE] = 'adamantite ore'; NAMES[MITH_ORE] = 'mithril ore';
 COLORS[IRON_ORE] = [150,138,128]; COLORS[ADAM_ORE] = [110,138,124]; COLORS[MITH_ORE] = [150,166,190];
 NAMES[IRON_INGOT] = 'iron ingot'; NAMES[ADAM_INGOT] = 'adamantite ingot'; NAMES[MITH_INGOT] = 'mithril ingot';
@@ -1213,8 +1214,8 @@ const ARMOR_MATS = [
   { key:'leather', mat:LEATHER,    names:['leather cap','leather jerkin','leather leggings','leather boots'], pts:[1,3,2,1], dur:80,   col:[138,90,50] },
   { key:'chitin',  mat:CHITIN,     names:['chitin helm','chitin cuirass','chitin greaves','chitin boots'],   pts:[2,4,3,1], dur:160,  col:[166,108,48] },
   { key:'iron',    mat:IRON_INGOT, names:['iron helm','iron cuirass','iron greaves','iron boots'],           pts:[2,6,5,2], dur:240,  col:[196,198,206] },
-  { key:'adam',    mat:ADAM_INGOT, names:['adamantite helm','adamantite cuirass','adamantite greaves','adamantite boots'], pts:[3,7,6,3], dur:700, col:[62,152,110] },
-  { key:'mith',    mat:MITH_INGOT, names:['mithril helm','mithril cuirass','mithril greaves','mithril boots'], pts:[3,8,6,3], dur:1200, col:[184,214,250] } ];
+  { key:'adam',    mat:ADAM_INGOT, names:['adamantite helm','adamantite cuirass','adamantite greaves','adamantite boots'], pts:[3,8,6,3], dur:1200, col:[62,152,110] },
+  { key:'mith',    mat:MITH_INGOT, names:['mithril helm','mithril cuirass','mithril greaves','mithril boots'], pts:[3,7,6,3], dur:700, col:[184,214,250] } ];
 const ARMOR_SLOT = ['head','chest','legs','feet'], ARMOR_DURK = [0.85, 1.25, 1.15, 0.75];      // a cuirass lasts longest
 const ARMOR = {};                                          // id -> { m, k, pts, dur }
 ARMOR_MATS.forEach((M,m)=>M.names.forEach((n,k)=>{ const id = AR(m,k); NAMES[id] = n; COLORS[id] = M.col; FLAT_ITEMS.add(id); ARMOR[id] = { m, k, pts:M.pts[k], dur:Math.round(M.dur*ARMOR_DURK[k]) }; }));
@@ -1870,13 +1871,13 @@ function blockAt(x,y,z){
   if(h3(x,y,z,SEED+7)<0.04) return COAL;
   return y>=h-6 ? stoneFace(x,y,z,h) : rockAt(x,y,z);
 }
-// ore veins: small clumps (a few blocks in a 2x2x2 cell). Iron is found anywhere below y 48; adamantite only below 20; mithril
-// only down by the lava, below 11. Roughly: iron 1 block in 150 of deep rock, adamantite 1 in 600, mithril 1 in 1500.
-// Adamantite's own band is y 11..20; it also turns up down at mithril's level, but thinner there (a third as much, a little rarer than mithril).
+// ore veins: small clumps (a few blocks in a 2x2x2 cell). Iron is found anywhere below y 48; mithril only below 20; adamantite
+// only down by the lava, below 11. Roughly: iron 1 block in 150 of deep rock, mithril 1 in 600, adamantite 1 in 1500.
+// Mithril's own band is y 11..20; it also turns up down at adamantite's level, but thinner there (a third as much, a little rarer than adamantite).
 function oreAt(x,y,z){
   const cx = x>>1, cy = y>>1, cz = z>>1;
-  if(y<=10 && h3(cx,cy,cz,SEED+93)<0.0012*1.6 && h3(x,y,z,SEED+94)<0.55) return MITH_ORE;
-  if(y<=20 && h3(cx,cy,cz,SEED+91)<(y<=10 ? 0.001 : 0.003)*1.6 && h3(x,y,z,SEED+92)<0.55) return ADAM_ORE;
+  if(y<=10 && h3(cx,cy,cz,SEED+93)<0.0012*1.6 && h3(x,y,z,SEED+94)<0.55) return ADAM_ORE;
+  if(y<=20 && h3(cx,cy,cz,SEED+91)<(y<=10 ? 0.001 : 0.003)*1.6 && h3(x,y,z,SEED+92)<0.55) return MITH_ORE;
   if(y<=48 && h3(cx,cy,cz,SEED+89)<0.0075*1.6 && h3(x,y,z,SEED+90)<0.55) return IRON_ORE;
   return 0;
 }
@@ -3631,7 +3632,7 @@ let wkHeld = 0;                                                     // (in a ren
 function heldBoxes(id){
   if(!id) return [];
   const B = (x0,y0,z0,x1,y1,z1,c)=>({ x0,y0,z0,x1,y1,z1, solid:c });
-  const WOODC = [150,110,60], T = TOOLS[id], HEADC = T ? ({1:[176,134,76], 2:[136,136,144], 3:[196,198,206], 4:[72,158,118], 5:[176,210,248]})[T.tier] : null;
+  const WOODC = [150,110,60], T = TOOLS[id], HEADC = T ? ({1:[176,134,76], 2:[136,136,144], 3:[196,198,206], 4:[176,210,248], 5:[72,158,118]})[T.tier] : null;
   if(T){
     if(T.kind==='sword') return [B(-6.5,11.4,0.5,-5.5,12.6,3,WOODC), B(-7.6,11.2,3,-4.4,12.8,3.8,[90,70,40]), B(-6.35,11.2,3.8,-5.65,12.8,14,HEADC)];
     const haft = B(-6.5,11.5,-1,-5.5,12.5,10,WOODC);
@@ -6298,7 +6299,7 @@ METALS.forEach((M,t)=>['pick','axe','shovel','sword','hoe'].forEach((k,i)=>{ TOO
 const KIND = { [SIGNPOST]:'axe', [SPELLMAKER]:'pick', [IRON_ORE]:'pick', [ADAM_ORE]:'pick', [MITH_ORE]:'pick', [ANDESITE]:'pick', [GRANITE]:'pick', [DIORITE]:'pick', [TUFF]:'pick', [MOSSROCK]:'pick', [COOK_TABLE]:'pick', [FURNACE]:'pick', [STONE_BRICK]:'pick', [MOSSY_BRICK]:'pick', [FLAGSTONE]:'pick', [PILLAR]:'pick', [CARVED]:'pick', [CUTTER]:'pick', [CHEST]:'axe', [FLESH]:'pick', [FLESH2]:'pick', [BONE]:'pick', [RUST]:'pick', [LAMP]:'pick', [GATE]:'pick', [EMBER]:'pick', [ICE]:'pick', [SANDSTONE]:'pick', [PALM_LOG]:'axe', [PALM_LEAF]:'sword', [BARREL]:'axe', [CRATE]:'axe', [SHROOM_STEM]:'axe', [CAP_R]:'axe', [CAP_T]:'axe', [DARKWOOD]:'axe', [SLATE]:'pick', [PLASTER]:'pick', [FRAME]:'axe', [FRAME_X]:'axe', [FRAME_D1]:'axe', [FRAME_D2]:'axe', [BEAM]:'axe', [SHINGLE]:'axe', [BOOKSHELF]:'axe', [PATH]:'shovel', [HEDGE]:'sword', [STONE]:'pick', [COBBLE]:'pick', [COAL]:'pick', [LOG]:'axe', [PLANKS]:'axe', [CRAFT_TABLE]:'axe',
                [TILLED]:'shovel', [TILLED_WET]:'shovel', [DIRT]:'shovel', [GRASS]:'shovel', [SNOW]:'shovel', [SAND]:'shovel', [GRAVEL]:'shovel', [LEAVES]:'sword' };
 // lowest pickaxe tier that can get the drop from a block
-const REQ_TIER = { [SPELLMAKER]:1, [IRON_ORE]:2, [ADAM_ORE]:3, [MITH_ORE]:4, [ANDESITE]:1, [GRANITE]:1, [DIORITE]:1, [TUFF]:1, [MOSSROCK]:1, [STONE]:1, [COBBLE]:1, [COAL]:1, [FURNACE]:1, [STONE_BRICK]:1, [MOSSY_BRICK]:1, [FLAGSTONE]:1, [PILLAR]:1, [CARVED]:1, [CUTTER]:1, [SLATE]:1, [RUST]:1, [GATE]:1, [EMBER]:1 };
+const REQ_TIER = { [SPELLMAKER]:1, [IRON_ORE]:2, [MITH_ORE]:3, [ADAM_ORE]:4, [ANDESITE]:1, [GRANITE]:1, [DIORITE]:1, [TUFF]:1, [MOSSROCK]:1, [STONE]:1, [COBBLE]:1, [COAL]:1, [FURNACE]:1, [STONE_BRICK]:1, [MOSSY_BRICK]:1, [FLAGSTONE]:1, [PILLAR]:1, [CARVED]:1, [CUTTER]:1, [SLATE]:1, [RUST]:1, [GATE]:1, [EMBER]:1 };
 for(const id of [ICE,SANDSTONE,CACTUS,PALM_LOG,PALM_LEAF]) HAND_OK.add(id);
 for(let i=0;i<NB;i++) if(CROP_OF[i]>=0 || IS_FLOWER[i]){ HARD[i]=0; HAND_OK.add(i); }
 HARD[SUGARCANE]=HARD[SUGARCANE_F]=HARD[CORN_TOP]=HARD[GRAPE_TOP]=0;
@@ -6359,14 +6360,14 @@ function canHarvest(b, tool){
 }
 // ---- how many hits a block takes ----
 // Every block has a number of bare-hand hits (dirt 4.5 -> 5 punches, a log 8, stone 9). The right tool divides that by its tier's
-// power (wood 1.25, stone 1.7, iron 2.5, adamantite 3.4, mithril 4.5). Skills never make you faster, they make you get more. Nothing solid ever
+// power (wood 1.25, stone 1.7, iron 2.5, mithril 3.4, adamantite 4.5). Skills never make you faster, they make you get more. Nothing solid ever
 // goes in one hit, except soft ground under a top-tier shovel; stone takes at least two even with the best pickaxe.
 // Hitting a block that needs a pickaxe with anything else takes three times as long, and it drops nothing.
-const TIER_POW = { 1:1.25, 2:1.7, 3:2.5, 4:3.4, 5:4.5 };          // wood, stone, iron, adamantite, mithril
+const TIER_POW = { 1:1.25, 2:1.7, 3:2.5, 4:3.4, 5:4.5 };          // wood, stone, iron, mithril, adamantite
 const HITS = {};
 { const S = (ids,v)=>{ for(const id of [].concat(ids)) HITS[id] = v; };
   S([DIRT, GRASS, TILLED, TILLED_WET], 4.5); S([GRAVEL, PATH], 5); S(SAND, 4); S([SNOW, GLASS, GLOW], 2); S([PUMPKIN, MELON], 4);
-  S([STONE, ANDESITE, GRANITE, DIORITE, MOSSROCK], 9); S(TUFF, 8); S(COBBLE, 10); S(COAL, 11); S(SIGNPOST, 4); S(SPELLMAKER, 10); S(IRON_ORE, 12); S(ADAM_ORE, 16); S(MITH_ORE, 20); S(CRAFT_TABLE, 6); S(COOK_TABLE, 8); S(FURNACE, 12);
+  S([STONE, ANDESITE, GRANITE, DIORITE, MOSSROCK], 9); S(TUFF, 8); S(COBBLE, 10); S(COAL, 11); S(SIGNPOST, 4); S(SPELLMAKER, 10); S(IRON_ORE, 12); S(MITH_ORE, 16); S(ADAM_ORE, 20); S(CRAFT_TABLE, 6); S(COOK_TABLE, 8); S(FURNACE, 12);
   for(let id=0; id<NB; id++){ if(IS_LOG[id]) HITS[id] = 8; else if(IS_LEAF[id]) HITS[id] = 2; }
   for(const id of PLANK_IDS) HITS[id] = 6; }
 function baseHits(b){
@@ -6382,7 +6383,7 @@ function hitsNeeded(b, tool){
   const T = tool ? TOOLS[tool] : null;
   let pow = T ? (TIER_POW[T.tier] || 1) : 1;
   let n = Math.ceil(base / pow * (canHarvest(b, tool) ? 1 : 3));
-  const soft = base<=5 && T && T.tier>=5;                                      // a mithril shovel on soft ground: one stroke
+  const soft = base<=5 && T && T.tier>=5;                                      // an adamantite shovel (the top tier) on soft ground: one stroke
   return Math.max(soft ? 1 : 2, n);
 }
 // a tool loses one durability per block it breaks; at 0 it is gone
@@ -6571,7 +6572,7 @@ const PRICE = {};
   P(BOOKSHELF, 30); P(CANDLE, 6); P(LANTERN0+1, 20); P(BARS0, 8); P(WOOD_BUCKET, 10); P(WATER_BUCKET, 12); P(BED0, 40); P(WOOL0, 6); P(LITTER, 1); P(BONE, 3);
   P(CATNIP_SEED, 20); P(CRAFT_TABLE, 8); P(COOK_TABLE, 25); P([FIRE_POTION, BOLT_POTION], 40); P(EMBER, 60); P(CROSSBOW, 150);
   P([WOOD_PICK,WOOD_AXE,WOOD_SHOVEL,WOOD_HOE], 15); P(WOOD_SWORD, 20); P([STONE_PICK,STONE_AXE,STONE_SHOVEL,STONE_HOE], 35); P(STONE_SWORD, 45);
-  P(IRON_ORE, 8); P(IRON_INGOT, 15); P(ADAM_ORE, 30); P(ADAM_INGOT, 55); P(MITH_ORE, 70); P(MITH_INGOT, 120);
+  P(IRON_ORE, 8); P(IRON_INGOT, 15); P(MITH_ORE, 30); P(MITH_INGOT, 55); P(ADAM_ORE, 70); P(ADAM_INGOT, 120);
   METALS.forEach((M,t)=>[3,3,1,2,2].forEach((n,i)=>{ PRICE[MT(t,i)] = Math.round(PRICE[M.ingot]*n*1.4 + 8 + (i===3 ? 10 : 0)); }));
   ARMOR_MATS.forEach((M,m)=>[5,8,7,4].forEach((n,k)=>{ PRICE[AR(m,k)] = Math.round((PRICE[M.mat]||10)*n*1.3 + 10); }));
   for(let w=0;w<4;w++){ P(tableId(w), 12); P(chairId(w,0), 8); P(benchId(w,0), 10); P(doorId(w,0,0,0), 10); P(fenceId(w,0), 3); P(gateId(w,0,0), 6); }
@@ -8085,8 +8086,8 @@ function beastHit(m, dmg){
     const L = m.lvl||0;
     for(const [id,lo,hi] of K.drops) for(let n=roll(lo,hi)+(isClass('ranger') && !K.undead ? 1 : 0)+(Math.random() < L*0.2 ? 1 : 0); n>0; n--) spawnDrop(x,y,z,id);     // tougher beasts, richer spoils
     if(K.gold) spawnGold(x,y,z,Math.round(roll(K.gold[0],K.gold[1])*(1+0.25*L)));
-    if(m.kind==='daedroth' && Math.random()<0.35) spawnDrop(x,y,z, Math.random()<0.2 ? MITH_INGOT : ADAM_INGOT);
-    if(m.kind==='cryptlord'){ spawnDrop(x,y,z, Math.random()<0.25 ? MITH_INGOT : ADAM_INGOT); spawnDrop(x,y,z, ADAM_INGOT); cryptCleared(m.crypt); }
+    if(m.kind==='daedroth' && Math.random()<0.35) spawnDrop(x,y,z, Math.random()<0.2 ? ADAM_INGOT : MITH_INGOT);
+    if(m.kind==='cryptlord'){ spawnDrop(x,y,z, Math.random()<0.25 ? ADAM_INGOT : MITH_INGOT); spawnDrop(x,y,z, MITH_INGOT); cryptCleared(m.crypt); }
   }
 }
 // ---- giant bats and slaughterfish: they move freely in air or water instead of walking ----
@@ -9079,9 +9080,9 @@ const chests = new Map();
 let chestOpen = null;
 const LOOT = {
   house:   [[GOLD,2,15,.6],[WHEAT,1,4,.7],[CARROT,1,3,.5],[POTATO,1,3,.5],[PLANKS,2,8,.6],[STICK,2,6,.6],[COAL_ITEM,1,3,.35],[GLASS,1,4,.25],[LANTERN0+1,1,1,.2],[LITTER,1,3,.3]],
-  dungeon: [[GOLD,15,80,.85],[IRON_INGOT,1,4,.45],[ADAM_INGOT,1,1,.06],[COAL_ITEM,2,6,.8],[FIRE_POTION,1,2,.5],[BOLT_POTION,1,2,.5],[STONE_SWORD,1,1,.3],[CROSSBOW,1,1,.2],[BARS0,2,6,.4],[LANTERN0+1,1,2,.5],[STONE_BRICK,4,12,.5],[BOOKSHELF,1,2,.2]],
-  crypt:   [[GOLD,25,90,.9],[IRON_INGOT,1,4,.5],[ADAM_INGOT,1,2,.14],[MITH_INGOT,1,1,.04],[FIRE_POTION,1,2,.4],[BOLT_POTION,1,2,.4],[CANDLE,1,3,.5],[BONE,2,5,.6],[AR(2,0),1,1,.12],[AR(2,3),1,1,.12],[AR(1,1),1,1,.1],[IRON_SWORD,1,1,.15],[CROSSBOW,1,1,.1]],
-  under:   [[GOLD,20,120,.8],[IRON_INGOT,2,5,.5],[ADAM_INGOT,1,2,.15],[MITH_INGOT,1,1,.05],[EMBER,1,3,.8],[FIRE_POTION,1,3,.6],[BOLT_POTION,1,3,.6],[GLOWMOSS,2,8,.6],[BONE,2,6,.4],[RUST,2,6,.4],[LANTERN0+1,1,3,.5],[CROSSBOW,1,1,.2],[COAL_ITEM,3,8,.5]]
+  dungeon: [[GOLD,15,80,.85],[IRON_INGOT,1,4,.45],[MITH_INGOT,1,1,.06],[COAL_ITEM,2,6,.8],[FIRE_POTION,1,2,.5],[BOLT_POTION,1,2,.5],[STONE_SWORD,1,1,.3],[CROSSBOW,1,1,.2],[BARS0,2,6,.4],[LANTERN0+1,1,2,.5],[STONE_BRICK,4,12,.5],[BOOKSHELF,1,2,.2]],
+  crypt:   [[GOLD,25,90,.9],[IRON_INGOT,1,4,.5],[MITH_INGOT,1,2,.14],[ADAM_INGOT,1,1,.04],[FIRE_POTION,1,2,.4],[BOLT_POTION,1,2,.4],[CANDLE,1,3,.5],[BONE,2,5,.6],[AR(2,0),1,1,.12],[AR(2,3),1,1,.12],[AR(1,1),1,1,.1],[IRON_SWORD,1,1,.15],[CROSSBOW,1,1,.1]],
+  under:   [[GOLD,20,120,.8],[IRON_INGOT,2,5,.5],[MITH_INGOT,1,2,.15],[ADAM_INGOT,1,1,.05],[EMBER,1,3,.8],[FIRE_POTION,1,3,.6],[BOLT_POTION,1,3,.6],[GLOWMOSS,2,8,.6],[BONE,2,6,.4],[RUST,2,6,.4],[LANTERN0+1,1,3,.5],[CROSSBOW,1,1,.2],[COAL_ITEM,3,8,.5]]
 };
 function chestItems(x,y,z){
   const key = x+','+y+','+z;
@@ -9317,8 +9318,8 @@ const RECIPES = [
 // the furnace: coal (or planks) is the fuel; one coal smelts a stack of 4
 const SMELT_RECIPES = [
   { name:'Iron ingot (1 iron ore, 1 coal)',             out:[IRON_INGOT,1], ing:{[IRON_ORE]:1, [COAL_ITEM]:1} },
-  { name:'Adamantite ingot (1 adamantite ore, 2 coal)', out:[ADAM_INGOT,1], ing:{[ADAM_ORE]:1, [COAL_ITEM]:2} },
-  { name:'Mithril ingot (1 mithril ore, 3 coal)',       out:[MITH_INGOT,1], ing:{[MITH_ORE]:1, [COAL_ITEM]:3} },
+  { name:'Mithril ingot (1 mithril ore, 2 coal)',       out:[MITH_INGOT,1], ing:{[MITH_ORE]:1, [COAL_ITEM]:2} },
+  { name:'Adamantite ingot (1 adamantite ore, 3 coal)', out:[ADAM_INGOT,1], ing:{[ADAM_ORE]:1, [COAL_ITEM]:3} },
   { name:'Glass (4 sand, 1 coal)',     out:[GLASS,4], ing:{[SAND]:4, [COAL_ITEM]:1} },
   { name:'Stone (4 cobble, 1 coal)',   out:[STONE,4], ing:{[COBBLE]:4, [COAL_ITEM]:1} },
   { name:'Iron bars (2 stone, 1 coal)', out:[BARS0,4], ing:{[STONE]:2, [COAL_ITEM]:1} },
@@ -10207,7 +10208,7 @@ const OUTLINE_RGB = [28,22,14];
 const WOOD_RGB = [[176,122,66],[143,93,44],[106,68,32]];          // handle: light, mid, dark
 const WOOD_HEAD_RGB = [[217,181,122],[185,142,85],[125,90,48]];   // wooden head
 const STONE_HEAD_RGB = [[201,201,201],[154,154,154],[95,95,95]];  // stone head
-const HEAD_RGB = { 1:WOOD_HEAD_RGB, 2:STONE_HEAD_RGB, 3:[[236,236,240],[188,190,198],[118,120,130]], 4:[[150,226,188],[72,158,118],[30,92,66]], 5:[[236,246,255],[170,206,246],[104,136,188]] };
+const HEAD_RGB = { 1:WOOD_HEAD_RGB, 2:STONE_HEAD_RGB, 3:[[236,236,240],[188,190,198],[118,120,130]], 4:[[236,246,255],[170,206,246],[104,136,188]], 5:[[150,226,188],[72,158,118],[30,92,66]] };      // by tier: 4 mithril (pale blue), 5 adamantite (green)
 function cellHash(x,y,s){
   let h = Math.imul(x+1,374761393) ^ Math.imul(y+1,668265263) ^ Math.imul(s+1,2246822519);
   h = Math.imul(h ^ (h>>>13), 1274126177);

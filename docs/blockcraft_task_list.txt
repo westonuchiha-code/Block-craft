@@ -481,3 +481,14 @@ DONE  The class picker no longer appears: a new world starts straight in the gam
       Nothing was deleted: CLASSES, the picker screen, perks and confirmClass() are all still in the file behind one switch,
       CLASSES_ON (false), just above the CLASSES table. Set it to true to bring the picker back.
       Worlds made while classes were on keep their class and its perk.
+
+== METALS IN DAGGERFALL'S ORDER (2026-11-14) ==
+DONE  He corrected the earlier answer: adamantite is ABOVE mithril, as in Daggerfall. Order is now wood -> stone -> iron -> mithril -> adamantite.
+      Item ids, names and colours are unchanged (saves still mean the same things); only the ranking moved:
+      - tools: adamantite tier 5 / 1600 uses, mithril tier 4 / 900. The one-stroke dirt shovel is now the adamantite shovel (top tier).
+      - armour: adamantite cuirass 8 points, mithril 7 (durability swapped likewise).
+      - ore: adamantite is the rare one at y <= 10 and needs a mithril pick; mithril is at y <= 20 and needs an iron pick. Mithril also appears
+        thinly at adamantite's depth (a third of its rate). Measured over 900,000 cells per band: y 1-10 adamantite 1003 / mithril 688; y 11-20 mithril 2278.
+      - prices (ingot 120 vs 55), smelting coal (3 vs 2), chest odds and boss drops swapped to match. Tool head colours follow the metal.
+      Existing worlds: gear keeps its name and swaps strength; unmined deep ore swaps type.
+      Cosmetic, not done: recipe lists still show adamantite before mithril.

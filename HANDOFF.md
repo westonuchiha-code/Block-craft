@@ -40,10 +40,9 @@ a bestiary, a spellmaker, travel by wagon, danger that rises with distance).
   = cooking + alchemy). Skills **never lock** anything. Levelling a gathering skill gives **more materials per
   block** (extra drops / bonus materials), **never more speed**.
 - **Mining** is only raised by a pickaxe on pickaxe-blocks **that the world placed** (not player-placed blocks).
-- **Breaking:** nothing breaks in one hit **except dirt under a mithril shovel**. Stone takes **≥ 2 hits even with
+- **Breaking:** nothing breaks in one hit **except dirt under an adamantite shovel (the top tier)**. Stone takes **≥ 2 hits even with
   the best pickaxe**; bare hands / wood shovel take 4–5 hits minimum on dirt.
-- **Tool tiers:** wood → stone → iron → adamantite → mithril (mithril is top; adamantite was slotted below it,
-  flagged to him as an interpretation).
+- **Tool tiers:** wood → stone → iron → mithril → adamantite (Daggerfall's order; adamantite is top. Corrected by him 2026-11-14).
 - **Classes:** SHELVED 2026-11-14 at his request (they did not add much to the feel). The code is intact behind `CLASSES_ON = false`;
   new worlds start with no class and no picker. Old worlds keep the class they chose. (Was: few, Final-Fantasy-style, 6, picked at world start.)
 - **Money** is Daggerfall-style gold. **Death** drops a floating sack with a light beam where you died.
@@ -75,14 +74,13 @@ runs before optimising.
 ## 4. Open items
 
 - **GPU speed check** on his hardware; if needed add a resolution-scale setting (generic PC option).
-- **Aspect:** DONE 2026-11-14. The logical picture is 16:9 (`RES_LEVELS`); adamantite confirmed below mithril.
+- **Aspect:** DONE 2026-11-14. The logical picture is 16:9 (`RES_LEVELS`).
 - **`tp3`/`og2` worker differences:** RESOLVED 2026-11-14. Test artefact (class picker left open, loop frozen). Tests fixed; 0 differences.
 - **Windows / Steam port** (planned, not started; e.g. Electron / Tauri / NW.js wrapper; saves currently live in
   `localStorage`).
 - Pistol cleanup: DONE 2026-11-14 (only the id and the save-load strip remain).
 - Held items in third person still use simple boxes (`heldBoxes`); first person was rebuilt (see trap 1).
-- Possibly open, check the code first: villages in snow and desert biomes; the adamantite/mithril order
-  (confirm with him); a further efficiency pass.
+- Possibly open, check the code first: villages in snow and desert biomes; a further efficiency pass.
 - `docs/blockcraft_task_list.txt` is a **chronological log**. Older `NEXT:` lines are mostly done; verify against
   the code before treating one as open. The newest sections are at the bottom.
 

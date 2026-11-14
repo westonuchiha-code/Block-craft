@@ -73,6 +73,9 @@ runs before optimising.
 
 ## 4. Open items
 
+- **World shape, 2026-11-14.** New worlds (`worldGen` 6) are lifted 40 blocks: `setWorldShape(40)` sets `YOFF`, `SEA` (56), `TOP_BUILD` (115),
+  `TREELINE`, `SNOW_LINE`, cloud height (`uCloudY` in the shader) and the rat/cat/deep lines. These are now `let`, not `const`. `surfaceH`
+  works in the old frame (`SEA0` = 16) and adds `YOFF`. Ores, lava, tuff stay counted from bedrock. Older worlds: `setWorldShape(0)`.
 - **Delves (cavern dungeons), prototype 2026-11-14.** New worlds (`worldGen` 5) get great caverns with ruins: `delvePlan` / `delveBlock` /
   `delveTick` beside the crypt code; keys start with `D` and share `cryptState` / `cryptSeen` (`siteByKey`). See the task log for what is
   in and what is not (no cave dwellers or fetch quests yet). Design direction and the later "dungeon dimension" idea are in
@@ -143,7 +146,7 @@ runs before optimising.
 |---|---|
 | 1–470 | HTML/CSS: menu (WORLDS / ADVENTURE / SETTINGS / BUILDER TOOLS), HUD, menus (character sheet, map, talk, chest, crafting) |
 | 470–985 | Character creator (skin painting `ccPaint`, 3D preview) |
-| 985–1405 | World constants (`H`=120, `CS`=16, `NB`=2048, `SEA`=16), block/item tables, crops, flowers, woods, cooking, beast drops, metals (`METALS`, `MT`), armor (`ARMOR_MATS`, `AR`), shaped blocks (`SH_BOXES`, `SH_BASE`…) |
+| 985–1405 | World constants (`H`=120, `CS`=16, `NB`=2048; `SEA` is 16 in old worlds, 56 in lifted ones), block/item tables, crops, flowers, woods, cooking, beast drops, metals (`METALS`, `MT`), armor (`ARMOR_MATS`, `AR`), shaped blocks (`SH_BOXES`, `SH_BASE`…) |
 | 1406–2040 | Hashing (`h3`, `vnoise`), terrain, biomes, crypts (`cryptPlan`), trees, the Underworld (`UNDER_Z`=480000), test hall |
 | 2295–2750 | Villages (`villageAt`, `VREG`=192, houses, plaza), roads/signposts/names (`roadChunk`, `villageName`) |
 | 2751–3000 | Chunks (`chunkKey`=cx*131072+cz, `getChunk`, `setB`/`getB`, `computeDerived`, light), multi-core CPU rendering part 1 |

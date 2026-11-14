@@ -510,3 +510,18 @@ TESTED - 38 delves over 5 seeds: every chamber and the master can be reached on 
       - master kill -> cleared -> quest done; chests fill from the delve loot tables; chunk generation inside a delve ~5 ms (same as elsewhere)
 LIMIT The world is only ~25-35 blocks deep under most land (sea 16, bedrock 0), so caverns cannot be Caves-and-Cliffs tall. Truly vast ones need a taller world.
 NOT YET  cave dwellers (hermit / trader / lost miner), fetch-an-item quests, more delve kinds, a delve journal entry. Not playtested by a person.
+
+== THE WORLD LIFTED: DEEP UNDERGROUND (2026-11-14) ==
+WHY   Caverns could only be ~20 high because most land sat 20-35 blocks above bedrock (sea level 16). He asked to fix that.
+DONE  New worlds are worldGen 6: the land is shaped exactly as before and then lifted 40 blocks (YOFF). Sea level 56, mountain tops to 115
+      (highest found on the test seed: 112), build ceiling still 120. Old worlds (gen <= 5) keep their shape: setWorldShape(0).
+      - setWorldShape() sets SEA, TREELINE, TOP_BUILD, SNOW_LINE, cloud height, rat/cat heights and the "deep" danger line; render workers get it too
+      - clouds are 40 higher in lifted worlds (the GPU shader takes the height as a uniform, uCloudY)
+      - ores, lava and the dark deep rock stay counted from bedrock, so they are now a real descent: on the test seed coal everywhere,
+        iron only below y 48 (surface is ~60-75), mithril below 20, adamantite below 10
+      - delves use the depth: stairs 9-20 down, chambers up to 44 across and 33 high, floors dropping up to 8 a step (shrine 20-45 below the gate)
+      - tunnels now run rim to rim at floor level, never steeper than 1 in 2 (deep drops used to leave a ledge high in the next chamber's wall)
+      - a delve site needs solid ground over its whole stair and first chamber (one stair came out under a lake)
+TESTED - 43 delves over 6 seeds in lifted worlds: every chamber and the master reachable on foot from the gate
+      - GPU = CPU in all 8 scenes of tests/gpu.py (clouds included); CPU render time per frame about the same as an old-shape world
+NOTE  A world started on the previous preview build (gen 5) keeps its low shape, but its delves are laid out by the new rules, so they will differ.

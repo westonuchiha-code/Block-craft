@@ -789,3 +789,4 @@ DONE  INDEPENDENT REVIEW of everything added to the game file on 2026-11-15 (a s
       8. "Nothing new on the board" could carry over from one world to another on the same day number.
       9. A horse left far above you (you in a delve below) was put back in the world and removed again every second.
       tests/horse.py checks 1, 2 and 4.
+      Full suite on this build (review fixes): 55/55 (proof/suite_review.log).

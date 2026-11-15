@@ -2,7 +2,7 @@
 
 Read this whole file before touching the code. It is the working agreement with the developer, a map of the
 code, the traps that have already cost time, and what is open. Latest build: `game/blockcraft.html`
-(12,020 lines, one self-contained HTML file, no external assets or libraries).
+(about 13,100 lines, one self-contained HTML file, no external assets or libraries).
 
 ---
 
@@ -50,12 +50,19 @@ a bestiary, a spellmaker, travel by wagon, danger that rises with distance).
 - **Held items** use Minecraft's single "handheld" transform for every tool (see §5, trap 1). Never hand-tune
   per-tool poses.
 
-## 3. Current state (2026-11-14, later the same day)
+## 3. Current state (2026-11-15)
 
 **He cannot playtest until about 2026-11-16.** Until then: build only what scripts and screenshots can verify, do not ask him to try
 things, and keep `docs/blockcraft_playtest_list.txt` (top section) current with what he should look at when he is back.
 
-The suite has 36 scripts and all pass. Built since the kit was handed over, newest first (details in `docs/blockcraft_task_list.txt`):
+The suite has 49 scripts. Built since the kit was handed over, newest first (details in `docs/blockcraft_task_list.txt`; code pointers for
+each are in the dated bullets further down this section and in "open items"):
+- **2026-11-15, a world with a society:** provinces (named baronies and counties, borders on the map, violent crime wanted province-wide),
+  their rulers and feuds, a calendar with holidays that change prices, taverns with innkeepers and evening gatherings, notice boards with
+  the ruler's bounties, temple blessings, pedlars walking the roads, and a horse to buy and ride. Also sound, a dungeon automap, more
+  delves, artifacts, careful/reckless wagon travel, people grounded with shadows and a proper gait, and a held-item audit.
+- **World versions:** `worldGen` 7 (new worlds) adds the tavern and notice board to villages; 6 lifted the land; 5 added delves. Provinces,
+  rulers, the calendar, the horse, blessings and pedlars need no generation and work in older worlds too.
 - **Daggerfall systems:** journal (sheet tab), guilds (Fighters, Mages, Temple, Thieves; ranks from guild work only), the law (bounty,
   witnesses, arrest, fine / cells / resist), rumours from villagers, three delve jobs (kill the master, bring back the heirloom, rescue
   someone lost), a hermit trader camped inside larger delves.

@@ -767,3 +767,8 @@ DONE  MORE TO SAY: every trade has more opening lines, and nearly half the time 
       you, your honours in the province ("We know your name here, Knight."), and whether the village likes you. ASK FOR NEWS sometimes
       brings a line about a neighbour by name ("Ansel the smith owes money to half the village."). Mounting a horse says "sneak to get
       down" the first three times, since nothing else in the game tells you. tests/greet.py (suite is now 55).
+DONE  INSCRIPTIONS IN THE DELVES: USE a post of a delve's gate (with anything but a block in your hand) and you read what is cut into
+      it: the place's name, who raised it and how long ago, what it was (a house for the dead, a border hold, an ore working), how many
+      chambers lie below and what holds it now. It also marks the delve as known. At the very bottom, USE the altar stone: the place's
+      story, and the plan of the whole delve appears on your automap. The founders are old rulers of the province the delve lies in.
+      Nothing is built for this, so it works in every world that has delves. tests/delve.py covers it; the soak reads both.

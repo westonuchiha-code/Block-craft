@@ -111,6 +111,10 @@ runs before optimising.
   kind `intro` whose giver is the first village's innkeeper; `questCount()` leaves it out of `QUEST_MAX`; it is turned in with SHOW THE LETTER.
   `hunterTick` / `hunterSpawn` (once a second): a `newBandit` marked `m.hunter` while `bounty[province key] >= 150`, outside villages, one at a time;
   `npcChase` gives a hunter a 3000-node search.
+- **Inscriptions and greetings, 2026-11-15.** `readInscription(hit)` (called from the use handler for carved stone and stone brick) reads a delve's gate
+  post or its altar stone; `delveLore(P)` makes the text from the seed; `openReading(title, text)` shows any text in the talk panel (a pseudo-person
+  with `m.plain`). Nothing is generated for it, so it works in every world with delves. `greetLine(m)` picks what someone says first (`GREET`,
+  `GREET_MORE`, lines about the moment); `neighbourLine` / `NEIGHBOUR` is the gossip about named neighbours in `talkNews`.
 - **The realm map, 2026-11-15.** `mapRealm` (the REALM / LOCAL button in the map header) makes `drawMap` call `drawRealm`: land and sea from `surfaceH`
   (the middle of five soundings per 4-pixel cell), provinces tinted by `provinceTint`, labels placed nearest-first with no overlaps, painted once
   into `REALM.cv` and reused until you move 200 blocks or change the scale.

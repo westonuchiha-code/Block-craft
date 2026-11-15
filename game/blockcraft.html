@@ -7481,6 +7481,43 @@ function provinceDeed(v){
   if(now>was){ skillToast(HONOURS[now].toUpperCase()+' OF '+P.name.slice(4).toUpperCase()+'<br><small>'+P.ruler+' has heard your name'+(now===2 ? ' \u00b7 your fines here are halved' : '')+'</small>', true); logJournal(`${P.ruler} names you ${honourTitle(P)}.`); }
   else logJournal(`Word of the deed reaches ${P.ruler}.`);
 }
+// ---------- inscriptions: a delve's gate post and the altar stone at its shrine can be read ----------
+// Nothing is built for them (so they are there in every world that has delves): USE a post of the gate, or the altar stone at the
+// very bottom, with anything but a block in your hand. The gate tells you what the place was, how big it is and what holds it now;
+// the altar tells its story and shows you the plan of the whole place (every chamber appears on your map).
+const LORE_EP = ['the Stern','the Open-Handed','the Pious','the Mad','the Elder','the Unlucky','the Builder','the Silent'];
+function delveLore(P){
+  const rx = Math.floor(P.ex/DRS), rz = Math.floor(P.ez/DRS), pv = provinceAt(P.ex,P.ez), q = pv.key.slice(1).split(',').map(Number);
+  const she = h3(rx,61,rz,SEED+930)<0.5 ? 1 : 0, T = PV_RULER[PV_T[Math.floor(h3(q[0],43,q[1],SEED+762)*PV_T.length)]][she];
+  const old = T+' '+(she ? PV_SHE : PV_HE)[Math.floor(h3(rx,62,rz,SEED+931)*12)]+' '+LORE_EP[Math.floor(h3(rx,63,rz,SEED+932)*LORE_EP.length)], yrs = 120+Math.floor(h3(rx,64,rz,SEED+933)*70)*10;
+  const what = P.kind===0 ? ['a house for the dead','They were laid here with their gold, and they have not stayed laid.','The dead walk here.']
+             : P.kind===2 ? ['a hold against the border wars','Its garrison was never paid, and never left.','Outlaws hold it now.']
+             :              ['a working for ore','The miners broke through into an older dark, and the dark came up.','It crawls with spiders.'];
+  return { gate:`${P.name.toUpperCase()}. Cut ${yrs} years ago under ${old}, as ${what[0]}. ${P.nodes.length} chambers lie below. ${what[2]}`,
+           shrine:`Here ${old} of ${pv.name.split(' of ')[1]} raised ${what[0]}, ${yrs} years gone. ${what[1]} Whoever reads this has come to the bottom of ${P.name}. The plan of the place is cut into the stone below the words.` };
+}
+function openReading(title, text){
+  if(paused || craftOpen) return false;
+  talkNpc = { board:true, plain:true, id:0, name:title, job:'board', village:null, vc:null, home:'reading', x:player.x, y:player.y, z:player.z, pose:{} };
+  talkView = 'talk'; talkOffer = null; talkLine = text; craftOpen = true;
+  renderTalk(); document.getElementById('talkMenu').classList.add('show'); if(document.pointerLockElement) document.exitPointerLock(); return true;
+}
+function readInscription(hit){
+  if(worldGen<5 || isUnder(hit.z)) return false;
+  { const id = HOTBAR[sel]; if(inv[id]>0 && heldKind(id)==='block') return false; }                 // a block in your hand is for building, not for reading
+  const P = delvePlan(Math.floor(hit.x/DRS), Math.floor(hit.z/DRS)); if(!P) return false;
+  if((hit.b===STONE_BRICK || hit.b===MOSSY_BRICK) && hit.z===P.ez && Math.abs(hit.x-P.ex)===2 && hit.y>P.h && hit.y<=P.h+4){
+    if(!openReading('The gate of '+P.name, delveLore(P).gate)) return false;
+    if(!cryptSeen.has(P.key)){ cryptSeen.add(P.key); logJournal(`Read the gate of ${P.name}: ${P.nodes.length} chambers, ${P.kind===0 ? 'held by the dead' : P.kind===2 ? 'held by outlaws' : 'full of spiders'}.`); }
+    return true; }
+  const N = P.nodes[P.heart];
+  if(hit.b===CARVED && N && N.decor==='shrine' && hit.x===N.cx && hit.z===N.cz+3 && hit.y>N.F && hit.y<=N.F+3){
+    if(!openReading('The altar of '+P.name, delveLore(P).shrine)) return false;
+    const L = delveSeen[P.key] || (delveSeen[P.key] = []);
+    if(L.length<P.nodes.length){ for(let i=0;i<P.nodes.length;i++) if(!L.includes(i)) L.push(i); logJournal(`Read the altar at the bottom of ${P.name}. Its whole plan is on my map.`); skillToast('THE PLAN OF THE PLACE<br><small>every chamber is on your map</small>', true); scheduleSave(); }
+    return true; }
+  return false;
+}
 const boardDay = {};                                          // village key -> the day you last read its notices
 function boardGuard(rx,rz){ const v = villageAt(rx,rz); let i = v.houses.findIndex(h=>h.job==='guard'); if(i<0 && v.houses[0].job==='villager') i = 0; if(i<0) i = v.tavern!==undefined ? v.tavern : 0;
   const ch = residentOf(rx,rz,i); return { home:rx+','+rz+':'+i, name:ch.name, job:ch.job }; }
@@ -7548,8 +7585,8 @@ function renderTalk(){
   document.getElementById('talkGold').textContent = gold + ' gold';
   let h = '';
   if(m.board){                                                 // the notice board: its own few buttons
-    document.getElementById('talkName').textContent = 'Notice board \u2014 ' + villageName(m.village[0], m.village[1]);
-    el.innerHTML = `<div class="tkLine">${talkLine}</div><div class="tkBtns">` + (talkOffer ? `<button data-a="accept">TAKE THE NOTICE</button><button data-a="decline">LEAVE IT</button>`
+    document.getElementById('talkName').textContent = m.plain ? m.name : 'Notice board \u2014 ' + villageName(m.village[0], m.village[1]);
+    el.innerHTML = `<div class="tkLine">${talkLine}</div><div class="tkBtns">` + (m.plain ? `<button data-a="bye">STEP AWAY</button>` : talkOffer ? `<button data-a="accept">TAKE THE NOTICE</button><button data-a="decline">LEAVE IT</button>`
       : `<button data-a="bread">READ THE NOTICES</button><button data-a="bwork">POSTED BOUNTY</button><button data-a="bye">STEP AWAY</button>`) + `</div>`;
     return; }
   document.getElementById('talkGold').textContent = gold + ' gold \u00b7 ' + repWord(repOf(m.village));
@@ -7605,7 +7642,7 @@ function renderTalk(){
 function talkAction(a){
   const m = talkNpc; if(!m) return;
   if(a==='bye'){ closeTalk(); return; }
-  if(m.board){ boardAction(m, a); renderTalk(); return; }
+  if(m.board){ if(!m.plain) boardAction(m, a); renderTalk(); return; }
   if(a==='finepay'){ if(gold>=fineOf(m.village)) arrestEnd(m, 'pay'); }
   else if(a==='jail'){ arrestEnd(m, 'jail'); return; }
   else if(a==='resist'){ arrestEnd(m, 'resist'); return; }
@@ -10262,6 +10299,7 @@ function placeBlock(){
   if(toggleLamp(hit.x,hit.y,hit.z)) return;                 // lanterns and lamps switch on and off
   if(IS_FURN[hit.b] && SH_HALF[hit.b]===2){ sitDown(hit.x,hit.y,hit.z,SH_FACE[hit.b]); return; }
   if(hit.b===NOTICE0 || hit.b===NOTICE0+1){ openBoard(hit.x, hit.z); return; }
+  if((hit.b===CARVED || hit.b===STONE_BRICK || hit.b===MOSSY_BRICK) && readInscription(hit)) return;
   if(hit.b===TSIGN0 || hit.b===TSIGN0+1){ const nm = tavernNear(hit.x,hit.z); skillToast(nm ? nm.toUpperCase()+'<br><small>food, a bed, and the talk of the road</small>' : 'A tavern sign<br><small>it hangs over no tavern</small>', true); return; }
   if(hit.b===CHEST){ openChest(hit.x,hit.y,hit.z); return; }
   if(IS_BED[hit.b]){ useBed(hit); return; }

@@ -108,6 +108,9 @@ PROVINCES (every world, old or new)
 [ ] Do the names feel right (the March of Lormark, the Barony of Lorwold, the Duchy of Kelmoor)?
 
 DELVES (seed 12345: the Black Hideout, a bandit den, gate at x 100, z -198, about 250 blocks north of spawn)
+[ ] USE a post of a delve's gate with a tool or empty hand: an inscription tells you what the place was, how many chambers lie
+    below and what holds it now. At the very bottom, USE the altar stone: its story, and the whole plan appears on your map.
+    Do the inscriptions add to the place, or get in the way of building against the gate?
 [ ] Finding the gate; the walk down the stair.
 [ ] Size and mood of the caverns; is the glowing moss too much or too little light?
 [ ] Can you find your way to the shrine? Is it too easy, too confusing, too long?

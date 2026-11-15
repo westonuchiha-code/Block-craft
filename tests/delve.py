@@ -73,6 +73,20 @@ with sync_playwright() as p:
     if len(r)<3: bad.append('too few delves: %d' % len(r))
     g=pg.evaluate(PLAY); print('play', json.dumps(g))
     if not (g['offer'] and g['seen'] and g['awake']>0 and g['chests']=='chest,chest' and min(g['loot'])>0 and g['master'] and g['cleared'] and g['quest']=='done' and g['site'] and g['relicOffer'] and g['idFree'] and g['inChest']==1 and g['canHandIn'] and g['goal'] and g['relicDone'] and g['automap']==[True,True] and g['automapSide'] and g['banditDelve'] and g['bandits']>=3 and g['banditsAngry'] and g['banditsHit'] and g['chief'] and g['noTalk'] and g['banditCleared'] and g['rescueOffer'] and g['lostFound'] and g['lostTalk'] and g['following'] and g['keepsClose'] and g['rescued'] and g['rescueGoal'] and g['walkedOff'] and g['camp'] and g['hermit'] and g['campQuiet'] and g['campBlocks']=='bed,barrel,lantern,crate' and g['hermitWork'] and g['hermitTalk'] and g['hermitShop']): bad.append('play')
+    # the inscriptions: a gate post tells what the place is; the altar stone at the bottom tells its story and shows the whole plan
+    w=pg.evaluate("""()=>{ const o={}, P=delveNear(player.x,player.z,2600)[0], N=P.nodes[P.heart], html=()=>document.getElementById('talkBody').innerText; if(talkNpc) closeTalk(); craftOpen=false; paused=false;
+      const gate={ b:STONE_BRICK, x:P.ex+2, y:P.h+2, z:P.ez }, altar={ b:CARVED, x:N.cx, y:N.F+1, z:N.cz+3 };
+      o.blocks=[[STONE_BRICK,MOSSY_BRICK].includes(blockAt(gate.x,gate.y,gate.z)), blockAt(altar.x,altar.y,altar.z)===CARVED, N.decor];
+      inv[COBBLE]=5; HOTBAR[sel]=COBBLE; o.withBlock=readInscription(gate);
+      HOTBAR[sel]=0; cryptSeen.delete(P.key); const j0=journal.length; o.gate=readInscription(gate); o.gateText=html().slice(0,200); o.title=document.getElementById('talkName').textContent;
+      o.gateKnown=[cryptSeen.has(P.key), journal.slice(j0).some(e=>e.t.startsWith('Read the gate of '+P.name)), html().includes('STEP AWAY') && !html().includes('POSTED BOUNTY')]; talkAction('bye'); o.closed=!talkNpc && !craftOpen;
+      o.elsewhere=readInscription({ b:STONE_BRICK, x:P.ex+2, y:P.h+2, z:P.ez+9 });
+      delveSeen[P.key]=[0]; o.altar=readInscription(altar); o.altarText=html().slice(0,120); o.plan=[delveSeen[P.key].length, P.nodes.length]; talkAction('bye');
+      const lore=delveLore(P); o.lore=[lore.gate.includes(P.name.toUpperCase()), /Cut \\d+ years ago under (Baron|Baroness|Count|Countess|Margrave|Margravine|Duke|Duchess|Lord|Lady) /.test(lore.gate), lore.gate.includes(P.nodes.length+' chambers'), delveLore(P).shrine===lore.shrine];
+      return o; }""")
+    print('inscriptions', json.dumps(w))
+    if not (w['blocks'][0] and w['blocks'][1] and w['withBlock'] is False and w['gate'] and 'The gate of' in w['title'] and w['gateKnown']==[True,True,True] and w['closed'] and w['elsewhere'] is False
+            and w['altar'] and w['plan'][0]==w['plan'][1] and w['lore']==[True,True,True,True]): bad.append('inscriptions')
     print(errs); b.close()
 print('DELVE TEST FAILED:', bad) if bad else print('delves ok')
 sys.exit(1 if (bad or errs) else 0)

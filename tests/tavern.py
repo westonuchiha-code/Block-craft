@@ -40,7 +40,7 @@ with sync_playwright() as p:
     print(json.dumps(t))
     if t.get('none') or not ('Innkeeper' in t['title'] and t['room'] and t['rumours']==[1,1] and t['gold']==42 and t['bed'] and t['isBed'] and t['journal'] and t['stew'] and t['trade']): bad.append('innkeeper')
     q="""()=>{ const h=window.__h, W=(h.r&1)?h.d:h.w, D=(h.r&1)?h.w:h.d, inn=m=>Math.abs(m.x-0.5-h.x)<=(W-1)/2 && Math.abs(m.z-0.5-h.z)<=(D-1)/2;
-      const L=mobs.filter(m=>m.kind==='npc' && m.job!=='guard' && m.job!=='innkeeper');
+      const L=mobs.filter(m=>m.kind==='npc' && m.house && m.job!=='guard' && m.job!=='innkeeper');      // (people of the village: a pedlar passing through has no house)
       return { drinkers:L.filter(npcDrinks).length, inTavern:L.filter(m=>npcDrinks(m)&&inn(m)).length, soberIn:L.filter(m=>!npcDrinks(m)&&inn(m)).length,
                home:(()=>{ window.__home=window.__home||new Set(); for(const m of L) if(Math.hypot(m.x-0.5-m.house.inside[0], m.z-0.5-m.house.inside[2])<2.5) window.__home.add(m.home); return L.filter(m=>window.__home.has(m.home)).length; })(),      // (has been home: at night some step out again to see off the rats)
                all:L.length, hour:tavernHour() }; }"""

@@ -2,7 +2,7 @@ from playwright.sync_api import sync_playwright
 import json, sys
 # Delves (cavern dungeons): the lifted world shape, that every chamber and the master can be reached on foot from the gate
 # without digging (step up 1, drop up to 3), and that the master, chests, quest and map entry work.
-WALK = r"""()=>{ beastSpawnT=1e9; ogreSpawnT=1e9; const out=[];
+WALK = r"""()=>{ beastSpawnT=1e9; travT=1e9; ogreSpawnT=1e9; const out=[];
       const L=[]; for(let a=-5;a<=5;a++) for(let b=-5;b<=5;b++){ const P=delvePlan(a,b); if(P) L.push(P); }
       for(const P of L.slice(0,8)){
         // can you walk (step up 1, drop up to 3) from the top of the stair to every chamber and to the master, without digging?

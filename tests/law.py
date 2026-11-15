@@ -7,7 +7,7 @@ with sync_playwright() as p:
     pg=b.new_page(viewport={'width':1920,'height':1080}); errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
     pg.goto('file:///home/claude/blockcraft_prototype.html'); pg.wait_for_timeout(1500)
     pg.fill('#newName','law'); pg.fill('#newSeed','12345'); pg.click('#newBtn'); pg.wait_for_timeout(6000)
-    r=pg.evaluate("""async ()=>{ beastSpawnT=1e9; ogreSpawnT=1e9; hurt=function(){}; tod=0.3; const o={}; const sleep=t=>new Promise(r=>setTimeout(r,t));
+    r=pg.evaluate("""async ()=>{ beastSpawnT=1e9; travT=1e9; ogreSpawnT=1e9; hurt=function(){}; tod=0.3; const o={}; const sleep=t=>new Promise(r=>setTimeout(r,t));
       const npcs=()=>mobs.filter(m=>m.kind==='npc' && !m.dead && m.village && m.village[0]!=='h');
       for(let i=0;i<20 && npcs().length<3;i++) await sleep(500);
       const folk=npcs(); o.npcs=folk.length; const vil=folk.find(m=>m.job!=='guard'), V=vil.village, k=vkey(V);

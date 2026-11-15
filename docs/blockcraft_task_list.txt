@@ -695,3 +695,6 @@ DONE  PEDLARS ON THE ROADS: by day, now and then, a pedlar sets out on a road ne
       his pack (candles, tinder, potions, dyes, iron; he buys hides and ores) or ask the news. He offers no work, and striking him is
       no village's crime. When he arrives he idles about the plaza. Worlds with roads (worldGen 4 on).
       New tests: tests/board.py, bless.py, pedlar.py; province.py checks rulers; gpu.py has a board scene (suite is now 49).
+      Full suite on this build: 48/49 on the run (proof/suite_society.log). The one failure was the tavern TEST itself: a pedlar now
+      walks into its village and the test's own helper assumed everyone there has a house. Test fixed (and pedlars switched off in the
+      tests that inspect villagers); rerun alone: tavern ok, law ok, people ok, guilds ok. The game was not changed.

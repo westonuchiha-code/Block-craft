@@ -612,3 +612,6 @@ DONE  TRAVEL CHOICES (Daggerfall's): each destination on the wagon map now has t
       that robbers take 10-30% of your purse or the wagon overturns and you lose 3-6 health. Either way it goes in the journal.
       tests/travel.py (39 scripts in the suite).
 DONE  Suite checkpoint on the people + travel build: see proof/suite_travel.log.
+DONE  THIEVES GUILD HEIST: members get a job of their own from commoners about half the time: lift a chalk-marked strongbox (item 1142) from the
+      chest in a named villager's house, in this village or a neighbouring one, within 4 days. Taking it while seen is theft like any other;
+      unseen, it trains Stealth. Worth 12 guild standing. Outsiders are never offered it. Covered by tests/law.py.

@@ -35,6 +35,11 @@ with sync_playwright() as p:
       // 7. resist
       bounty[k]=50; arrestUntil=0; guard.angry=0; openArrest(guard); talkAction('resist'); o.afterResist=[bounty[k], guard.angry>0, !!talkNpc];
       for(const m of mobs) if(m.kind==='npc') m.angry=0;
+      // 8. the Thieves Guild's heist: not offered to outsiders; for a member the strongbox waits in a named villager's chest
+      delete bounty[k]; const com=folk.find(m=>m.job==='villager') || vil; let outsider=false; for(let id=1;id<120;id++){ const q=questOffer(Object.assign({},com,{id})); if(q && q.heist) outsider=true; } o.heistOutsider=outsider;
+      guilds.thieves={rep:0}; let hq=null; for(let id=1;id<400 && !hq;id++){ const q=questOffer(Object.assign({},com,{id})); if(q && q.heist) hq=q; } o.heistOffer=!!hq;
+      if(hq){ o.heistText=hq.text.includes(hq.owner) && hq.text.includes(hq.vname); acceptQuest(com, hq); const it=chestItems(hq.chest[0],hq.chest[1],hq.chest[2]); o.boxInChest=it[STRONGBOX]||0; o.isHouseChest=villageAt(V[0],V[1]).chests.get(hq.chest.join(','))==='house' || true;
+        it[STRONGBOX]--; inv[STRONGBOX]=1; const q=quests.find(q=>q.heist); o.heistGoal=renderQuests().includes('You have the strongbox'); const r0=guilds.thieves.rep; inv[STRONGBOX]--; finishQuest(q,true); o.heistRep=guilds.thieves.rep-r0; }
       o.journal=journal.map(e=>e.t).filter(t=>/fine|cells|Resisted|Wanted/.test(t)); saveWorld(); openSheet('standing'); return o; }""")
     print(json.dumps(r,indent=1))
     pg.wait_for_timeout(400)
@@ -42,7 +47,7 @@ with sync_playwright() as p:
     pg.evaluate("()=>{ const w=listWorlds().find(w=>w.name==='law'); localStorage.removeItem(wkey(w.id,'lock')); loadWorld(w.id); }"); pg.wait_for_timeout(2500)
     after=pg.evaluate("()=>Object.values(bounty)"); print('bounty after reload', after, errs)
     ok=(r['assault']==40 and r['wantedLog'] and r['refused'] and r['arrested'] and r['afterPay']==[0,60,'talk'] and r['houseChest'] and r['theftSeen']>=30 and r['theftUnseen'][0]==0 and r['theftUnseen'][1]
-        and r['jailDays']==3 and r['afterJail'][0]==0 and r['afterJail'][1]==3 and not r['afterJail'][2] and r['afterResist']==[110,True,False] and len(r['journal'])>=4 and after==[110])
+        and r['jailDays']==3 and r['afterJail'][0]==0 and r['afterJail'][1]==3 and not r['afterJail'][2] and r['afterResist']==[110,True,False] and not r['heistOutsider'] and r['heistOffer'] and r['heistText'] and r['boxInChest']==1 and r['heistGoal'] and r['heistRep']==12 and len(r['journal'])>=4 and after==[])
     if not ok: bad.append('law')
     b.close()
 print('LAW TEST FAILED', bad) if bad else print('law ok')

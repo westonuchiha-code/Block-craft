@@ -6888,6 +6888,7 @@ function talkNews(m){
 // Each village remembers how you treat it: work done raises your standing (better prices), harming its people lowers it,
 // and at -30 they will not deal with you at all. Days are counted at sunrise; work not done in time fails.
 const PARCEL = 1088; NAMES[PARCEL] = 'sealed parcel'; COLORS[PARCEL] = [176,140,92]; FLAT_ITEMS.add(PARCEL);
+const STRONGBOX = 1142; NAMES[STRONGBOX] = 'marked strongbox'; COLORS[STRONGBOX] = [96,100,112]; FLAT_ITEMS.add(STRONGBOX);      // what the Thieves Guild sends you to lift from a house
 const HEIRLOOM = 1137; NAMES[HEIRLOOM] = 'old heirloom'; COLORS[HEIRLOOM] = [226,184,72]; FLAT_ITEMS.add(HEIRLOOM);      // a family's cup, lost in a delve: someone will ask you to bring it back
 const QUEST_MAX = 3;
 let quests = [], villageRep = {}, dayNo = 0, questId = 1;
@@ -6933,6 +6934,14 @@ function questOffer(m){
     return { kind:'fetch', item, n, days, reward, rep:0, text:`I am short of ${NAMES[item]}. Bring me ${n} within ${days} days and I will pay ${reward} gold, twice what any village would.` };
   }
   const rnd = vRng(Math.floor(h3(m.id, dayNo, (m.home||'').length*7+m.job.length, SEED+611)*4294967295));
+  if(m.job==='villager' && guildRank('thieves')>=0 && rnd()<0.5){                                  // the Guild's own work: lift a marked strongbox from someone's house
+    const [vx,vz] = villageRegionOf(m), cands = [];
+    for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){ const v = villageAt(vx+a, vz+b); if(!v || !v.houses || !v.chests) continue;
+      for(const [key,t] of v.chests){ if(t!=='house') continue; const [x,y,z] = key.split(',').map(Number); let hi = 0, hd = 1e9; v.houses.forEach((h,i)=>{ const d = Math.hypot(h.out[0]-x, h.out[2]-z); if(d<hd){ hd = d; hi = i; } });
+        if(m.home===(vx+a)+','+(vz+b)+':'+hi) continue; cands.push({ key, x, y, z, rx:vx+a, rz:vz+b, hi }); } }
+    if(cands.length){ const C = cands[Math.floor(rnd()*cands.length)], who = residentOf(C.rx, C.rz, C.hi), vc0 = m.vc || [m.x,m.z], d = Math.hypot(C.x-vc0[0], C.z-vc0[1]), days = 4, reward = 170 + Math.round(d/4);
+      return { kind:'fetch', heist:1, item:STRONGBOX, n:1, chest:[C.x,C.y,C.z], at:[C.x,C.z], owner:who.name, ownerJob:who.job, vname:villageName(C.rx,C.rz), days, reward, rep:0,
+               text:`A word, Guild-sibling. ${who.name} the ${(JOB_TITLE[who.job]||'villager').toLowerCase()}, in ${villageName(C.rx,C.rz)}, keeps a strongbox that is not rightly theirs. It is in the chest in their house, chalk-marked. Bring it to me within ${days} days. ${reward} gold. And do not be seen: what you do in there is on your own head.` }; } }
   const kinds = m.job==='guard' ? ['hunt','crypt','crypt','deliver','order','build'] : ['hunt','deliver','fetch','order','order','build','crypt'];
   let kind = kinds[Math.floor(rnd()*kinds.length)];
   const vc = m.vc || [m.x,m.z];
@@ -7065,7 +7074,7 @@ function guildSheet(){
 let journal = [];
 function logJournal(t){ journal.push({ d:dayNo, t }); if(journal.length>150) journal.splice(0, journal.length-150); scheduleSave(); }
 function questTitle(q){
-  return q.kind==='rescue' ? 'bring '+q.who+' out of '+q.cname : q.relic ? 'bring back the heirloom from '+q.cname : q.kind==='crypt' ? (q.delve ? 'kill what rules '+q.cname : 'destroy the Crypt Lord of the '+q.cname) : q.kind==='hunt' ? 'hunt a '+BEAST_NAME[q.beast] : q.kind==='deliver' ? 'carry a parcel to '+q.toName
+  return q.heist ? 'lift the strongbox from '+q.owner+"'s house in "+q.vname : q.kind==='rescue' ? 'bring '+q.who+' out of '+q.cname : q.relic ? 'bring back the heirloom from '+q.cname : q.kind==='crypt' ? (q.delve ? 'kill what rules '+q.cname : 'destroy the Crypt Lord of the '+q.cname) : q.kind==='hunt' ? 'hunt a '+BEAST_NAME[q.beast] : q.kind==='deliver' ? 'carry a parcel to '+q.toName
        : q.kind==='build' ? 'building work' : (q.order ? 'make ' : 'bring ')+q.n+' '+NAMES[q.item];
 }
 function journalSheet(){
@@ -7089,16 +7098,17 @@ function acceptQuest(m, q){
   { const gid = guildOfJob(m.job); if(gid && guildRank(gid)>=0 && !q.guildPay){ q.reward = Math.round(q.reward*(1 + 0.08*(guildRank(gid)+1))); q.guildPay = 1; } }      // a guild pays its own better
   Object.assign(q, { id:questId++, giver:m.home, giverName:m.name, giverJob:m.job, village:m.village, gvc:m.vc, due:dayNo+q.days, state:'active' });
   if(q.kind==='deliver'){ inv[PARCEL] = (inv[PARCEL]||0)+1; autoFillHotbar(PARCEL); }
+  if(q.heist){ const it = chestItems(q.chest[0], q.chest[1], q.chest[2]); it[STRONGBOX] = (it[STRONGBOX]||0)+1; }      // the strongbox waits in their chest
   if(q.relic){ const P = siteByKey(q.crypt), c = P && P.nodes[P.heart].chests[0]; if(c){ const it = chestItems(c[0],c[1],c[2]); it[HEIRLOOM] = (it[HEIRLOOM]||0)+1; } }      // the heirloom waits in a chest on the shrine
   quests.push(q); logJournal(`Took work from ${q.giverName}: ${questTitle(q)}. ${q.reward} gold if done within ${q.days} days.`);
-  return q.kind==='rescue' ? 'Go quickly. Please.' : q.relic ? 'Bless you. Look on the shrine, at the very bottom.' : q.kind==='deliver' ? 'Here is the parcel. Don\'t open it.' : q.kind==='hunt' ? 'Good luck. Bring me word when it is dead.' : 'I\'ll be waiting.';
+  return q.heist ? 'Quietly, now.' : q.kind==='rescue' ? 'Go quickly. Please.' : q.relic ? 'Bless you. Look on the shrine, at the very bottom.' : q.kind==='deliver' ? 'Here is the parcel. Don\'t open it.' : q.kind==='hunt' ? 'Good luck. Bring me word when it is dead.' : 'I\'ll be waiting.';
 }
 function finishQuest(q, ok){
   quests.splice(quests.indexOf(q),1);
-  { const gid = guildOfJob(q.giverJob); if(gid) guildGain(gid, ok ? (q.kind==='crypt' || q.kind==='hunt' || q.kind==='rescue' ? 12 : 8) : -6); }
+  { const gid = guildOfJob(q.giverJob); if(gid) guildGain(gid, ok ? (q.kind==='crypt' || q.kind==='hunt' || q.kind==='rescue' || q.heist ? 12 : 8) : -6); }
   logJournal(ok ? `Finished the work for ${q.giverName} (${questTitle(q)}) and was paid ${q.reward} gold.` : `Failed the work for ${q.giverName} (${questTitle(q)}): out of time.`);
   if(ok){ gold += q.reward; addRep(q.village, q.rep); if(q.kind==='deliver') addRep(q.to.split(':')[0].split(',').map(Number), 4); skillToast('QUEST DONE<br><small>+'+q.reward+' gold</small>', true); }
-  else { addRep(q.village, -5); if(q.kind==='deliver' && inv[PARCEL]>0) inv[PARCEL]--; if(q.relic && inv[HEIRLOOM]>0) inv[HEIRLOOM]--; skillToast('QUEST FAILED<br><small>'+q.giverName+' is disappointed</small>', true); }
+  else { addRep(q.village, -5); if(q.kind==='deliver' && inv[PARCEL]>0) inv[PARCEL]--; if(q.relic && inv[HEIRLOOM]>0) inv[HEIRLOOM]--; if(q.heist && inv[STRONGBOX]>0) inv[STRONGBOX]--; skillToast('QUEST FAILED<br><small>'+q.giverName+' is disappointed</small>', true); }
   scheduleSave();
 }
 function questDawn(){ dayNo++; for(const q of quests.slice()) if(dayNo>q.due && q.state!=='done') finishQuest(q, false); }
@@ -7129,9 +7139,10 @@ function renderQuests(){
     else if(q.kind==='crypt') goal = q.delve ? (q.state==='done' ? `The master of ${q.cname} is dead. Return to ${q.giverName} (${gv}).` : `Go down into ${q.cname} and kill what rules it, at the very bottom. Its gate is ${far(q.at[0],q.at[1])}.`) : q.state==='done' ? `The Crypt Lord is destroyed. Return to ${q.giverName} (${gv}).` : `Destroy the Crypt Lord in the ${q.cname}, ${far(q.at[0],q.at[1])}.`;
     else if(q.kind==='build'){ const J = BUILD_JOBS.find(j=>j.key===q.job); goal = q.state==='done' ? `Done. Tell ${q.giverName} (${gv}).` : `Place ${q.n} ${J.what} in ${q.giverName}'s village (${gv}). ${q.got||0} of ${q.n} so far.`; }
     else if(q.kind==='rescue') goal = q.state==='done' ? `${q.who} is safe. Tell ${q.giverName} (${gv}).` : q.found ? `Lead ${q.who} up to the gate of ${q.cname} (${far(q.at[0],q.at[1])}). Stay close.` : `Find ${q.who}, lost somewhere in ${q.cname}. Its gate is ${far(q.at[0],q.at[1])}.`;
+    else if(q.heist) goal = (inv[STRONGBOX]||0)>0 ? `You have the strongbox. Take it to ${q.giverName} (${gv}).` : `Take the marked strongbox from the chest in the house of ${q.owner} the ${(JOB_TITLE[q.ownerJob]||'villager').toLowerCase()}, in ${q.vname} (${far(q.at[0],q.at[1])}). Being seen is theft.`;
     else if(q.relic) goal = (inv[HEIRLOOM]||0)>0 ? `You have the heirloom. Take it to ${q.giverName} (${gv}).` : `Find the family's gold cup in ${q.cname}: look in the chests on the shrine at the very bottom. Its gate is ${far(q.at[0],q.at[1])}.`;
     else goal = `${q.order ? 'Make' : 'Bring'} ${q.n} ${NAMES[q.item]} for ${q.giverName} (${gv}). You have ${inv[q.item]||0}.`;
-    h += `<div class="skRow"><div class="skHead"><b>${q.kind==='rescue'?'Rescue':q.kind==='crypt'?(q.delve?'Delve':'Crypt'):q.kind==='hunt'?'Hunt':q.kind==='deliver'?'Delivery':q.kind==='build'?'Building':q.relic?'Heirloom':q.order?'Order':'Supplies'} for ${q.giverName}</b><span>${q.reward}g</span></div><div class="skDesc" style="color:#d8cfb8">${goal}</div><div class="skDesc">${left>0 ? left+(left===1?' day':' days')+' left' : 'due today'}</div></div>`;
+    h += `<div class="skRow"><div class="skHead"><b>${q.kind==='rescue'?'Rescue':q.kind==='crypt'?(q.delve?'Delve':'Crypt'):q.kind==='hunt'?'Hunt':q.kind==='deliver'?'Delivery':q.kind==='build'?'Building':q.heist?'Heist':q.relic?'Heirloom':q.order?'Order':'Supplies'} for ${q.giverName}</b><span>${q.reward}g</span></div><div class="skDesc" style="color:#d8cfb8">${goal}</div><div class="skDesc">${left>0 ? left+(left===1?' day':' days')+' left' : 'due today'}</div></div>`;
   }
   // every village you've found, or done work for, by name: your standing there and how far it is
   const keys = new Set([...visitedV, ...Object.keys(villageRep).filter(k=>villageRep[k] && k[0]!=='h'), ...quests.filter(q=>q.village && q.village[0]!=='h').map(q=>vkey(q.village))]);
@@ -7284,7 +7295,7 @@ function talkAction(a){
     else if(q && q.kind==='crypt' && q.state==='done'){ finishQuest(q, true); talkLine = q.delve ? `You went to the bottom of ${q.cname} and came back? Then it is true, the thing is dead. ${q.reward} gold, and our thanks with it.` : `The Crypt Lord is gone? Then the dead will rest. ${q.reward} gold, with our thanks.`; }
     else if(q && q.kind==='rescue' && q.state==='done'){ finishQuest(q, true); talkLine = `${q.who} is alive? Out of that place? You have given us back more than gold can pay for. Here: ${q.reward} gold, all the same.`; }
     else if(q && q.kind==='build' && q.state==='done'){ finishQuest(q, true); talkLine = `I saw it with my own eyes. Fine work! ${q.reward} gold, as promised.`; }
-    else if(q && q.kind==='fetch' && (inv[q.item]||0)>=q.n){ inv[q.item] -= q.n; finishQuest(q, true); talkLine = q.relic ? `Grandfather's cup. You found it. I never thought to hold it again. ${q.reward} gold, and my family's thanks.` : `Just what I needed. ${q.reward} gold, as promised.`; } }
+    else if(q && q.kind==='fetch' && (inv[q.item]||0)>=q.n){ inv[q.item] -= q.n; finishQuest(q, true); talkLine = q.heist ? `Chalk mark and all. Nicely done. ${q.reward} gold, and the Guild will hear of it.` : q.relic ? `Grandfather's cup. You found it. I never thought to hold it again. ${q.reward} gold, and my family's thanks.` : `Just what I needed. ${q.reward} gold, as promised.`; } }
   else if(a==='heal'){
     const need = maxHP()-health, cost = need*(isClass('whitemage') ? 1.5 : 3)*guildCut('temple', 15, 90) | 0;
     if(need<=0) talkLine = 'You are whole. Go with the gods.';
@@ -7525,7 +7536,7 @@ function drawMap(){
     if(label){ g.fillStyle = 'rgba(0,0,0,.65)'; const w = g.measureText(label).width; g.fillRect(sx-w/2-3, sy-20, w+6, 13); g.fillStyle = col; g.fillText(label, sx, sy-10); } };
   for(const p of knownPlaces()) mark(p.x, p.z, p.kind==='h' ? '#8fdc6a' : '#e3cf95', p.name);
   for(const k of cryptSeen){ const P = siteByKey(k); if(P) mark(P.ex, P.ez, cryptState[k] && cryptState[k].cleared ? '#8a8a9a' : k[0]==='D' ? '#e0a050' : '#b07ae0', P.name); }
-  for(const q of quests){ const t = (q.kind==='hunt' || q.kind==='crypt' || q.kind==='rescue' || q.relic) && q.state==='active' ? q.at : q.kind==='deliver' ? q.tvc : null; if(t) mark(t[0], t[1], '#e05040', q.kind==='hunt' ? BEAST_NAME[q.beast] : (q.kind==='crypt' || q.kind==='rescue' || q.relic) ? q.cname : q.toName); }
+  for(const q of quests){ const t = (q.kind==='hunt' || q.kind==='crypt' || q.kind==='rescue' || q.relic || q.heist) && q.state==='active' ? q.at : q.kind==='deliver' ? q.tvc : null; if(t) mark(t[0], t[1], '#e05040', q.kind==='hunt' ? BEAST_NAME[q.beast] : q.heist ? q.owner+"'s house" : (q.kind==='crypt' || q.kind==='rescue' || q.relic) ? q.cname : q.toName); }
   for(const sk of deathSacks) mark(sk.x, sk.z, '#ffe28c', 'your belongings');
   // you: an arrow pointing the way you face
   const f = camVectors().f, a = Math.atan2(f[0], f[2]);
@@ -9982,6 +9993,8 @@ function paintFood(g, id){
               for(let x=4;x<=11;x++) P(x,10,[84,60,40]); P(10,4,[255,220,90]); P(11,3,[255,170,40]); P(9,5,[255,190,60]); P(12,5,[255,240,170]); }); return true;
     case SACK: paintIcon(g,(P,E)=>{ E(8,10,5.6,4.6,null,(x,y,dx,dy)=>dx<-0.3&&dy<-0.1 ? [178,140,92] : dy>0.55 ? [104,76,46] : [146,110,70]);
               for(let x=6;x<=10;x++){ P(x,4,[146,110,70]); P(x,5,[120,90,56]); } P(7,3,[146,110,70]); P(9,3,[146,110,70]); for(let x=5;x<=11;x++) P(x,6,[196,160,70]); P(8,10,[90,64,38]); }); return true;
+    case STRONGBOX: paintIcon(g,(P,E)=>{ for(let y=5;y<=12;y++) for(let x=3;x<=12;x++) P(x,y, y===5||x===3 ? [140,146,160] : y===12||x===12 ? [50,52,62] : [96,100,112]);      // an iron-bound box with a brass lock and a chalk mark
+              for(let x=3;x<=12;x++) P(x,7,[60,62,72]); P(7,8,[214,170,64]); P(8,8,[214,170,64]); P(7,9,[160,120,40]); P(8,9,[160,120,40]); P(5,10,[236,236,228]); P(6,11,[236,236,228]); P(10,10,[236,236,228]); }); return true;
     case HEIRLOOM: paintIcon(g,(P,E)=>{ const G=[226,184,72], L=[250,226,130], D=[160,118,40];      // a gold cup with a red stone
               for(let y=3;y<=7;y++){ const w = y<=4 ? 4 : y<=6 ? 3 : 2; for(let x=8-w;x<8+w;x++) P(x,y, x===8-w ? L : x===8+w-1 ? D : G); } for(let x=4;x<12;x++) P(x,3,L);
               for(let y=8;y<=11;y++){ P(7,y,G); P(8,y,D); } for(let x=5;x<=10;x++){ P(x,12,G); P(x,13,D); } P(7,5,[200,40,40]); P(8,5,[150,20,24]); }); return true;

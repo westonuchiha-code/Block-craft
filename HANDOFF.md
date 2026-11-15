@@ -94,6 +94,9 @@ runs before optimising.
 - **World shape, 2026-11-14.** New worlds (`worldGen` 6) are lifted 40 blocks: `setWorldShape(40)` sets `YOFF`, `SEA` (56), `TOP_BUILD` (115),
   `TREELINE`, `SNOW_LINE`, cloud height (`uCloudY` in the shader) and the rat/cat/deep lines. These are now `let`, not `const`. `surfaceH`
   works in the old frame (`SEA0` = 16) and adds `YOFF`. Ores, lava, tuff stay counted from bedrock. Older worlds: `setWorldShape(0)`.
+- **Calendar, 2026-11-15.** `MONTHS` (8 x 12 days), `DAY0` (a new world is the 1st of Greening), `dateOf`, `dateStr`, `HOLIDAYS` (by day of year, each
+  with multipliers), `holiday()`, `holidayMul(key)` (used by `buyPrice`, `sellPrice` for crops, `trainCost`, `roomCost`, `fineOf`, healing, spell
+  cost, `wagonCost`), `nextHoliday()`, `holidayDawn()` (called from `questDawn`). Nothing new is saved: it all derives from `dayNo`.
 - **Provinces, 2026-11-15.** No world generation: `provinceAt(x,z)` is the nearest of one jittered seat per 1536-block square (`PREG`), cached per
   64-block square; `provinceOfVillage`, `provinceTick` (border toast + journal, `provSeen` in the save), the name and dotted border in `drawMap`.
   Law: `crime()` also adds half of an assault or murder under the province's key (`'P'+x+','+z`) in `bounty`; `bountyOf(v)` is the larger of

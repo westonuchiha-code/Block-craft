@@ -664,3 +664,9 @@ DONE  PROVINCES (Daggerfall's regions): the land is divided into named baronies,
       are in. LAW: an assault or murder is now also owed, at half value, in every village of the province (guards there come for you);
       theft stays local; paying or serving time clears it. New test tests/province.py (suite is now 44). Screenshot: proof/province_map.png.
       Full suite on this build: 44/44 (proof/suite_province.log).
+DONE  CALENDAR AND HOLIDAYS (Daggerfall): days now have dates - eight months of twelve days (a new world wakes on the 1st of Greening,
+      year 1). Eight holidays a year are announced at dawn, written in the journal, and change real prices for that day: the Merchants'
+      Fair and Sowing Day (shops a quarter cheaper), the Day of Mending (temples heal free), Warriors' Day (lessons half price), Harvest
+      Home (free bed at the inn, crops sell for half again), the Night of Lanterns (spells cost half), the Day of Pardons (fines halved),
+      Thawfair (wagons half fare). The journal shows the date and the next holiday; villagers mention one when it is close.
+      Works in every world; nothing new is saved. New test tests/calendar.py (suite is now 45).

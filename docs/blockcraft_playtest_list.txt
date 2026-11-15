@@ -34,6 +34,14 @@ TAVERNS (new worlds only; seed 12345: The Laughing Boar in the spawn village, th
 [ ] Come by in the late afternoon: about two villagers in three walk over and stand about inside until well after dark, then go home.
     Does the village feel more alive for it? Do they block the doorway or crowd badly?
 
+CALENDAR AND HOLIDAYS (every world)
+[ ] The journal now shows dates (a new world wakes on the 1st of Greening, year 1) and tells you the next holiday.
+[ ] The 4th day of a new world is the Merchants' Fair: a notice at dawn, and everything in the shops a quarter cheaper for the day.
+    Others through the year: free temple healing, half-price lessons, a free bed and better crop prices, half-cost spells,
+    halved fines, half-fare wagons. Villagers mention a holiday when it is within four days.
+[ ] Are eight holidays in a 96-day year too many, too few? Do the month names sit right (Frostwane, Seedfall, Greening, Highsun,
+    Goldleaf, Harvestmoon, Emberfall, Deepwinter)?
+
 PROVINCES (every world, old or new)
 [ ] The land is now divided into named baronies, counties and marches about 1,400 blocks across. Open the map: the name is at the
     top and the border is a faint dotted line. Walk (or take a wagon) across one: a notice, and a line in the journal.

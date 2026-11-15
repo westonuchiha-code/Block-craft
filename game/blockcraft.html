@@ -6945,6 +6945,7 @@ function talkNews(m){
       lines.push(isD ? `They say there is an old gate in the hills about ${Math.round(d/10)*10} paces to the ${dirWord(hc[0],hc[1],R.ex,R.ez)}: ${R.name}. Caverns under it, and worse. I have marked it for you.`
                      : `The ${R.name} lies about ${Math.round(d/10)*10} paces to the ${dirWord(hc[0],hc[1],R.ex,R.ez)}. The dead do not rest there. I have marked it for you.`);
       cryptSeen.add(R.key); logJournal(`${m.name} told of ${isD ? R.name+', a delve' : 'the '+R.name}, ${Math.round(d/10)*10} paces ${dirWord(hc[0],hc[1],R.ex,R.ez)} of ${here ? villageName(rx,rz) : 'here'}.`); } }
+  { const th = holiday(), nh = nextHoliday(); if(th) lines.push(`It is ${th.name} today: ${th.what}.`); else if(nh && nh.days<=4) lines.push(`${nh.h.name[0].toUpperCase()+nh.h.name.slice(1)} is ${nh.days===1 ? 'tomorrow' : 'in '+nh.days+' days'}: ${nh.h.what}.`); }
   const kinds = new Set(); for(const o of mobs) if(BEAST[o.kind] && Math.hypot(o.x-m.x,o.z-m.z)<70) kinds.add(o.kind);
   const nm = { daedra:'fire daedra', daedroth:'a daedroth', bat:'giant bats', fish:'slaughterfish', bear:'a grizzly bear', tiger:'a sabertooth', spider:'giant spiders', scorpion:'a giant scorpion', skeleton:'walking skeletons', zombie:'the walking dead', ghost:'a ghost', cryptlord:'a Crypt Lord' };
   if(kinds.size) lines.push(`Folk have seen ${[...kinds].map(k=>nm[k]).join(' and ')} close by. Be careful out there.`);
@@ -6966,7 +6967,28 @@ function vkey(v){ return v[0]+','+v[1]; }
 function repOf(v){ return v ? (villageRep[vkey(v)]||0) : 0; }
 function addRep(v, n){ if(!v) return; const k = vkey(v); villageRep[k] = Math.max(-100, Math.min(100, (villageRep[k]||0)+n)); scheduleSave(); }
 function repWord(r){ return r>=60 ? 'revered' : r>=30 ? 'liked' : r>=10 ? 'welcome' : r>-10 ? 'a stranger' : r>-30 ? 'distrusted' : 'unwelcome'; }
-function buyPrice(id){ return Math.max(1, Math.round((PRICE[id]||1)*(1 - repOf(talkNpc && talkNpc.village)/400)*(isClass('thief') ? 0.85 : 1))); }
+// ---------- the calendar: eight months of twelve days, and holidays that change what things cost ----------
+const MONTHS = ['Frostwane','Seedfall','Greening','Highsun','Goldleaf','Harvestmoon','Emberfall','Deepwinter'], MONTH_DAYS = 12, YEAR_DAYS = 96, DAY0 = 24;      // a new world wakes on the 1st of Greening
+function dateOf(d){ const n = d+DAY0, y = Math.floor(n/YEAR_DAYS), r = n-y*YEAR_DAYS; return { y:y+1, m:Math.floor(r/MONTH_DAYS), d:r%MONTH_DAYS+1, doy:r }; }
+function ordinal(n){ const t = n%100; return n + (t>=11 && t<=13 ? 'th' : n%10===1 ? 'st' : n%10===2 ? 'nd' : n%10===3 ? 'rd' : 'th'); }
+function dateStr(d){ const q = dateOf(d); return ordinal(q.d)+' of '+MONTHS[q.m]+', year '+q.y; }
+const HOLIDAYS = [                                                  // doy = day of the year (month*12 + day-1)
+  { doy:27, name:"the Merchants' Fair",   what:'everything in the shops is a quarter cheaper', buy:0.75 },      // the 4th of Greening: the fourth day of a new world
+  { doy:41, name:'the Day of Mending',    what:'the temples heal for nothing', heal:0 },
+  { doy:56, name:"Warriors' Day",         what:'every lesson costs half', train:0.5 },
+  { doy:66, name:'Harvest Home',          what:'a bed at the inn is free, and crops sell for half again', room:0, crops:1.5 },
+  { doy:83, name:'the Night of Lanterns', what:'spells cost half their magicka', spell:0.5 },
+  { doy:93, name:'the Day of Pardons',    what:'every fine is halved', fine:0.5 },
+  { doy:7,  name:'Thawfair',              what:'the wagons carry you for half the fare', wagon:0.5 },
+  { doy:19, name:'Sowing Day',            what:'everything in the shops is a quarter cheaper', buy:0.75 } ];
+function holidayOn(d){ const q = dateOf(d).doy; return HOLIDAYS.find(h=>h.doy===q) || null; }
+function holiday(){ return holidayOn(dayNo); }
+function holidayMul(k){ const h = holiday(); return h && h[k]!==undefined ? h[k] : 1; }
+function nextHoliday(){ for(let k=1;k<=YEAR_DAYS;k++){ const h = holidayOn(dayNo+k); if(h) return { h, days:k }; } return null; }
+function holidayDawn(){ const h = holiday(); if(!h) return; const nm = h.name.replace(/^the /,'');
+  skillToast(nm.toUpperCase()+'<br><small>'+h.what+'</small>', true); logJournal('Today is '+h.name+': '+h.what+'.'); }
+function buyPrice(id){ return Math.max(1, Math.round((PRICE[id]||1)*(1 - repOf(talkNpc && talkNpc.village)/400)*(isClass('thief') ? 0.85 : 1)*holidayMul('buy'))); }
+function roomCost(){ return Math.round(8*holidayMul('room')); }
 function dirWord(fx,fz,tx,tz){ const ang = Math.atan2(tx-fx, -(tz-fz)); return DIR8[((Math.round(ang/(Math.PI/4))%8)+8)%8]; }
 const FETCH_WANTS = { blacksmith:[LEATHER,CHITIN,COAL_ITEM,IRON_ORE,IRON_INGOT], baker:[WHEAT,RAW_MEAT,CARROT], farmer:[BONE,WOOL0,HAY], miner:[COAL_ITEM,COBBLE,IRON_ORE], librarian:[SILK,GLOWMOSS,EMBER],
                       cleric:[GLOWMOSS,CANDLE,SILK], fisher:[RAW_MEAT,LEATHER], villager:[WOOL0,SILK,LEATHER] };
@@ -7076,7 +7098,7 @@ function questOffer(m){
 const CRIME = { assault:[40,'assault'], murder:[300,'murder'], theft:[30,'theft'], vandal:[6,'wrecking property'] };
 let bounty = {}, arrestUntil = 0, arrestOpen = false;        // village key -> gold owed
 function bountyOf(v){ return v && v[0]!=='h' ? Math.max(bounty[vkey(v)]||0, bounty[provinceOfVillage(v).key]||0) : 0; }      // what this village wants you for, or what the whole province does
-function fineOf(v){ return Math.round(bountyOf(v)*guildCut('thieves', 10, 60)); }      // what you actually pay: the Thieves Guild has friends among the guard
+function fineOf(v){ return Math.round(bountyOf(v)*guildCut('thieves', 10, 60)*holidayMul('fine')); }      // what you actually pay: the Thieves Guild has friends among the guard
 function witnessAt(x,y,z){                                   // a living villager close enough to have seen it
   const r = 10*stealthMul()*guildCut('thieves', 8, 48);
   for(const o of mobs) if(o.kind==='npc' && !o.dead && o.village && o.village[0]!=='h' && Math.abs(o.y-y)<5 && Math.hypot(o.x-x,o.z-z)<r) return o;
@@ -7157,11 +7179,12 @@ function journalSheet(){
   if(sites.length){ h += '<div class="tkHd" style="margin-top:14px">DELVES AND BARROWS KNOWN</div>';
     for(const [k,P] of sites){ const cl = cryptState[k] && cryptState[k].cleared, nm = P.name[0].toUpperCase()+P.name.slice(1);
       h += `<div class="skRow"><div class="skHead"><b style="color:${cl ? '#8a8a9a' : k[0]==='D' ? '#e0a050' : '#b07ae0'}">${nm}</b><span>${cl ? 'cleared' : k[0]==='D' ? 'a delve' : 'a barrow'}</span></div><div class="skDesc">${far(P.ex,P.ez)}${cl ? '' : k[0]==='D' ? '. Its master still lives.' : '. Its Crypt Lord still walks.'}</div></div>`; } }
+  { const nh = nextHoliday(), th = holiday(); h += `<div class="skNote">Today is the ${dateStr(dayNo)}${th ? ', '+th.name+': '+th.what : ''}.${nh ? ' Next: '+nh.h.name+', in '+nh.days+(nh.days===1 ? ' day' : ' days')+' ('+nh.h.what+').' : ''}</div>`; }
   h += '<div class="tkHd" style="margin-top:14px">THE RECORD</div>';
   if(!journal.length) h += '<div class="skNote">Nothing written yet. What you find and what you do is set down here.</div>';
   let day = -1;
   for(let i=journal.length-1;i>=0;i--){ const e = journal[i];
-    if(e.d!==day){ day = e.d; h += `<div class="skDesc" style="color:#e3cf95;margin-top:8px">Day ${day+1}${day===dayNo ? ' (today)' : ''}</div>`; }
+    if(e.d!==day){ day = e.d; h += `<div class="skDesc" style="color:#e3cf95;margin-top:8px">${dateStr(day)}${day===dayNo ? ' (today)' : ''}${holidayOn(day) ? ' \u00b7 '+holidayOn(day).name : ''}</div>`; }
     h += `<div class="skDesc" style="color:#d8cfb8;padding-left:10px">${e.t}</div>`; }
   return h;
 }
@@ -7184,7 +7207,7 @@ function finishQuest(q, ok){
   else { addRep(q.village, -5); if(q.kind==='deliver' && inv[PARCEL]>0) inv[PARCEL]--; if(q.relic && inv[HEIRLOOM]>0) inv[HEIRLOOM]--; if(q.heist && inv[STRONGBOX]>0) inv[STRONGBOX]--; skillToast('QUEST FAILED<br><small>'+q.giverName+' is disappointed</small>', true); }
   scheduleSave();
 }
-function questDawn(){ dayNo++; for(const q of quests.slice()) if(dayNo>q.due && q.state!=='done') finishQuest(q, false); }
+function questDawn(){ dayNo++; for(const q of quests.slice()) if(dayNo>q.due && q.state!=='done') finishQuest(q, false); holidayDawn(); }
 // the hunted beast appears at its den when you come near, and is a little tougher than most
 function questTick(){
   for(const q of quests){
@@ -7245,7 +7268,7 @@ function closeQuests(){ document.getElementById('questMenu').classList.remove('s
 const TRAINS = { guard:'weapons', villager:'stealth', miner:'mining', farmer:'farming', baker:'alchemy', cleric:'magic', librarian:'magic', fisher:'athletics', blacksmith:'woodcut' };
 const TRAIN_CAP = 50;
 let trainedDay = {};                                          // trainer -> the day of their last lesson
-function trainCost(id, job){ const gid = guildOfJob(job); return Math.round((15 + skills[id]*4) * (gid ? guildCut(gid, 10, 60) : 1)); }
+function trainCost(id, job){ const gid = guildOfJob(job); return Math.round((15 + skills[id]*4) * (gid ? guildCut(gid, 10, 60) : 1) * holidayMul('train')); }
 function trainCap(job){ const gid = guildOfJob(job), r = gid ? guildRank(gid) : -1; return TRAIN_CAP + (r>=0 ? 8*(r+1) : 0); }
 // repairs: the smith mends what you're wearing and the tool in your hand, for gold
 function repairCost(){
@@ -7273,7 +7296,7 @@ function openTalk(m){
 function closeTalk(){
   if(arrestOpen && talkNpc){ arrestEnd(talkNpc, 'resist'); return; }      // walking away from an arrest is resisting it
   talkNpc = null; craftOpen = false; document.getElementById('talkMenu').classList.remove('show'); scheduleSave(); }
-function sellPrice(id){ return Math.max(1, Math.floor((PRICE[id]||1)*0.4*(1 + repOf(talkNpc && talkNpc.village)/400)*(isClass('thief') ? 1.15 : 1)*(talkNpc && talkNpc.job==='villager' && guildRank('thieves')>=0 ? 1 + 0.1*(guildRank('thieves')+1) : 1))); }
+function sellPrice(id){ return Math.max(1, Math.floor((PRICE[id]||1)*0.4*(CROPS_SOLD.includes(id) ? holidayMul('crops') : 1)*(1 + repOf(talkNpc && talkNpc.village)/400)*(isClass('thief') ? 1.15 : 1)*(talkNpc && talkNpc.job==='villager' && guildRank('thieves')>=0 ? 1 + 0.1*(guildRank('thieves')+1) : 1))); }
 function renderTalk(){
   const m = talkNpc; if(!m) return;
   const shop = SHOPS[m.job], el = document.getElementById('talkBody');
@@ -7304,7 +7327,7 @@ function renderTalk(){
     { const gid = guildOfJob(m.job); if(gid && guildRank(gid)<0 && !(GUILDS[gid].secret && thefts<3)) h += `<button data-a="join">${GUILDS[gid].secret ? 'A WORD IN PRIVATE' : 'JOIN THE '+GUILDS[gid].name.toUpperCase()}</button>`; }
     if(TRAINS[m.job]) h += `<button data-a="train">TRAIN ${SKILLS.find(k=>k.id===TRAINS[m.job]).name.toUpperCase()} (${trainCost(TRAINS[m.job], m.job)}g)</button>`;
     if(m.job==='blacksmith'){ const rc = repairCost(); if(rc>0) h += `<button data-a="repair">REPAIR (${rc}g)</button>`; }
-    if((m.job==='villager' || m.job==='innkeeper') && m.house && m.house.bed) h += `<button data-a="room">RENT A ROOM (8g)</button>`;
+    if((m.job==='villager' || m.job==='innkeeper') && m.house && m.house.bed) h += `<button data-a="room">RENT A ROOM (${roomCost() ? roomCost()+'g' : 'free today'})</button>`;
     if(shop) h += `<button data-a="trade">TRADE</button>`;
     if(shop && shop.heal) h += `<button data-a="heal">HEALING</button>`;
     h += `<button data-a="news">ASK FOR NEWS</button>`; }
@@ -7348,8 +7371,9 @@ function talkAction(a){
     else { gold -= cost; trainedDay[m.home] = dayNo; skillUses[id] = skillUsesFor(id); trainSkill(id, 0); talkLine = `An afternoon's practice. Your ${K.name.toLowerCase()} is now ${skills[id]}. (${cost} gold)`; }
   }
   else if(a==='room'){
-    if(gold<8) talkLine = 'A room is 8 gold. You have '+gold+'.';
-    else { gold -= 8; bedSpawn = (m.house.guest || m.house.bed).slice(); health = maxHP(); vitalKey = ''; if(m.job==='innkeeper' && m.village) logJournal(`Took a room at ${tavernName(m.village[0],m.village[1])} in ${villageName(m.village[0],m.village[1])}.`);
+    const rc = roomCost();
+    if(gold<rc) talkLine = 'A room is '+rc+' gold. You have '+gold+'.';
+    else { gold -= rc; bedSpawn = (m.house.guest || m.house.bed).slice(); health = maxHP(); vitalKey = ''; if(m.job==='innkeeper' && m.village) logJournal(`Took a room at ${tavernName(m.village[0],m.village[1])} in ${villageName(m.village[0],m.village[1])}.`);
       if(Math.sin(tod*Math.PI*2) < -0.05){ closeTalk(); const el = document.getElementById('sleepov'); if(el){ el.textContent = 'Sleeping...'; el.classList.add('dark'); el.style.opacity = '1'; }
         clearTimeout(sleepMsg.t); sleepMsg.t = setTimeout(()=>{ advanceHours(((1.02-tod)%1)*24); scheduleSave(); if(el){ el.textContent = 'Good morning'; el.style.opacity = '0'; } }, 1300); return; }
       talkLine = 'The bed upstairs is yours. You feel rested. If you fall, you will wake up here.'; scheduleSave(); }
@@ -7371,7 +7395,7 @@ function talkAction(a){
     else if(q && q.kind==='build' && q.state==='done'){ finishQuest(q, true); talkLine = `I saw it with my own eyes. Fine work! ${q.reward} gold, as promised.`; }
     else if(q && q.kind==='fetch' && (inv[q.item]||0)>=q.n){ inv[q.item] -= q.n; finishQuest(q, true); talkLine = q.heist ? `Chalk mark and all. Nicely done. ${q.reward} gold, and the Guild will hear of it.` : q.relic ? `Grandfather's cup. You found it. I never thought to hold it again. ${q.reward} gold, and my family's thanks.` : `Just what I needed. ${q.reward} gold, as promised.`; } }
   else if(a==='heal'){
-    const need = maxHP()-health, cost = need*(isClass('whitemage') ? 1.5 : 3)*guildCut('temple', 15, 90) | 0;
+    const need = maxHP()-health, cost = need*(isClass('whitemage') ? 1.5 : 3)*guildCut('temple', 15, 90)*holidayMul('heal') | 0;
     if(need<=0) talkLine = 'You are whole. Go with the gods.';
     else if(gold<cost) talkLine = `Healing your wounds asks a donation of ${cost} gold. You have ${gold}.`;
     else { gold -= cost; health = maxHP(); vitalKey = ''; talkLine = `The light mends you. (${cost} gold)`; }
@@ -7593,8 +7617,9 @@ function atPlace(){ return knownPlaces().find(p=>Math.hypot(p.x-player.x, p.z-pl
 // hungry, and the further you go the likelier it is that the road takes its toll (a fall, or robbers after your purse).
 function wagonCost(p, reckless){
   const d = Math.hypot(p.x-player.x, p.z-player.z), g = Math.round(5 + d/15), h = Math.max(1, Math.round(d/90));
-  return reckless ? { gold:Math.max(2, Math.round(g*0.55)), hours:Math.max(1, Math.round(h*0.6)), d, risk:Math.min(0.5, 0.08 + d/2500) }
-                  : { gold:Math.round(g*1.25)+3, hours:Math.round(h*1.4)+1, d, risk:0 };
+  const hm = holidayMul('wagon');
+  return reckless ? { gold:Math.max(2, Math.round(g*0.55*hm)), hours:Math.max(1, Math.round(h*0.6)), d, risk:Math.min(0.5, 0.08 + d/2500) }
+                  : { gold:Math.round((g*1.25+3)*hm), hours:Math.round(h*1.4)+1, d, risk:0 };
 }
 // ---- the automap (Daggerfall's): underground in a delve, the map shows the chambers you have found, not the land above ----
 let delveSeen = {};                                         // delve key -> list of chamber numbers you have stood in
@@ -11274,7 +11299,7 @@ function spellDesc(fx,pow){ return SPELL_FX[fx].desc.replace(/(\S+) \/ (\S+) \/ 
 function bookName(sp){ return SPELL_FX[sp.fx].name+' '+ROMAN[sp.pow]; }
 function castBook(){
   const sp = bookSpell(); if(!sp) return false;
-  const cost = SPELL_FX[sp.fx].mp[sp.pow];
+  const cost = Math.ceil(SPELL_FX[sp.fx].mp[sp.pow]*holidayMul('spell'));
   if(mp<cost){ skillToast('not enough magicka'); return true; }
   mp -= cost; vitalKey = ''; castCool = 0.45; swingT = 1; trainSkill('magic');
   if(sp.fx==='fire' || sp.fx==='bolt'){ castPow = SPELL_POW[sp.pow]; castEffect(sp.fx); castPow = 1; }
@@ -12219,7 +12244,7 @@ function renderSheet(){
   const L = playerLevel(), cur = Math.max(0,(L-1)*12-4), nxt = L*12-4, frac = L>=LEVEL_MAX ? 1 : Math.max(0,Math.min(1,(skillGained-cur)/(nxt-cur)));
   const c = cls();
   let h = `<div class="skLvl">${c ? c.name.toUpperCase()+' · ' : ''}LEVEL ${L}<span>${maxHP()/2} hearts &nbsp;<b style="color:#ecc440">${gold} gold</b></span></div><div class="skBar"><i style="width:${frac*100}%"></i></div>`;
-  h += `<div class="skNote">${L>=LEVEL_MAX ? 'highest level' : (nxt-skillGained)+' more skill points to level '+(L+1)} · day ${dayNo+1}</div>`;
+  h += `<div class="skNote">${L>=LEVEL_MAX ? 'highest level' : (nxt-skillGained)+' more skill points to level '+(L+1)} · ${dateStr(dayNo)}</div>`;
   h += `<div class="shTabs">${[['skills','SKILLS'],['gear','GEAR'],['magic','MAGIC'],['quests','JOURNAL'+(quests.length?' ('+quests.length+')':'')],['standing','STANDING']].map(([t,n])=>`<button data-tab="${t}" class="${sheetTab===t?'on':''}">${n}</button>`).join('')}</div>`;
   if(sheetTab==='skills'){
     if(c) h += `<div class="skNote" style="color:#b8ae94">${c.perk} ★ skills are learned faster.</div>`;

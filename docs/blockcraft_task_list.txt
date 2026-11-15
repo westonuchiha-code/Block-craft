@@ -654,3 +654,4 @@ DONE  TAVERNS (Daggerfall): every village in a NEW world has a tavern - a bigger
       in new worlds, every other building stands exactly where it did (the tavern is sited last with its own dice; the test proves it).
       Checked on 3 seeds: 111 of 112 villages have one, all with the spare bed. New test tests/tavern.py (suite is now 43).
       Screenshot: proof/tavern.png. NOT done: a hanging sign, ale, anyone sitting down (they stand).
+      Full suite on this build: 43/43 (proof/suite_tavern.log).

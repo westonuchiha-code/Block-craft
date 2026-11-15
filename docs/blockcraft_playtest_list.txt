@@ -3,6 +3,14 @@ BLOCKCRAFT - PLAYTEST LIST
 == TO LOOK AT WHEN YOU ARE BACK (built 2026-11-14 onward, checked by scripts and screenshots only) ==
 Start a NEW world for all of this (old worlds keep the old low land and have no delves).
 
+SOUND (new, and NOBODY HAS HEARD IT: it was built and checked by measurement only. MENU -> SETTINGS -> SOUND sets the volume or turns it off)
+[ ] First impression with sound on: better, or annoying? Say which sounds are wrong; each is one line to retune or remove.
+[ ] Footsteps on grass, stone, wood, sand, snow: right pace, right loudness?
+[ ] Digging and breaking, placing, sword swing and hits, being hurt.
+[ ] Wind outdoors, rain, drips underground: too much, too little?
+[ ] Creature voices when they notice you, the discovery chime, the quest fanfare.
+[ ] Do you want music as well (Daggerfall had a lot of it)?
+
 PEOPLE (you said they felt like they were floating)
 [ ] Villagers, bandits, cats and beasts now have a dark patch under them. Do they feel planted on the ground now?
 [ ] Watch someone walk: do the feet still slide? Is the slower stroll right? Do they turn naturally?

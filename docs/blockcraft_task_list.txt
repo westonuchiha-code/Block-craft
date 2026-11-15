@@ -619,3 +619,15 @@ DONE  OLD SAVES: tests/compat.py (40 scripts in the suite) plays a little in the
       that save in the current build. Everything survives: old low world shape (no lift, no delves), position, class and its extra hearts, items,
       hotbar, gold, village standing, day, the quest in hand, block edits; and it loads again after the current build re-saves it.
       One intended change shows: a mithril sword saved as top tier is now one tier below adamantite (his Daggerfall-order decision).
+
+== SOUND (2026-11-15) ==
+DONE  The game had no sound at all. Added a full set of effects, all synthesized in the browser from noise and tones (no files, still one HTML):
+      footsteps by surface (grass, stone, wood, sand, snow, water; quieter when sneaking), hitting and breaking blocks by material, placing,
+      weapon swing, landing a blow, being hurt, dying, eating, picking things up, coins, chests, doors, fire and lightning, a chime for
+      discoveries and a short fanfare for finished quests and promotions, creatures giving voice when they notice you (growl / hiss / rattle),
+      button clicks; plus two beds that fade in and out: wind in the open (stronger high up) and rain when it rains, and the odd drip underground.
+      Creature and door sounds get quieter with distance (silent past 26 blocks). A limiter stops many sounds at once from clipping.
+      SETTINGS has a SOUND button: OFF / 30% / 60% (default) / 100%, remembered. Sound starts at the first click or key, as browsers require.
+TESTED tests/sound.py (41 scripts in the suite): all 37 effect variants render a real signal that neither clips nor is silent; each game event
+      triggers its sound exactly once; the materials are classified right; the volume button cycles and saves.
+NOT TESTED  How any of it SOUNDS. No one has heard it. He must judge every effect by ear; expect tuning. No music.

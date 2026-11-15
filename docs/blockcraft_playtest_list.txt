@@ -36,7 +36,7 @@ DELVES (seed 12345: the Black Hideout, a bandit den, gate at x 100, z -198, abou
 [ ] Bandits are people who attack on sight. Do they read as bandits? Too many, too few?
 [ ] Digging shortcuts: fun or does it spoil it?
 [ ] Open the MAP underground: it becomes an automap of the delve. Does it help without giving too much away?
-[ ] Delves are about 1 per 9 regions of 256 blocks. Too rare?
+[ ] Delves are now about 1 per 6 regions of 256 blocks; most villages have one within 560 blocks. Still too rare, or about right?
 
 JOURNAL AND QUESTS
 [ ] Character sheet -> JOURNAL: is the record useful? Anything missing?

@@ -1644,8 +1644,8 @@ function delvePlan(rx,rz){
   const z0 = rz*DRS, z1 = z0+DRS-1;
   if(worldGen>=5 && !isUnder(z0) && !isUnder(z1) && !isTestZ(z0) && !isTestZ(z1) && h3(rx,71,rz,SEED+900) < 0.9){
     let best = null;
-    for(let t=0;t<18;t++){
-      const ex = rx*DRS + 80 + Math.floor(h3(rx,72+t,rz,SEED+901)*(DRS-160)), ez = rz*DRS + 24 + Math.floor(h3(rx,92+t,rz,SEED+902)*(DRS-190));
+    for(let t=0;t<48;t++){                                     // (the first 18 tries are the ones older worlds used, so their delves stay where they were whenever one of those succeeded)
+      const ex = rx*DRS + 80 + Math.floor(h3(rx,t<18 ? 72+t : 200+t,rz,SEED+901)*(DRS-160)), ez = rz*DRS + 24 + Math.floor(h3(rx,t<18 ? 92+t : 300+t,rz,SEED+902)*(DRS-190));
       const ci = colInfo(ex,ez), h = ci.h;
       if(ci.open || h<SEA+9 || h>TOP_BUILD-8 || !(ci.top===GRASS || ci.top===SNOW || ci.top===SAND || ci.top===STONE || ci.top===DIRT)) continue;
       let ok = true; for(let a=-3;a<=3 && ok;a+=3) for(let b=-3;b<=3;b+=3) if(Math.abs(colInfo(ex+a,ez+b).h-h)>3){ ok = false; break; }

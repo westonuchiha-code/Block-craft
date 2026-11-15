@@ -637,3 +637,7 @@ DONE  AUTOMAP (Daggerfall's): open the map while underground in a delve and it s
       each passage you have not followed, the gate and stair, your position and facing, "N of M chambers found" and how far below the gate you are.
       Chambers are noted as you walk (delveSeen, saved with the world). On the surface the map is the land as before.
       Covered by tests/delve.py. Screenshot: proof/automap.png.
+DONE  DELVES MORE COMMON: a region now tries up to 48 candidate sites (was 18) and keeps the best. Measured over 169 regions on three seeds:
+      22 / 17 / 28 delves (was 18 / 11 on the first two), and 89% / 74% / 93% of villages now have a delve within the 560 blocks a villager
+      will send you (was 80% / 42%). Walk check still clean on all three seeds. Because a region keeps its best site, some delves in a
+      world made on an earlier build of today will have moved.

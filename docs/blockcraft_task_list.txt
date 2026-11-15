@@ -773,3 +773,19 @@ DONE  INSCRIPTIONS IN THE DELVES: USE a post of a delve's gate (with anything bu
       story, and the plan of the whole delve appears on your automap. The founders are old rulers of the province the delve lies in.
       Nothing is built for this, so it works in every world that has delves. tests/delve.py covers it; the soak reads both.
       Full suite on this build (greetings + inscriptions): 55/55 (proof/suite_lore.log).
+DONE  INDEPENDENT REVIEW of everything added to the game file on 2026-11-15 (a second reader going through the whole diff looking for
+      real faults; no crashes or save faults found). Nine findings, all fixed:
+      1. A horse bought while standing indoors was put indoors, where a rider (2.5 blocks tall) could never get her out. She is now
+         brought round to open ground under open sky (within 14 blocks, or the surface above), and the farmer says so if there is none.
+      2. The room to mount was judged where YOU stood, not where the horse stood, so mounting a horse under a low branch wedged you.
+         Also: you could place a block into your own head while mounted; and a wagon now takes your horse along instead of leaving
+         you sitting on her through the journey.
+      3. The background planner sent a copy of each village again inside every road that touches it (wasted memory and time). Roads are
+         now sent without them and joined to the villages on arrival. Plans still verified identical (tests/plan.py).
+      4. Hitting your own horse (she cannot be hurt) trained weapon skill for free. It teaches nothing now.
+      5. Loading a world saved in the saddle while you were sneaking in another got you down and left you sneaking.
+      6. A fire spell cast steeply downward from the saddle could burst on your own horse.
+      7. The realm map could leave a strip of the old picture along two edges.
+      8. "Nothing new on the board" could carry over from one world to another on the same day number.
+      9. A horse left far above you (you in a delve below) was put back in the world and removed again every second.
+      tests/horse.py checks 1, 2 and 4.

@@ -3569,7 +3569,7 @@ function loadWorld(id){
   explored = new Set(meta.explored || []); visitedV = new Set(meta.visited || []); mapTiles.clear(); roadEdgeCache.clear(); roadChunkCache.clear(); roadMemoCx = 1e9;
   fires.clear(); for(const f of (meta.fires||[])) fires.set(f.x+','+f.y+','+f.z, f);
   book = meta.book || []; bookSel = meta.bookSel || 0; mp = meta.mp===undefined ? 10 : meta.mp; wardT = wardPts = swiftT = swiftK = 0;
-  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; provSeen = meta.provSeen || []; provHere = null; provDeeds = meta.provDeeds || {}; horse = meta.horse || null; blessDay = meta.bless===undefined ? -1 : meta.bless; rideSet(riding()); guilds = meta.guilds || {}; bounty = meta.bounty || {}; thefts = meta.thefts || 0; delveSeen = meta.delveSeen || {}; arrestUntil = 0; arrestOpen = false; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
+  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; provSeen = meta.provSeen || []; provHere = null; provDeeds = meta.provDeeds || {}; for(const k in boardDay) delete boardDay[k]; horse = meta.horse || null; blessDay = meta.bless===undefined ? -1 : meta.bless; rideSet(riding()); guilds = meta.guilds || {}; bounty = meta.bounty || {}; thefts = meta.thefts || 0; delveSeen = meta.delveSeen || {}; arrestUntil = 0; arrestOpen = false; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
   trainedDay = meta.trained || {}; homesteads = meta.homesteads || []; homesteadId = meta.homesteadId || 1;
   gold = meta.gold || 0; playerClass = meta.cls || null; deathSacks = meta.sacks || []; placedMap = unpackPlaced(meta.placed);
   if(meta.inv && meta.inv[PISTOL]) delete inv[PISTOL];          // the pistol is gone from the world
@@ -3581,7 +3581,7 @@ function loadWorld(id){
   spell = meta.spell || null; spellCharges = meta.spellCharges || 0; swordSpell = !!meta.swordSpell; fx.length = 0; spellHud();
   food = (meta.food === undefined ? 20 : meta.food);
   saturation = (meta.saturation === undefined ? 5 : meta.saturation);
-  if(sneaking) toggleSneak();                 // sneak always starts off
+  sneaking = false;                           // sneak always starts off (set directly: in the saddle, the sneak key means get down)
   exhaustion = 0; vitalT = 0; starveT = 0; dead = false; vitalKey = '';
   document.getElementById('death').classList.remove('show');
   refreshLock();
@@ -5428,7 +5428,7 @@ function plGot(d){
   if(d.seed!==SEED || d.gen!==worldGen || d.yoff!==YOFF) return;                        // (an answer for a world you have since left)
   for(const [k,v] of d.villages) if(!villageCache.has(k)) villageCache.set(k, v);
   for(const [k,P] of d.crypts) if(!cryptByNum.has(k)){ cryptByNum.set(k, P); if(P){ const rx = Math.floor((k+65536)/131072), rz = k-rx*131072; cryptCache.set(rx+','+rz, P); } }
-  for(const [k,E] of d.edges) if(!roadEdgeCache.has(k)) roadEdgeCache.set(k, E);
+  for(const [k,E] of d.edges) if(!roadEdgeCache.has(k)){ for(const e of E){ e.va = villageAt(e.ra[0], e.ra[1]); e.vb = villageAt(e.rb[0], e.rb[1]); } roadEdgeCache.set(k, E); }
   for(const [k,P] of d.delves) if(!delveByNum.has(k)) delveByNum.set(k, P);
   PLN.got++;
 }
@@ -5449,7 +5449,7 @@ function planJob(S){
     const sent = planJob.sent;
     for(const [k,v] of villageCache) if(!sent.has('v'+k)){ sent.add('v'+k); out.villages.push([k,v]); }
     for(const [k,P] of cryptByNum) if(!sent.has('c'+k)){ sent.add('c'+k); out.crypts.push([k,P]); }
-    for(const [k,E] of roadEdgeCache) if(!sent.has('e'+k)){ sent.add('e'+k); out.edges.push([k,E]); }
+    for(const [k,E] of roadEdgeCache) if(!sent.has('e'+k)){ sent.add('e'+k); out.edges.push([k, E.map(e=>Object.assign({}, e, { va:null, vb:null }))]); }      // (each edge points at its two villages: those go once, in the village list, not again inside every edge)
     for(const [k,P] of delveByNum) if(!sent.has('d'+k)){ sent.add('d'+k); out.delves.push([k,P]); }
     if(roadChunkCache.size>2000) roadChunkCache.clear();
   }catch(e){ out.err = String(e && e.message || e); }
@@ -7979,7 +7979,7 @@ function drawRealm(){
     og.fillStyle = 'rgba(60,40,24,0.55)';                         // borders
     for(let j=0;j<nz;j++) for(let i=0;i<nx;i++){ const k = keys[j*nx+i]; if(!k) continue; if(i+1<nx && keys[j*nx+i+1] && keys[j*nx+i+1]!==k) og.fillRect(i*C+C-1,j*C,2,C); if(j+1<nz && keys[(j+1)*nx+i] && keys[(j+1)*nx+i]!==k) og.fillRect(i*C,j*C+C-1,C,2); }
     REALM.key = key; }
-  g.imageSmoothingEnabled = false; g.drawImage(REALM.cv, Math.round((cx-player.x)*S), Math.round((cz-player.z)*S));
+  g.fillStyle = '#2a3a4a'; g.fillRect(0,0,W,Hh); g.imageSmoothingEnabled = false; g.drawImage(REALM.cv, Math.round((cx-player.x)*S), Math.round((cz-player.z)*S));
   const toS = (x,z)=>[W/2+(x-player.x)*S, Hh/2+(z-player.z)*S];
   // labels never overlap: each claims its box, nearest the middle of the map first, and one that would cover another is left out
   const boxes = [], claim = (x0,y0,x1,y1)=>{ for(const B of boxes) if(x0<B[2] && x1>B[0] && y0<B[3] && y1>B[1]) return false; boxes.push([x0,y0,x1,y1]); return true; };
@@ -8068,6 +8068,7 @@ function advanceHours(hours){
 function wagonTo(key, reckless){
   const p = knownPlaces().find(q=>q.key===key), here = atPlace(); if(!p || !here) return;
   const c = wagonCost(p, reckless); if(gold<c.gold) return;
+  const rode = riding(); if(rode) dismountHorse();      // the horse is led behind the wagon and is waiting where you get down
   gold -= c.gold; let toll = '';
   if(reckless){ food = Math.max(2, food - Math.min(8, 2+Math.round(c.hours)));
     if(Math.random()<c.risk){
@@ -8083,6 +8084,9 @@ function wagonTo(key, reckless){
   if(best){ player.x = best[0]+0.5; player.y = best[1]; player.z = best[2]+0.5; } else player.y = colInfo(Math.floor(p.x),Math.floor(p.z)).h+2;
   fallPeakY = player.y; safeT = 2; vitalKey = '';
   for(let i=mobs.length-1;i>=0;i--) if(Math.hypot(mobs[i].x-player.x, mobs[i].z-player.z) > 70) mobs.splice(i,1);
+  if(rode && horse){ const hm = horseMob(); if(hm) mobs.splice(mobs.indexOf(hm),1); let hx = player.x, hy = player.y, hz = player.z;
+    for(const [a,b] of [[2,0],[-2,0],[0,2],[0,-2],[1,1]]){ const x = Math.floor(player.x)+a, z = Math.floor(player.z)+b, y = Math.round(player.y); if(npcCanStand(x,y,z) && openSky(x,y,z)){ hx = x+0.5; hy = y; hz = z+0.5; break; } }
+    horse.x = hx; horse.y = hy; horse.z = hz; horseSpawn(hx,hy,hz,player.yaw); }
   closeMap(); sleepMsg(`After ${c.hours} hours ${reckless ? 'across country' : 'on the road'}, you arrive at ${p.name}.${toll}`, toll ? 4200 : 2600);
   logJournal(`Travelled ${reckless ? 'recklessly' : 'carefully'} to ${p.name} (${c.hours} hours, ${c.gold} gold).${toll}`);
 }
@@ -9956,7 +9960,7 @@ function punch(){
   const hit = target();
   { const {f} = camVectors(), mh = ratRay(player.x, player.y+EYE_H, player.z, f[0],f[1],f[2], 3.2);
     if(mh && (!hit || mh.t < Math.hypot(hit.x+0.5-player.x, hit.y+0.5-player.y-EYE_H, hit.z+0.5-player.z)-0.4)){      // a rat is in the way: hit it, not the block behind
-      { const armed = !!(TOOLS[HOTBAR[sel]] && inv[HOTBAR[sel]]>0); mobHit(mh.m, playerAttackDamage() + swordSpellHit(mh.m) + artifactHit(mh.m)); snd('thwack'); trainSkill(armed ? 'weapons' : 'unarmed'); } crack = null; return;
+      { const armed = !!(TOOLS[HOTBAR[sel]] && inv[HOTBAR[sel]]>0); mobHit(mh.m, playerAttackDamage() + swordSpellHit(mh.m) + artifactHit(mh.m)); snd('thwack'); if(!(BEAST[mh.m.kind] && BEAST[mh.m.kind].tame)) trainSkill(armed ? 'weapons' : 'unarmed'); } crack = null; return;
     } }
   if(!hit || hit.b===BEDROCK || hit.b===OBSIDIAN){ crack = null; return; }
   const key = hit.x+','+hit.y+','+hit.z;
@@ -10271,7 +10275,7 @@ function useBed(hit){
 }
 // would a block with this id at cell (x,y,z) overlap the player's body?
 function collidesBlockAt(id,x,y,z){
-  const x0=player.x-0.3, x1=player.x+0.3, z0=player.z-0.3, z1=player.z+0.3, y0=player.y, y1=player.y+1.7;
+  const x0=player.x-0.3, x1=player.x+0.3, z0=player.z-0.3, z1=player.z+0.3, y0=player.y, y1=player.y+BODY_H+0.01;
   if(IS_SHAPED[id]) return shapedTouches(id,x,y,z,x0,y0,z0,x1,y1,z1);
   return x1>x && x0<x+1 && y1>y && y0<y+1 && z1>z && z0<z+1;
 }
@@ -11056,10 +11060,11 @@ function riding(){ return IS_WORKER ? wkRide : !!(horse && horse.mounted); }
 function horseMob(){ return mobs.find(m=>m.kind==='horse' && m.mine) || null; }
 function rideSet(on){ EYE_H = on ? 1.6+RIDE_LIFT : 1.6; BODY_H = on ? 1.69+RIDE_LIFT : 1.69; }
 function horseSpawn(x,y,z,yaw){ const m = newBeast('horse', Math.floor(x), y, Math.floor(z), 0); m.x = x; m.z = z; m.yaw = yaw||0; m.mine = true; m.idleT = 4; mobs.push(m); return m; }
-function headroom(h){ const x = Math.floor(player.x), z = Math.floor(player.z); for(let y=Math.floor(player.y+1.7); y<=Math.floor(player.y+h); y++){ const b = getB(x,y,z); if(b!==AIR && !PASS[b]) return false; } return true; }
+function headroom(h, at){ const x = Math.floor(at ? at.x : player.x), z = Math.floor(at ? at.z : player.z), fy = at ? at.y : player.y; for(let y=Math.floor(fy+1.7); y<=Math.floor(fy+h); y++){ const b = getB(x,y,z); if(b!==AIR && !PASS[b]) return false; } return true; }
+function openSky(x,y,z){ for(let k=1;k<=6;k++){ const b = getB(x,y+k,z); if(b!==AIR && !PASS[b]) return false; } return true; }      // nothing over a spot for six blocks: not indoors, not under a tree
 function mountHorse(m){
   if(!horse || !m || !m.mine || dead) return false;
-  if(!headroom(1.69+RIDE_LIFT)){ skillToast('no room to mount here'); return true; }
+  if(!headroom(1.69+RIDE_LIFT, m)){ skillToast('no room to mount here'); return true; }      // (room where the horse stands: that is where you will be sitting)
   if(sneaking) sneaking = false;
   player.x = m.x; player.z = m.z; player.y = Math.max(player.y, m.y); player.vy = 0;
   horse.mounted = true; m.ridden = true; rideSet(true); snd('step', { m:1, g:0.9 }); scheduleSave();
@@ -11090,7 +11095,7 @@ function horseTick(){
   if(m){ if(m.dead){ if(riding()){ horse.mounted = false; rideSet(false); } horse = null; skillToast('YOUR HORSE IS DEAD', true); logJournal('The horse died.'); scheduleSave(); return; }
     if(!horse.mounted){ horse.x = m.x; horse.y = m.y; horse.z = m.z; horse.yaw = m.yaw; } return; }
   if(horse.mounted) return;
-  if(isUnder(player.z)!==isUnder(horse.z) || Math.hypot(horse.x-player.x, horse.z-player.z)>56) return;
+  if(isUnder(player.z)!==isUnder(horse.z) || Math.hypot(horse.x-player.x, horse.z-player.z)>56 || Math.abs(horse.y-player.y)>40) return;
   if(!chunks.get(chunkKey(Math.floor(horse.x/CS), Math.floor(horse.z/CS)))) return;
   horseSpawn(horse.x, horse.y, horse.z, horse.yaw);
 }
@@ -11098,10 +11103,13 @@ function buyHorse(m){
   const cost = Math.round(HORSE_PRICE*holidayMul('buy'));
   if(horse){ talkLine = 'You have a horse already. One is plenty to feed.'; return; }
   if(gold<cost){ talkLine = `A sound riding horse is ${cost} gold. You have ${gold}.`; return; }
-  gold -= cost; let at = null; const px = Math.floor(player.x), py = Math.round(player.y), pz = Math.floor(player.z);
-  for(let r=1; r<=4 && !at; r++) for(let a=0; a<8 && !at; a++){ const x = px+Math.round(Math.cos(a*0.785)*r), z = pz+Math.round(Math.sin(a*0.785)*r); if(npcCanStand(x,py,z) && npcCanStand(x,py,z+1)) at = [x,z]; }
-  if(!at) at = [px,pz];
-  horse = { x:at[0]+0.5, y:py, z:at[1]+0.5, yaw:player.yaw, mounted:false }; horseSpawn(horse.x, horse.y, horse.z, horse.yaw);
+  let at = null; const px = Math.floor(player.x), pz = Math.floor(player.z);      // she is brought round to open ground near you: never indoors, where you could not ride her out
+  for(let r=1; r<=14 && !at; r++) for(let a=0; a<16 && !at; a++){ const x = px+Math.round(Math.cos(a*0.3927)*r), z = pz+Math.round(Math.sin(a*0.3927)*r);
+    for(let y=Math.round(player.y)+3; y>=Math.round(player.y)-3 && !at; y--) if(npcCanStand(x,y,z) && openSky(x,y,z)) at = [x,y,z];
+    for(let y=colInfo(x,z).h+3; y>=colInfo(x,z).h && !at; y--) if(Math.abs(y-player.y)<=12 && npcCanStand(x,y,z) && openSky(x,y,z)) at = [x,y,z]; }      // (or up on the ground above, if you struck the bargain in a cellar)
+  if(!at){ talkLine = 'There is no open ground near enough to bring her round. Ask me again out of doors.'; return; }
+  gold -= cost;
+  horse = { x:at[0]+0.5, y:at[1], z:at[2]+0.5, yaw:player.yaw, mounted:false }; horseSpawn(horse.x, horse.y, horse.z, horse.yaw);
   talkLine = `She is yours. Use her to climb up; sneak to get down. She will wait wherever you leave her. (${cost} gold)`;
   logJournal('Bought a horse'+(m.village ? ' in '+villageName(m.village[0],m.village[1]) : '')+'.'); scheduleSave();
 }
@@ -12059,7 +12067,7 @@ function fxExplode(b, direct){
   { const gx = Math.floor(b.x), gy = Math.floor(b.y), gz = Math.floor(b.z); let lit = false;                  // a fireball lights a gate it hits
     for(let a=-1;a<=1 && !lit;a++) for(let c=-1;c<=1 && !lit;c++) for(let d=-1;d<=1;d++) if(getB(gx+a,gy+c,gz+d)===GATE && lightGate(gx+a,gy+c,gz+d)){ lit = true; break; } }
   for(const m of mobs){
-    if(m.dead || m.removed || !m.kind) continue;
+    if(m.dead || m.removed || !m.kind || m.ridden) continue;
     const p = mobMid(m);
     if(m===direct) spellDamage(m, SPELL_DMG.fire*skillMul('magic')*(b.pow||1));
     else if(Math.hypot(p[0]-b.x, p[1]-b.y, p[2]-b.z) < 2.6) spellDamage(m, SPELL_DMG.fireSplash*skillMul('magic')*(b.pow||1));
@@ -12078,7 +12086,7 @@ function updateFx(dt){
         if(b!==AIR && (!PASS[b] || IS_WATER[b] || IS_LAVA[b]) && (!IS_SHAPED[b] || shapedTouches(b,cx,cy,cz,e.x-0.1,e.y-0.1,e.z-0.1,e.x+0.1,e.y+0.1,e.z+0.1))){ stop = true; e.x -= e.vx*dt/4; e.y -= e.vy*dt/4; e.z -= e.vz*dt/4; break; }
         if(e.enemy){ if(Math.hypot(player.x-e.x, Math.max(player.y, Math.min(player.y+1.7, e.y))-e.y, player.z-e.z) < 0.7){ hurt(e.dmg||4); stop = true; } }
         else for(const m of mobs){
-          if(m.dead || m.removed || !m.kind) continue;
+          if(m.dead || m.removed || !m.kind || m.ridden) continue;
           const yy = Math.max(m.y, Math.min(m.y+mobTall(m), e.y));
           if(Math.hypot(m.x-e.x, yy-e.y, m.z-e.z) < (m.kind==='ogre' ? 1.5 : m.kind==='mino' ? 1.0 : m.kind==='beetle' ? 0.8 : 0.55)){ hitMob = m; stop = true; break; }
         }

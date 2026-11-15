@@ -21,7 +21,7 @@ STEPS = [
     openMap(); renderMapSide(); mapZoom=2; drawMap(); mapZoom=1; drawMap(); document.getElementById('mapRealm').click(); mapZoom=0.25; drawMap(); mapZoom=4; drawMap(); mapZoom=1; document.getElementById('mapRealm').click(); closeMap(); openCraft(3); closeCraft(); openCraft(2); closeCraft(); toggleMenu(); toggleMenu(); return o.length; }"""),
  ('hold everything', """()=>{ let n=0; for(let id=1;id<NB;id++){ if(!NAMES[id]) continue; iconCanvas(id); heldModel(id); n++; } for(const id of [STONE, IRON_PICK, MEAT_STEW, CROSSBOW, NOTICE0, TSIGN0, 412, 316]){ inv[id]=2; HOTBAR[sel]=id; updateHotbar(); drawHand(); } return n; }"""),
  ('five days pass', """()=>{ const d0=dayNo; for(let i=0;i<5;i++){ advanceHours(24); } for(let i=0;i<60;i++){ provinceTick(); horseTick(); blessTick(); travellerTick(); hunterTick(); delveTick(); } return [dayNo-d0, dateStr(dayNo), quests.length]; }"""),
- ('buy and ride a horse', """()=>{ gold=5000; horse=null; buyHorse({ job:'farmer', village:[window.__V[0],window.__V[1]], name:'T' }); const m=horseMob(); if(!m) return 'no horse'; mountHorse(m); return riding(); }"""),
+ ('buy and ride a horse', """()=>{ gold=5000; horse=null; { const v=window.__V[2]; player.x=v.cx+4.5; player.z=v.cz+4.5; player.y=v.g+1; } buyHorse({ job:'farmer', village:[window.__V[0],window.__V[1]], name:'T' }); const m=horseMob(); if(!m) return 'no horse'; mountHorse(m); return riding(); }"""),
  ('ride about', None),
  ('get down, wagon to the next place', """()=>{ if(riding()) toggleSneak(); for(let a=-3;a<=3;a++) for(let c=-3;c<=3;c++){ const v=villageAt(window.__V[0]+a, window.__V[1]+c); if(v&&v.houses) visitedV.add((window.__V[0]+a)+','+(window.__V[1]+c)); } const P=knownPlaces().filter(p=>Math.hypot(p.x-player.x,p.z-player.z)>60); if(!P.length) return 'nowhere known'; wagonTo(P[0].key, false); return [P[0].name, Math.round(player.x), Math.round(player.z)]; }"""),
  ('crime and the law', """()=>{ const v=nearbyVillages().sort((p,q)=>Math.hypot(p[2].cx-player.x,p[2].cz-player.z)-Math.hypot(q[2].cx-player.x,q[2].cz-player.z))[0]; if(!v) return 'no village'; const vv=[v[0],v[1]]; player.x=v[2].cx+0.5; player.z=v[2].cz+0.5; player.y=v[2].g+1; lastPCX=null; updateChunks(); gold=5000;
@@ -73,7 +73,7 @@ with sync_playwright() as p:
         pg=b.new_page(viewport={'width':960,'height':540}); errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)[:300]))
         pg.goto(F); pg.wait_for_timeout(1500)
         pg.fill('#newName','soak'+seed); pg.fill('#newSeed',seed); pg.click('#newBtn'); pg.wait_for_timeout(4000)
-        pg.evaluate("()=>{ window.__f=0; (function t(){ window.__f++; requestAnimationFrame(t); })(); setInterval(()=>{ if(!window.__mortal && !dead){ health=maxHP(); fallPeakY=player.y; } }, 100); }")
+        pg.evaluate("()=>{ window.__f=0; (function t(){ window.__f++; requestAnimationFrame(t); })(); setInterval(()=>{ if(!window.__mortal && !dead){ health=maxHP(); fallPeakY=player.y; } }, 16); }")
         for name,js in STEPS:
             n0=len(errs)
             pg.evaluate("(die)=>{ if(dead) respawn(); window.__mortal = die; health = maxHP(); }", name=='back up, die and wake')      # the tour must survive its own stops (it is dropped beside a delve's master), so it is healed all the while

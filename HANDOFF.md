@@ -94,6 +94,11 @@ runs before optimising.
 - **World shape, 2026-11-14.** New worlds (`worldGen` 6) are lifted 40 blocks: `setWorldShape(40)` sets `YOFF`, `SEA` (56), `TOP_BUILD` (115),
   `TREELINE`, `SNOW_LINE`, cloud height (`uCloudY` in the shader) and the rat/cat/deep lines. These are now `let`, not `const`. `surfaceH`
   works in the old frame (`SEA0` = 16) and adds `YOFF`. Ores, lava, tuff stay counted from bedrock. Older worlds: `setWorldShape(0)`.
+- **Taverns, 2026-11-15.** New worlds (`worldGen` 7) get one tavern per village: in `planVillage`, after the sewer, a 9x7 `buildHouse(...,'innkeeper')`
+  sited with its own dice (`vRng` from `SEED+470`) so every other building is exactly where an older build puts it (`tests/tavern.py` proves it).
+  `V.tavern` is its index in `V.houses`; the house record has `guest` (the spare bed a rented room sets as `bedSpawn`). `INN_LOOK`, `SHOPS.innkeeper`,
+  `tavernName(rx,rz)`, `tavernOf(m)`, `tavernSpot`, `npcDrinks`, `tavernHour()`; the evening branch in `updateNpc` sits just before "night: home to bed".
+  `npcGoTo` takes a search budget (7000 for the walk across the village, 1500 otherwise).
 - **Delves (cavern dungeons), prototype 2026-11-14.** New worlds (`worldGen` 5) get great caverns with ruins: `delvePlan` / `delveBlock` /
   `delveTick` beside the crypt code; keys start with `D` and share `cryptState` / `cryptSeen` (`siteByKey`). See the task log for what is
   in and what is not (no cave dwellers or fetch quests yet). Design direction and the later "dungeon dimension" idea are in

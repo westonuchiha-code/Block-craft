@@ -647,3 +647,10 @@ DONE  HELD-ITEM AUDIT: looked at all 209 kinds of thing in the hand (contact she
       edge-on so you only saw a thin strip; they are now held as their flat item picture, as Minecraft holds doors, panes and bars.
       Everything else sits by the one shared Minecraft transform. New test tests/hand.py (suite is now 42). Screenshot: proof/held_thin.png.
       Full suite on this build: 42/42 (proof/suite_hand.log).
+DONE  TAVERNS (Daggerfall): every village in a NEW world has a tavern - a bigger house marked by two lamps hanging by the door, with a
+      bar of barrels, tables, and a spare bed. Each has a name (The Laughing Boar, The Gilded Hound...). The innkeeper rents the spare bed
+      (8g: rest, and you wake there if you fall), sells hot food, and always has another rumour (other folk give one a day). From late
+      afternoon about two villagers in three walk to the tavern and stay until well after dark, then go home. Old worlds are untouched and,
+      in new worlds, every other building stands exactly where it did (the tavern is sited last with its own dice; the test proves it).
+      Checked on 3 seeds: 111 of 112 villages have one, all with the spare bed. New test tests/tavern.py (suite is now 43).
+      Screenshot: proof/tavern.png. NOT done: a hanging sign, ale, anyone sitting down (they stand).

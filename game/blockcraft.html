@@ -2490,7 +2490,7 @@ function portalTick(dt){
 // ---------- villages ----------
 // The world is cut into regions of VREG x VREG blocks; some regions hold one village. A village is planned once from the world seed
 // (where the plaza, houses, farms and paths go, and every block they are made of) and then stamped into chunks as they are built.
-let worldGen = 2;                        // 1 = a world from before villages existed (it gets none), 2 = villages, 4 = roads and signposts between them, 5 = delves (great caverns with ruins), 6 = the land lifted 40 blocks (deep underground)
+let worldGen = 2;                        // 1 = a world from before villages existed (it gets none), 2 = villages, 4 = roads and signposts between them, 5 = delves (great caverns with ruins), 7 = a tavern in every village, 6 = the land lifted 40 blocks (deep underground)
 const VREG = 192;
 const villageCache = new Map();
 function vRng(seed){ let a = seed>>>0; return ()=>{ a = (a+0x6D2B79F5)>>>0; let t = a; t = Math.imul(t^(t>>>15), t|1); t ^= t+Math.imul(t^(t>>>7), t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
@@ -2591,6 +2591,21 @@ function planVillage(cx,cz,rnd){
   }
   if(V.houses.length<3) return null;
   buildSewer(V,put,hOf,rnd,starts);
+  // --- the tavern (worlds from worldGen 7): one bigger house with an innkeeper. It is sited last, with its own dice, so every
+  //     other building of the village stands exactly where it would without it ---
+  if(worldGen>=7){ const tr = vRng(Math.floor(h3(cx,91,cz,SEED+470)*4294967295));
+    for(let tries=0; tries<200 && V.tavern===undefined; tries++){
+      const ang = tr()*6.283, dist = 15 + tr()*(15 + tries*0.04), hx = Math.round(cx+Math.cos(ang)*dist), hz = Math.round(cz+Math.sin(ang)*dist), w = 9, d = 7;
+      const ddx = cx-hx, ddz = cz-hz, want = Math.abs(ddx)>Math.abs(ddz) ? (ddx>0 ? 1 : 3) : (ddz>0 ? 2 : 0), r = (want+2)&3;
+      const W = (r&1) ? d : w, D = (r&1) ? w : d, R = { x0:hx-(W-1)/2, z0:hz-(D-1)/2, x1:hx+(W-1)/2, z1:hz+(D-1)/2 };
+      let ok = Math.hypot(hx-cx,hz-cz) <= V.r+4, lo = 999, hi = -999, sum = 0, cnt = 0;
+      for(const Q of V.rects) if(R.x0-3<=Q.x1 && R.x1+3>=Q.x0 && R.z0-3<=Q.z1 && R.z1+3>=Q.z0){ ok = false; break; }
+      for(let x=R.x0; x<=R.x1 && ok; x++) for(let z=R.z0; z<=R.z1; z++){
+        const ci = colInfo(x,z); if(ci.top!==GRASS || ci.h<=SEA+1 || ci.open){ ok = false; break; }
+        if(ci.h<lo) lo = ci.h; if(ci.h>hi) hi = ci.h; sum += ci.h; cnt++; }
+      if(!ok || hi-lo>4) continue;
+      V.rects.push(R); starts.push(buildHouse(V,put,hOf,tr,hx,hz,w,d,r,Math.round(sum/cnt),'innkeeper')); V.tavern = V.houses.length-1;
+    } }
   // --- paths from every door to the plaza: two blocks wide, with steps cut or built wherever the ground rises or falls ---
   for(const st of starts){
     let x = st[0], z = st[1], L = st[2];
@@ -2741,7 +2756,7 @@ function buildHouse(V,put,hOf,rnd,hx,hz,w,d,r,F,job){
   const T = (u,v)=>{ const a = u-lu, b = v-lv; return r===0 ? [hx+a,hz+b] : r===1 ? [hx-b,hz+a] : r===2 ? [hx-a,hz-b] : [hx+b,hz-a]; };
   const P = (u,v,y,b)=>{ const q = T(u,v); put(q[0],y,q[1],b); };
   const rf = f=>(f+r)&3;
-  const style = Math.floor(rnd()*4), wood = Math.floor(rnd()*4), roofM = 8+Math.floor(rnd()*3), wallH = (w>=7 && rnd()<0.35) ? 4 : 3;
+  const style = Math.floor(rnd()*4), wood = Math.floor(rnd()*4), roofM = 8+Math.floor(rnd()*3), wallH = ((w>=7 && rnd()<0.35) || job==='innkeeper') ? 4 : 3;
   const lattice = rnd()<0.5, dwood = Math.floor(rnd()*4), wallTop = F+wallH, um = (w-1)/2;
   const ridgeU = w>=d, n = ridgeU ? d : w, len = ridgeU ? w : d;
   const roofY = c=>wallTop+1+Math.min(c, n-1-c), top = roofY(Math.floor((n-1)/2))+2;
@@ -2809,7 +2824,7 @@ function buildHouse(V,put,hOf,rnd,hx,hz,w,d,r,F,job){
     for(let i=a.length-1;i>0;i--){ const j = Math.floor(rnd()*(i+1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
   const spot = (kind, prefs, draw)=>{ for(const q of prefs.concat(wallCells())) if(tryPut(kind,[q],()=>draw(q[0],q[1]))) return true; return false; };
   tryPut('bed',[[1,1],[1,2]],()=>{ P(1,2,F+1,BED0+rf(0)*2); P(1,1,F+1,BED0+rf(0)*2+1); });
-  const A = [w-2,1], Bq = [w-2,2], C = [1,d-2], D = [w-2,d-2];
+  const A = [w-2,1], Bq = [w-2,2], C = [1,d-2], D = [w-2,d-2]; let guest = null, tables = 0;
   const stn = (b,prefs,y2)=>spot('station',prefs,(u,v)=>{ P(u,v,F+1,b); if(y2) P(u,v,F+2,y2); });
   const shelf = (prefs,two)=>spot('shelf',prefs,(u,v)=>{ P(u,v,F+1,BOOKSHELF); if(two) P(u,v,F+2,BOOKSHELF); });
   let chimney = false;
@@ -2820,6 +2835,11 @@ function buildHouse(V,put,hOf,rnd,hx,hz,w,d,r,F,job){
   else if(job==='cleric'){ shelf([A],false); stn(CARVED,[C],LANTERN0+1); }
   else if(job==='miner'){ stn(FURNACE,[A]); stn(COBBLE,[D]); chimney = true; }
   else if(job==='guard'){ stn(CRAFT_TABLE,[A]); stn(STONE_BRICK,[D]); }
+  else if(job==='innkeeper'){                                 // a bar of barrels by the hearth, and a spare bed for whoever pays for the night
+    if(tryPut('bed',[[3,1],[3,2]],()=>{ P(3,2,F+1,BED0+rf(0)*2); P(3,1,F+1,BED0+rf(0)*2+1); })) guest = T(3,2);
+    stn(BARREL,[A]); stn(BARREL,[Bq]); stn(COOK_TABLE,[D]); chimney = true;
+    P(um-1,d,wallTop-1,LANTERN0); P(um+1,d,wallTop-1,LANTERN0);      // two lamps hang under the eave either side of the door: the mark of a tavern
+  }
   else { stn(CRAFT_TABLE,[A]); if(rnd()<0.5) shelf([D],false); }
   if(job!=='librarian' && job!=='cleric') spot('chest',[C],(u,v)=>{ P(u,v,F+1,CHEST); const q = T(u,v); V.chests.set(q[0]+','+(F+1)+','+q[1], 'house'); });
   // a table with a chair at each end, only if the house still has room to walk round it (at least half the floor stays free)
@@ -2831,7 +2851,7 @@ function buildHouse(V,put,hOf,rnd,hx,hz,w,d,r,F,job){
     cand.reverse();
     for(const [tx,tz] of cand){
       if(interior-occ.size-3 < Math.ceil(interior/2)) break;
-      if(tryPut('table',[[tx,tz],[tx,tz-1],[tx,tz+1]],()=>{ P(tx,tz,F+1,tableId(fw)); P(tx,tz-1,F+1,chairId(fw,rf(2))); P(tx,tz+1,F+1,chairId(fw,rf(0))); if(lit) P(tx,tz,F+2,LANTERN0+1); })) break;
+      if(tryPut('table',[[tx,tz],[tx,tz-1],[tx,tz+1]],()=>{ P(tx,tz,F+1,tableId(fw)); P(tx,tz-1,F+1,chairId(fw,rf(2))); P(tx,tz+1,F+1,chairId(fw,rf(0))); if(lit) P(tx,tz,F+2,LANTERN0+1); }) && (job!=='innkeeper' || ++tables>=2)) break;
     }
     if(d>=7 && (job==='farmer' || job==='baker') && interior-occ.size-1 >= Math.ceil(interior/2)) spot('barrel',[[w-3,d-2]],(u,v)=>P(u,v,F+1,BARREL));
   }
@@ -2840,7 +2860,7 @@ function buildHouse(V,put,hOf,rnd,hx,hz,w,d,r,F,job){
   const level = F, q = T(um,d);
   { const th = hOf(q[0],q[1]); for(let y=Math.min(th,F-1); y<F; y++) put(q[0],y,q[1],COBBLE); put(q[0],F,q[1],COBBLE); for(let y=F+1;y<=Math.max(F+2,th+1);y++) put(q[0],y,q[1],AIR); }
   const dq = T(um,d-1), iq = T(um,d-2), bq = T(1,2), oq = T(um,d);
-  V.houses.push({ job, door:[dq[0],F+1,dq[1]], inside:[iq[0],F+1,iq[1]], bed:[bq[0],F+1,bq[1]], out:[oq[0],F+1,oq[1]], x:hx, z:hz, F, w, d, r });
+  V.houses.push({ job, door:[dq[0],F+1,dq[1]], inside:[iq[0],F+1,iq[1]], bed:[bq[0],F+1,bq[1]], guest: guest ? [guest[0],F+1,guest[1]] : null, out:[oq[0],F+1,oq[1]], x:hx, z:hz, F, w, d, r });
   return [q[0], q[1], level];
 }
 // a fenced field: wet tilled soil either side of a water channel, with ripe and growing crops
@@ -6796,11 +6816,12 @@ const NPC_JOBS = [
   { job:'fisher',     top:[5,['#3a8a9a','#2f7a8a','#4a98a6']], legs:[0,['#4a5a3a','#3f4f34','#5a6a46']], feet:[1,['#3a3020','#2b2418']], hair:null },
   { job:'villager',   top:null, legs:null, feet:null, hair:null }
 ];
+const INN_LOOK = { job:'innkeeper', top:[6,['#7a2f2a','#2f5a3a','#6a4a24']], legs:[0,['#4a3a2a','#3a3028','#55432e']], feet:[1,['#2b2018','#3a2a1c']], hair:null };
 const _hx = c => '#' + c.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
 function npcGenerate(rnd, forceJob){
   rnd = rnd || Math.random;
   const ch = ccRandom(rnd);
-  const J = forceJob ? (NPC_JOBS.find(j=>j.job===forceJob) || NPC_JOBS[NPC_JOBS.length-1]) : NPC_JOBS[Math.floor(rnd()*NPC_JOBS.length)];
+  const J = forceJob==='innkeeper' ? INN_LOOK : forceJob ? (NPC_JOBS.find(j=>j.job===forceJob) || NPC_JOBS[NPC_JOBS.length-1]) : NPC_JOBS[Math.floor(rnd()*NPC_JOBS.length)];
   const jit = hx => _hx(ccMul(ccHex(hx), 0.92+rnd()*0.16));                          // each person's clothes are a little different
   const pick = a => a[Math.floor(rnd()*a.length)];
   if(J.top){ ch.top = J.top[0]; ch.topCol = jit(pick(J.top[1])); ch.topTrim = jit(pick(['#e8e0c8','#8c6a3a','#303030'])); }
@@ -6844,9 +6865,10 @@ const SHOPS = {
   librarian:  { title:'Scholar\'s wares', sell:[SPELLMAKER, BOOKSHELF, CANDLE, GLASS, FIRE_POTION, BOLT_POTION, ...[0,1,2,3,4,5].map(i=>DYE0+i)], buy:[GLOWMOSS, EMBER, SILK, BONE, BOOKSHELF, GLASS, WIN0, WIN0+2, CANDLE] },
   cleric:     { title:'Temple offerings', sell:[FIRE_POTION, BOLT_POTION, CANDLE, LANTERN0+1], buy:[GLOWMOSS, EMBER, BONE, CANDLE], heal:true },
   fisher:     { title:'Fisher\'s stall', sell:[WOOD_BUCKET, WATER_BUCKET, RAW_FISH, COOKED_FISH, RAW_MEAT], buy:[RAW_FISH, COOKED_FISH, RAW_MEAT, LEATHER, SILK] },
+  innkeeper:  { title:'The tavern\'s board', sell:[MEAT_STEW, STEAK, COOKED_FISH, ...DISHES.map(d=>d.id), CANDLE, TINDERBOX], buy:[...CROPS_SOLD, RAW_MEAT, RAW_FISH, FLOUR, BARREL] },
   villager:   { title:'Odds and ends', sell:[STICK, PLANKS, CRAFT_TABLE, BED0, WOOL0, CANDLE], buy:[SILK, WOOL0, LEATHER, LITTER, HAY, BED0, CHEST, ...[0,1,2,3].flatMap(w=>[tableId(w), chairId(w,0), benchId(w,0), doorId(w,0,0,0)]), ...Array.from({length:12},(_,i)=>RUG0+i)] }
 };
-const JOB_TITLE = { hermit:'Hermit', farmer:'Farmer', baker:'Baker', blacksmith:'Smith', miner:'Miner', librarian:'Scholar', cleric:'Cleric', fisher:'Fisher', villager:'Villager', guard:'Guard' };
+const JOB_TITLE = { hermit:'Hermit', farmer:'Farmer', baker:'Baker', blacksmith:'Smith', miner:'Miner', librarian:'Scholar', cleric:'Cleric', fisher:'Fisher', villager:'Villager', guard:'Guard', innkeeper:'Innkeeper' };
 const GREET = {
   hermit:['Light and a living voice. Sit, if you mean no harm.','You came down through all that? Then you will want what I sell.','Mind the moss. It glows, but it does not warm.','I have lived down here longer than I lived up there.'],
   guard:['Keep your blade sheathed inside the walls.','Move along, traveller.','The beasts grow bold near the woods. Stay sharp.'],
@@ -6857,8 +6879,23 @@ const GREET = {
   miner:['There\'s coal in every hill, if you dig deep enough.','Watch for rats down in the tunnels.'],
   librarian:['Knowledge is the sharpest weapon.','Mind the books. They are older than you.'],
   fisher:['The water\'s calm today.','I trade in whatever the hunt brings in.'],
+  innkeeper:['Sit anywhere. The stew is hot.','A bed, a bowl, or the talk of the road? I sell all three.','Travellers bring the news here before anywhere else.'],
   villager:['Fine day, isn\'t it?','Welcome, stranger.','Not many travellers come through here.']
 };
+// every tavern has a name, the same one for the life of the world
+const TAV_A = ['Gilded','Drunken','Laughing','Black','Red','Silver','Sleeping','Dancing','Howling','Lucky','Rusty','Crooked'], TAV_N = ['Stag','Griffin','Dragon','Boar','Lantern','Barrel','Hound','Rat','Crow','Maiden','Knight','Ogre'];
+function tavernName(rx,rz){ return 'The '+TAV_A[Math.floor(h3(rx,81,rz,SEED+471)*12)]+' '+TAV_N[Math.floor(h3(rx,82,rz,SEED+471)*12)]; }
+function tavernOf(m){ if(!m.village || m.village[0]==='h') return null; const v = villageAt(m.village[0], m.village[1]); return v && v.tavern!==undefined ? v.houses[v.tavern] : null; }
+// somewhere to stand inside the tavern: a different corner for each person each day
+function tavernSpot(h, m){
+  const W = (h.r&1) ? h.d : h.w, D = (h.r&1) ? h.w : h.d, x0 = h.x-(W-1)/2, z0 = h.z-(D-1)/2, L = [];
+  for(let x=x0+1; x<x0+W-1; x++) for(let z=z0+1; z<z0+D-1; z++) if(!(x===h.inside[0] && z===h.inside[2]) && npcCanStand(x,h.F+1,z)) L.push([x,h.F+1,z]);
+  if(!L.length) return null;
+  let k = dayNo*7; for(let i=0;i<m.home.length;i++) k = (k*31 + m.home.charCodeAt(i))>>>0;
+  return L[k%L.length];
+}
+function npcDrinks(m){ let k = 5; for(let i=0;i<m.home.length;i++) k = (k*33 + m.home.charCodeAt(i))>>>0; return k%3!==0; }      // two villagers in three like an evening at the tavern
+function tavernHour(){ const s = Math.sin(tod*Math.PI*2), c = Math.cos(tod*Math.PI*2); return c<0 && s<0.45 && s>-0.5; }           // from late afternoon until well after dark
 const DIR8 = ['north','north-east','east','south-east','south','south-west','west','north-west'];
 function talkNews(m){
   const [rx,rz] = villageRegionOf(m), here = hsOf(m) ? null : villageAt(rx,rz), hc = m.vc || (here ? villageCentre(here) : [m.x,m.z]);
@@ -6871,7 +6908,7 @@ function talkNews(m){
   else lines.push('No other village for many days\' walk, they say.');
   // a rumour: the nearest delve or barrow you have not heard of yet is told to you, and marked on your map
   { const R = [...cryptNear(hc[0], hc[1], 500), ...delveNear(hc[0], hc[1], 800)].filter(P=>!cryptSeen.has(P.key)).sort((p,q)=>Math.hypot(p.ex-hc[0],p.ez-hc[1])-Math.hypot(q.ex-hc[0],q.ez-hc[1]))[0];
-    if(R && m.rumourDay!==dayNo){ m.rumourDay = dayNo; const d = Math.hypot(R.ex-hc[0], R.ez-hc[1]), isD = R.key[0]==='D';      // one rumour a day from each person
+    if(R && (m.rumourDay!==dayNo || m.job==='innkeeper')){ m.rumourDay = dayNo; const d = Math.hypot(R.ex-hc[0], R.ez-hc[1]), isD = R.key[0]==='D';      // one rumour a day from each person (an innkeeper always has another)
       lines.push(isD ? `They say there is an old gate in the hills about ${Math.round(d/10)*10} paces to the ${dirWord(hc[0],hc[1],R.ex,R.ez)}: ${R.name}. Caverns under it, and worse. I have marked it for you.`
                      : `The ${R.name} lies about ${Math.round(d/10)*10} paces to the ${dirWord(hc[0],hc[1],R.ex,R.ez)}. The dead do not rest there. I have marked it for you.`);
       cryptSeen.add(R.key); logJournal(`${m.name} told of ${isD ? R.name+', a delve' : 'the '+R.name}, ${Math.round(d/10)*10} paces ${dirWord(hc[0],hc[1],R.ex,R.ez)} of ${here ? villageName(rx,rz) : 'here'}.`); } }
@@ -7190,6 +7227,7 @@ function openTalk(m){
   if(paused || craftOpen || m.angry>0 || m.dead || m.bandit) return false;
   talkNpc = m; talkView = 'talk'; m.talkT = 0; talkOffer = null;
   const g = GREET[m.job] || GREET.villager; talkLine = g[Math.floor(Math.random()*g.length)];
+  if(m.job==='innkeeper' && m.village && Math.random()<0.5) talkLine = `Welcome to ${tavernName(m.village[0],m.village[1])}. `+talkLine;
   craftOpen = true;
   m.yaw = Math.atan2(player.x-m.x, -(player.z-m.z)); m.path = null; m.state = 'idle'; m.idleT = 6;
   renderTalk(); document.getElementById('talkMenu').classList.add('show');
@@ -7230,7 +7268,7 @@ function renderTalk(){
     { const gid = guildOfJob(m.job); if(gid && guildRank(gid)<0 && !(GUILDS[gid].secret && thefts<3)) h += `<button data-a="join">${GUILDS[gid].secret ? 'A WORD IN PRIVATE' : 'JOIN THE '+GUILDS[gid].name.toUpperCase()}</button>`; }
     if(TRAINS[m.job]) h += `<button data-a="train">TRAIN ${SKILLS.find(k=>k.id===TRAINS[m.job]).name.toUpperCase()} (${trainCost(TRAINS[m.job], m.job)}g)</button>`;
     if(m.job==='blacksmith'){ const rc = repairCost(); if(rc>0) h += `<button data-a="repair">REPAIR (${rc}g)</button>`; }
-    if(m.job==='villager' && m.house && m.house.bed) h += `<button data-a="room">RENT A ROOM (8g)</button>`;
+    if((m.job==='villager' || m.job==='innkeeper') && m.house && m.house.bed) h += `<button data-a="room">RENT A ROOM (8g)</button>`;
     if(shop) h += `<button data-a="trade">TRADE</button>`;
     if(shop && shop.heal) h += `<button data-a="heal">HEALING</button>`;
     h += `<button data-a="news">ASK FOR NEWS</button>`; }
@@ -7275,7 +7313,7 @@ function talkAction(a){
   }
   else if(a==='room'){
     if(gold<8) talkLine = 'A room is 8 gold. You have '+gold+'.';
-    else { gold -= 8; bedSpawn = m.house.bed.slice(); health = maxHP(); vitalKey = '';
+    else { gold -= 8; bedSpawn = (m.house.guest || m.house.bed).slice(); health = maxHP(); vitalKey = ''; if(m.job==='innkeeper' && m.village) logJournal(`Took a room at ${tavernName(m.village[0],m.village[1])} in ${villageName(m.village[0],m.village[1])}.`);
       if(Math.sin(tod*Math.PI*2) < -0.05){ closeTalk(); const el = document.getElementById('sleepov'); if(el){ el.textContent = 'Sleeping...'; el.classList.add('dark'); el.style.opacity = '1'; }
         clearTimeout(sleepMsg.t); sleepMsg.t = setTimeout(()=>{ advanceHours(((1.02-tod)%1)*24); scheduleSave(); if(el){ el.textContent = 'Good morning'; el.style.opacity = '0'; } }, 1300); return; }
       talkLine = 'The bed upstairs is yours. You feel rested. If you fall, you will wake up here.'; scheduleSave(); }
@@ -7696,13 +7734,13 @@ function npcChase(m, tx, ty, tz, dt){
   if(npcCanStand(Math.floor(nx),Math.round(m.y),Math.floor(nz))){ m.x=nx; m.z=nz; m.moving=true; m.phase+=st*5; m.yaw=Math.atan2(dx,-dz); return true; }
   return false;
 }
-function npcGoTo(m, at, dt, speed){
+function npcGoTo(m, at, dt, speed, reach){
   if(Math.hypot(at[0]+0.5-m.x, at[2]+0.5-m.z)<0.9 && Math.abs(at[1]-m.y)<1.2) return false;
   m.replanT -= dt;
   if(!m.path || m.pi>=m.path.length){
     if(m.replanT>0) return false;
     m.replanT = 2;
-    const p = npcPath(m, (x,y,z)=>x===at[0] && z===at[2] && Math.abs(y-at[1])<=1, 1500);
+    const p = npcPath(m, (x,y,z)=>x===at[0] && z===at[2] && Math.abs(y-at[1])<=1, reach||1500);
     if(p) ratSetPath(m,p); else return false;
   }
   return npcWalk(m, speed);
@@ -7743,8 +7781,12 @@ function updateNpc(m, dt){
       if(p) ratSetPath(m,p); else m.path=null;
     }
     walking = npcWalk(m, NPC_RUN);
+  } else if(m.house && !guard && m.home && tavernHour() && (m.job==='innkeeper' || npcDrinks(m)) && tavernOf(m)){      // evening: the tavern fills up (its keeper minds the bar)
+    if(m.innDay!==dayNo || !m.innAt){ m.innDay = dayNo; m.innAt = m.job==='innkeeper' ? m.house.inside : tavernSpot(tavernOf(m), m); }
+    walking = m.innAt ? npcGoTo(m, m.innAt, dt, NPC_WALK*1.2, 7000) : false;      // the tavern can be right across the village: look further for the way
+    if(!walking){ m.state = 'home'; if(Math.random()<dt*0.2) m.yaw += (Math.random()-0.5)*2; }
   } else if(m.house && ratNight && !guard){                                            // night: home to bed
-    walking = npcGoTo(m, m.house.inside, dt, NPC_WALK*1.4);
+    walking = npcGoTo(m, m.house.inside, dt, NPC_WALK*1.4, Math.hypot(m.house.inside[0]-m.x, m.house.inside[2]-m.z)>14 ? 7000 : 1500);      // (a long way if they were at the tavern)
     if(!walking){ m.state = 'home'; if(Math.random()<dt*0.2) m.yaw += (Math.random()-0.5)*2; }
   } else if(m.state==='idle' || m.state==='home'){
     m.moving=false; m.idleT -= dt;
@@ -12721,7 +12763,7 @@ document.getElementById('newBtn').addEventListener('click', ()=>{
              : isNaN(Number(seedIn)) ? seedFromName(seedIn)
              : Number(seedIn);
   const id = newWorldId();
-  localStorage.setItem(wkey(id,'world'), JSON.stringify({ format: SAVE_FORMAT, version: SAVE_VERSION, name, seed, gen:6, inv:{}, tod:0.15, player:null }));
+  localStorage.setItem(wkey(id,'world'), JSON.stringify({ format: SAVE_FORMAT, version: SAVE_VERSION, name, seed, gen:7, inv:{}, tod:0.15, player:null }));
   loadWorld(id);
 });
 document.getElementById('testBtn').addEventListener('click', ()=>{

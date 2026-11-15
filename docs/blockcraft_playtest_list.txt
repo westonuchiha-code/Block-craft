@@ -18,6 +18,7 @@ PEOPLE (you said they felt like they were floating)
 [ ] If they still feel off, try to say when: standing, walking, turning, on stairs, at night?
 
 HELD ITEMS
+[ ] Doors, windows and iron bars are now held as their flat picture (they were edge-on strips). Better?
 [ ] Blocks, stairs, doors, beds, lanterns, food, ingots in the hand: do they sit right? Chairs and fences are thin and low.
 [ ] The 3D arm when the hand is empty, and its punch.
 [ ] Fire and lightning on the fist and along a sword: too much? Does the fire hide the blade?
@@ -26,6 +27,12 @@ THE LIFTED WORLD
 [ ] Does the land feel the same as before, just higher? Sea level is 56, mountains reach about 115 (build ceiling 120).
 [ ] How long does it take to dig down to iron (below 48), mithril (below 20), adamantite (below 10)? Too far?
 [ ] GPU speed on the S21 Ultra and a PC (never measured on real hardware).
+
+TAVERNS (new worlds only; seed 12345: The Laughing Boar in the spawn village, the house with two lamps hanging by its door)
+[ ] Find the tavern by its two lamps. Does it read as a tavern, or just a bigger house? (A hanging sign is the obvious next step.)
+[ ] Talk to the innkeeper: RENT A ROOM (8g, the spare bed), TRADE (hot food), ASK FOR NEWS (always has another rumour).
+[ ] Come by in the late afternoon: about two villagers in three walk over and stand about inside until well after dark, then go home.
+    Does the village feel more alive for it? Do they block the doorway or crowd badly?
 
 DELVES (seed 12345: the Black Hideout, a bandit den, gate at x 100, z -198, about 250 blocks north of spawn)
 [ ] Finding the gate; the walk down the stair.

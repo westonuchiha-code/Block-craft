@@ -663,3 +663,4 @@ DONE  PROVINCES (Daggerfall's regions): the land is divided into named baronies,
       border shows a notice and writes the journal; the map names the province and dots its border; villagers say which province they
       are in. LAW: an assault or murder is now also owed, at half value, in every village of the province (guards there come for you);
       theft stays local; paying or serving time clears it. New test tests/province.py (suite is now 44). Screenshot: proof/province_map.png.
+      Full suite on this build: 44/44 (proof/suite_province.log).

@@ -1264,6 +1264,7 @@ const crops = new Map();                        // "x,y,z" -> { x, y, z, t: seco
 const DROP = {};
 // ---------- shaped blocks: slabs and stairs (ids 256+). Each is a few boxes inside one cell, wearing the texture of its material ----------
 const SH_MATS = [PLANK_IDS[0],PLANK_IDS[1],PLANK_IDS[2],PLANK_IDS[3],COBBLE,STONE,STONE_BRICK,FLAGSTONE,SHINGLE,SLATE,THATCH];
+const TSIGN0 = 1143;      // a tavern's hanging sign: a bar under the eave and a board below it (1143 hangs along x, 1144 along z)
 const SIGNPOST = 1131, SPELLMAKER = 1132, FIRE = 1135, TINDERBOX = 1136;
 const IS_SHAPED = new Uint8Array(NB), IS_SLAB = new Uint8Array(NB), IS_STAIR = new Uint8Array(NB);
 const SH_BASE = new Uint16Array(NB), SH_HALF = new Uint8Array(NB), SH_FACE = new Uint8Array(NB), SH_MAT = new Uint8Array(NB);
@@ -1344,6 +1345,8 @@ const slabId = (m,h)=> m<6 ? 256+m*2+h : SH_OFF(m)+h, stairId = (m,h,f)=> m<6 ? 
   // a signpost: a post with a board; use it to read where the road goes
   IS_SHAPED[SIGNPOST]=1; SH_BOXES[SIGNPOST]=[[.4375,0,.4375,.5625,1.25,.5625],[.0625,.75,.4375,.9375,1.0,.5625],[.4375,.95,.0625,.5625,1.2,.9375]];      // two boards, pointing two ways SH_COL[SIGNPOST]=[[.4375,0,.4375,.5625,1.25,.5625]];
   SH_BASE[SIGNPOST]=PLANK_IDS[0]; SH_MAT[SIGNPOST]=0; COLORS[SIGNPOST]=COLORS[PLANK_IDS[0]]; NAMES[SIGNPOST]='signpost';
+  for(let o=0;o<2;o++){ const id = TSIGN0+o; IS_SHAPED[id]=1; SH_BOXES[id] = o ? [[.4375,.875,0,.5625,1,1],[.4375,.1875,.125,.5625,.875,.875]] : [[0,.875,.4375,1,1,.5625],[.125,.1875,.4375,.875,.875,.5625]];
+    SH_BASE[id]=PLANK_IDS[3]; SH_MAT[id]=3; COLORS[id]=COLORS[PLANK_IDS[3]]; NAMES[id]='tavern sign'; }
   // beds: two cells, a low mattress on a plank frame; the head cell also has a headboard at its far end
   for(let f=0; f<4; f++) for(let part=0; part<2; part++){
     const id = BED0+f*2+part, bx=[[0,0,0,1,.5625,1]];
@@ -2526,7 +2529,7 @@ function villageSiteOk(cx,cz){
 const V_JOBS = ['farmer','blacksmith','librarian','baker','villager','guard','cleric','fisher','miner','villager'];
 function planVillage(cx,cz,rnd){
   const g = colInfo(cx,cz).h;
-  const V = { cx, cz, g, rects:[], houses:[], cells:new Map(), pathSet:new Set(), chests:new Map(), r:34 };
+  const V = { cx, cz, g, late:[], rects:[], houses:[], cells:new Map(), pathSet:new Set(), chests:new Map(), r:34 };
   const B = new Map();
   const put = (x,y,z,b)=>{ if(y>0 && y<H) B.set(x+','+y+','+z, b); };
   const hmap = new Map();                                              // columns whose ground level the village has changed
@@ -2629,6 +2632,7 @@ function planVillage(cx,cz,rnd){
       if(up) L++; else if(down) L--;
     }
   }
+  for(const q of V.late) put(q[0],q[1],q[2],q[3]);
   // --- fences join up; then sort every block into its chunk ---
   const conn = (x,y,z,axis)=>{ const nb = B.get(x+','+y+','+z); return !!nb && (IS_FENCE[nb] || (IS_GATE[nb] && SH_FACE[nb]===axis) || (!PASS[nb] && !IS_SHAPED[nb] && !IS_WATER[nb])); };
   for(const [k,b] of B){
@@ -2838,7 +2842,7 @@ function buildHouse(V,put,hOf,rnd,hx,hz,w,d,r,F,job){
   else if(job==='innkeeper'){                                 // a bar of barrels by the hearth, and a spare bed for whoever pays for the night
     if(tryPut('bed',[[3,1],[3,2]],()=>{ P(3,2,F+1,BED0+rf(0)*2); P(3,1,F+1,BED0+rf(0)*2+1); })) guest = T(3,2);
     stn(BARREL,[A]); stn(BARREL,[Bq]); stn(COOK_TABLE,[D]); chimney = true;
-    P(um-1,d,wallTop-1,LANTERN0); P(um+1,d,wallTop-1,LANTERN0);      // two lamps hang under the eave either side of the door: the mark of a tavern
+    for(const [u,b] of [[um-1,LANTERN0],[um+1,LANTERN0],[um+2,TSIGN0+((r&1)?0:1)]]){ const q = T(u,d); V.late.push([q[0],wallTop-1,q[1],b]); }      // and its sign sticks out from the wall beside them (hung last, so no path cut past the door takes them down)      // two lamps hang under the eave either side of the door: the mark of a tavern
   }
   else { stn(CRAFT_TABLE,[A]); if(rnd()<0.5) shelf([D],false); }
   if(job!=='librarian' && job!=='cleric') spot('chest',[C],(u,v)=>{ P(u,v,F+1,CHEST); const q = T(u,v); V.chests.set(q[0]+','+(F+1)+','+q[1], 'house'); });
@@ -2893,6 +2897,31 @@ function villageForChunk(data,cx,cz){
 const VN_A = ['Raven','Oak','Stone','Thorn','Ash','Elder','Black','Wolf','Mill','Brook','Iron','Fern','Mead','Hollow','Grey','Cold'];
 const VN_B = ['ford','wick','dale','stead','mere','haven','cross','field','hold','bury','moor','well','gate','ton'];
 function villageName(rx,rz){ const a = Math.floor(h3(rx,31,rz,SEED+700)*VN_A.length), b = Math.floor(h3(rx,32,rz,SEED+701)*VN_B.length); return VN_A[a]+VN_B[b]; }
+// ---------- provinces: the land is divided into named baronies, counties and marches ----------
+// Nothing is built for them: a province is only which seat you stand nearest to (one seat somewhere in every 1536-block square), so they
+// exist in every world, old or new. They give places a wider name, and they are how far word of a violent crime travels.
+const PREG = VREG*8;
+const PV_T = ['Barony','County','March','Duchy','Shire','Fief','Reach','Wardship'];
+const PV_A = ['Dun','Wyr','Ald','Car','Mor','Glen','Tor','Bryn','Hal','Esk','Lor','Vey','Kel','Ran','Sil','Orm'], PV_B = ['moor','wold','mark','ness','garth','land','vale','rock','fell','holm','crest','wick'];
+const provCache = new Map(); let provCacheSeed = null;
+function provinceAt(x,z){
+  if(provCacheSeed!==SEED){ provCache.clear(); provCacheSeed = SEED; }
+  const qx = Math.floor(x/64), qz = Math.floor(z/64), ck = qx*131072+qz; let P = provCache.get(ck); if(P) return P;      // looked up per 64-block square
+  const mx = qx*64+32, mz = qz*64+32, cx = Math.floor(mx/PREG), cz = Math.floor(mz/PREG); let bd = 1e18, bx = 0, bz = 0;
+  for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){ const sx = (cx+a+0.15+0.7*h3(cx+a,41,cz+b,SEED+760))*PREG, sz = (cz+b+0.15+0.7*h3(cx+a,42,cz+b,SEED+761))*PREG, d = (sx-mx)*(sx-mx)+(sz-mz)*(sz-mz);
+    if(d<bd){ bd = d; bx = cx+a; bz = cz+b; } }
+  P = { key:'P'+bx+','+bz, name:'the '+PV_T[Math.floor(h3(bx,43,bz,SEED+762)*PV_T.length)]+' of '+PV_A[Math.floor(h3(bx,44,bz,SEED+763)*PV_A.length)]+PV_B[Math.floor(h3(bx,45,bz,SEED+764)*PV_B.length)] };
+  if(provCache.size>20000) provCache.clear(); provCache.set(ck, P); return P;
+}
+function provinceOfVillage(v){ return provinceAt((v[0]+0.5)*VREG, (v[1]+0.5)*VREG); }
+let provHere = null, provSeen = [];
+function provinceTick(){
+  if(worldGen<2 || testWorld || isUnder(player.z) || isTestZ(player.z)) return;
+  const P = provinceAt(player.x, player.z); if(provHere===P.key) return;
+  const first = provHere===null; provHere = P.key;
+  if(!provSeen.includes(P.key)){ provSeen.push(P.key); if(!first) logJournal('Crossed into '+P.name+'.'); scheduleSave(); }
+  if(!first){ const w = bounty[P.key]||0; skillToast(P.name.slice(4).toUpperCase()+'<br><small>'+(w ? 'you are wanted here' : 'you cross the border')+'</small>', true); }
+}
 const roadEdgeCache = new Map(), roadChunkCache = new Map();
 function inVillageRects(v,x,z,m){ for(const R of v.rects) if(x>=R.x0-m && x<=R.x1+m && z>=R.z0-m && z<=R.z1+m) return true; return false; }
 // the road edges whose line passes near region (rx,rz)
@@ -3310,7 +3339,7 @@ function saveWorld(){
   if(!currentWorld) return;
   const meta = {
     format: SAVE_FORMAT, version: SAVE_VERSION, name: currentWorldName, seed: SEED, gen: worldGen, test: testWorld ? 1 : 0, rain: [rainOn?1:0, rainLeftT],
-    inv, wear, hotbar: HOTBAR, grid2, tod, health, food, saturation, skills:{ v:skills, u:skillUses, g:skillGained }, gold, armor, book, bookSel, mp, fires:[...fires.values()].slice(0,300), crypts:cryptState, cryptSeen:[...cryptSeen], journal, guilds, bounty, thefts, delveSeen, trained:trainedDay, homesteads, homesteadId, explored:[...explored], visited:[...visitedV], cls:playerClass, sacks:deathSacks, placed:packPlaced(), villagers:villagerState, quests, rep:villageRep, dayNo, questId, bed: bedSpawn, spell, spellCharges, swordSpell, chests: Object.fromEntries(chests),
+    inv, wear, hotbar: HOTBAR, grid2, tod, health, food, saturation, skills:{ v:skills, u:skillUses, g:skillGained }, gold, armor, book, bookSel, mp, fires:[...fires.values()].slice(0,300), crypts:cryptState, cryptSeen:[...cryptSeen], provSeen, journal, guilds, bounty, thefts, delveSeen, trained:trainedDay, homesteads, homesteadId, explored:[...explored], visited:[...visitedV], cls:playerClass, sacks:deathSacks, placed:packPlaced(), villagers:villagerState, quests, rep:villageRep, dayNo, questId, bed: bedSpawn, spell, spellCharges, swordSpell, chests: Object.fromEntries(chests),
     player: { x:player.x, y:player.y, z:player.z, yaw:player.yaw, pitch:player.pitch }
   };
   try{
@@ -3521,7 +3550,7 @@ function loadWorld(id){
   explored = new Set(meta.explored || []); visitedV = new Set(meta.visited || []); mapTiles.clear(); roadEdgeCache.clear(); roadChunkCache.clear(); roadMemoCx = 1e9;
   fires.clear(); for(const f of (meta.fires||[])) fires.set(f.x+','+f.y+','+f.z, f);
   book = meta.book || []; bookSel = meta.bookSel || 0; mp = meta.mp===undefined ? 10 : meta.mp; wardT = wardPts = swiftT = swiftK = 0;
-  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; guilds = meta.guilds || {}; bounty = meta.bounty || {}; thefts = meta.thefts || 0; delveSeen = meta.delveSeen || {}; arrestUntil = 0; arrestOpen = false; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
+  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; provSeen = meta.provSeen || []; provHere = null; guilds = meta.guilds || {}; bounty = meta.bounty || {}; thefts = meta.thefts || 0; delveSeen = meta.delveSeen || {}; arrestUntil = 0; arrestOpen = false; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
   trainedDay = meta.trained || {}; homesteads = meta.homesteads || []; homesteadId = meta.homesteadId || 1;
   gold = meta.gold || 0; playerClass = meta.cls || null; deathSacks = meta.sacks || []; placedMap = unpackPlaced(meta.placed);
   if(meta.inv && meta.inv[PISTOL]) delete inv[PISTOL];          // the pistol is gone from the world
@@ -6566,7 +6595,7 @@ function artifactHit(m){
   return 0;
 }
 // which tool kind mines each block faster
-const KIND = { [SIGNPOST]:'axe', [SPELLMAKER]:'pick', [IRON_ORE]:'pick', [ADAM_ORE]:'pick', [MITH_ORE]:'pick', [ANDESITE]:'pick', [GRANITE]:'pick', [DIORITE]:'pick', [TUFF]:'pick', [MOSSROCK]:'pick', [COOK_TABLE]:'pick', [FURNACE]:'pick', [STONE_BRICK]:'pick', [MOSSY_BRICK]:'pick', [FLAGSTONE]:'pick', [PILLAR]:'pick', [CARVED]:'pick', [CUTTER]:'pick', [CHEST]:'axe', [FLESH]:'pick', [FLESH2]:'pick', [BONE]:'pick', [RUST]:'pick', [LAMP]:'pick', [GATE]:'pick', [EMBER]:'pick', [ICE]:'pick', [SANDSTONE]:'pick', [PALM_LOG]:'axe', [PALM_LEAF]:'sword', [BARREL]:'axe', [CRATE]:'axe', [SHROOM_STEM]:'axe', [CAP_R]:'axe', [CAP_T]:'axe', [DARKWOOD]:'axe', [SLATE]:'pick', [PLASTER]:'pick', [FRAME]:'axe', [FRAME_X]:'axe', [FRAME_D1]:'axe', [FRAME_D2]:'axe', [BEAM]:'axe', [SHINGLE]:'axe', [BOOKSHELF]:'axe', [PATH]:'shovel', [HEDGE]:'sword', [STONE]:'pick', [COBBLE]:'pick', [COAL]:'pick', [LOG]:'axe', [PLANKS]:'axe', [CRAFT_TABLE]:'axe',
+const KIND = { [SIGNPOST]:'axe', [TSIGN0]:'axe', [TSIGN0+1]:'axe', [SPELLMAKER]:'pick', [IRON_ORE]:'pick', [ADAM_ORE]:'pick', [MITH_ORE]:'pick', [ANDESITE]:'pick', [GRANITE]:'pick', [DIORITE]:'pick', [TUFF]:'pick', [MOSSROCK]:'pick', [COOK_TABLE]:'pick', [FURNACE]:'pick', [STONE_BRICK]:'pick', [MOSSY_BRICK]:'pick', [FLAGSTONE]:'pick', [PILLAR]:'pick', [CARVED]:'pick', [CUTTER]:'pick', [CHEST]:'axe', [FLESH]:'pick', [FLESH2]:'pick', [BONE]:'pick', [RUST]:'pick', [LAMP]:'pick', [GATE]:'pick', [EMBER]:'pick', [ICE]:'pick', [SANDSTONE]:'pick', [PALM_LOG]:'axe', [PALM_LEAF]:'sword', [BARREL]:'axe', [CRATE]:'axe', [SHROOM_STEM]:'axe', [CAP_R]:'axe', [CAP_T]:'axe', [DARKWOOD]:'axe', [SLATE]:'pick', [PLASTER]:'pick', [FRAME]:'axe', [FRAME_X]:'axe', [FRAME_D1]:'axe', [FRAME_D2]:'axe', [BEAM]:'axe', [SHINGLE]:'axe', [BOOKSHELF]:'axe', [PATH]:'shovel', [HEDGE]:'sword', [STONE]:'pick', [COBBLE]:'pick', [COAL]:'pick', [LOG]:'axe', [PLANKS]:'axe', [CRAFT_TABLE]:'axe',
                [TILLED]:'shovel', [TILLED_WET]:'shovel', [DIRT]:'shovel', [GRASS]:'shovel', [SNOW]:'shovel', [SAND]:'shovel', [GRAVEL]:'shovel', [LEAVES]:'sword' };
 // lowest pickaxe tier that can get the drop from a block
 const REQ_TIER = { [SPELLMAKER]:1, [IRON_ORE]:2, [MITH_ORE]:3, [ADAM_ORE]:4, [ANDESITE]:1, [GRANITE]:1, [DIORITE]:1, [TUFF]:1, [MOSSROCK]:1, [STONE]:1, [COBBLE]:1, [COAL]:1, [FURNACE]:1, [STONE_BRICK]:1, [MOSSY_BRICK]:1, [FLAGSTONE]:1, [PILLAR]:1, [CARVED]:1, [CUTTER]:1, [SLATE]:1, [RUST]:1, [GATE]:1, [EMBER]:1 };
@@ -6580,7 +6609,7 @@ for(let id=256; id<NB; id++) if(IS_WINDOW[id]){ if(SH_HALF[id]===2){ HARD[id]=3;
 for(let id=256; id<NB; id++) if(IS_BED[id]){ HARD[id]=0.4; HAND_OK.add(id); }
 for(let id=256; id<NB; id++) if(IS_LANTERN[id] || IS_PORTAL[id] || IS_VINE[id]){ HARD[id]=0.3; HAND_OK.add(id); }
 for(let id=0; id<NB; id++) if(id===GLOW || IS_LAVA[id] || IS_LANTERN[id] || IS_PORTAL[id] || IS_VINE[id] || id===GLOWMOSS || id===CAP_T || id===LAMP || id===EMBER || id===CANDLE || id===FIRE) IS_EMIT[id] = 1;   // these give light and are drawn at full brightness
-HARD[FIRE]=0; HAND_OK.add(FIRE); DROP[FIRE]=0; FLAT_ITEMS.add(TINDERBOX);
+HARD[FIRE]=0; HAND_OK.add(FIRE); DROP[FIRE]=0; DROP[TSIGN0+1]=TSIGN0; FLAT_ITEMS.add(TINDERBOX);
 // what burns: anything made of wood, leaves, straw, cloth or paper, and plants
 const IS_FLAM = new Uint8Array(NB);
 for(let id=0; id<NB; id++){
@@ -6637,7 +6666,7 @@ const TIER_POW = { 1:1.25, 2:1.7, 3:2.5, 4:3.4, 5:4.5 };          // wood, stone
 const HITS = {};
 { const S = (ids,v)=>{ for(const id of [].concat(ids)) HITS[id] = v; };
   S([DIRT, GRASS, TILLED, TILLED_WET], 4.5); S([GRAVEL, PATH], 5); S(SAND, 4); S([SNOW, GLASS, GLOW], 2); S([PUMPKIN, MELON], 4);
-  S([STONE, ANDESITE, GRANITE, DIORITE, MOSSROCK], 9); S(TUFF, 8); S(COBBLE, 10); S(COAL, 11); S(SIGNPOST, 4); S(SPELLMAKER, 10); S(IRON_ORE, 12); S(MITH_ORE, 16); S(ADAM_ORE, 20); S(CRAFT_TABLE, 6); S(COOK_TABLE, 8); S(FURNACE, 12);
+  S([STONE, ANDESITE, GRANITE, DIORITE, MOSSROCK], 9); S(TUFF, 8); S(COBBLE, 10); S(COAL, 11); S(SIGNPOST, 4); S([TSIGN0, TSIGN0+1], 4); S(SPELLMAKER, 10); S(IRON_ORE, 12); S(MITH_ORE, 16); S(ADAM_ORE, 20); S(CRAFT_TABLE, 6); S(COOK_TABLE, 8); S(FURNACE, 12);
   for(let id=0; id<NB; id++){ if(IS_LOG[id]) HITS[id] = 8; else if(IS_LEAF[id]) HITS[id] = 2; }
   for(const id of PLANK_IDS) HITS[id] = 6; }
 function baseHits(b){
@@ -6885,6 +6914,9 @@ const GREET = {
 // every tavern has a name, the same one for the life of the world
 const TAV_A = ['Gilded','Drunken','Laughing','Black','Red','Silver','Sleeping','Dancing','Howling','Lucky','Rusty','Crooked'], TAV_N = ['Stag','Griffin','Dragon','Boar','Lantern','Barrel','Hound','Rat','Crow','Maiden','Knight','Ogre'];
 function tavernName(rx,rz){ return 'The '+TAV_A[Math.floor(h3(rx,81,rz,SEED+471)*12)]+' '+TAV_N[Math.floor(h3(rx,82,rz,SEED+471)*12)]; }
+function tavernNear(x,z){ const rx = Math.floor(x/VREG), rz = Math.floor(z/VREG);      // the name of the tavern this spot belongs to, if any
+  for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){ const v = villageAt(rx+a,rz+b); if(!v || v.tavern===undefined) continue; const h = v.houses[v.tavern]; if(Math.abs(x-h.x)<=8 && Math.abs(z-h.z)<=8) return tavernName(rx+a,rz+b); }
+  return null; }
 function tavernOf(m){ if(!m.village || m.village[0]==='h') return null; const v = villageAt(m.village[0], m.village[1]); return v && v.tavern!==undefined ? v.houses[v.tavern] : null; }
 // somewhere to stand inside the tavern: a different corner for each person each day
 function tavernSpot(h, m){
@@ -6903,6 +6935,7 @@ function talkNews(m){
   for(let a=-3;a<=3;a++) for(let b=-3;b<=3;b++){ if(!a && !b) continue; const v = villageAt(rx+a, rz+b); if(!v || !v.houses) continue;
     const c = villageCentre(v), d = Math.hypot(c[0]-hc[0], c[1]-hc[1]); if(d<bd){ bd = d; best = [c[0], c[1], villageName(rx+a, rz+b)]; } }
   const lines = [];
+  if(here && m.village) lines.push(`${villageName(rx,rz)} stands in ${provinceOfVillage(m.village).name}.`);
   if(best){ const ang = Math.atan2(best[0]-hc[0], -(best[1]-hc[1])), k = ((Math.round(ang/(Math.PI/4))%8)+8)%8;          // -z is north
     lines.push(`${best.length>2 ? best[2] : 'The nearest village'} lies about ${Math.round(bd/10)*10} paces to the ${DIR8[k]}.`); }
   else lines.push('No other village for many days\' walk, they say.');
@@ -7042,7 +7075,7 @@ function questOffer(m){
 // gives work, and any guard who spots you comes to arrest you: pay the fine, serve the days in the cells, or resist and fight.
 const CRIME = { assault:[40,'assault'], murder:[300,'murder'], theft:[30,'theft'], vandal:[6,'wrecking property'] };
 let bounty = {}, arrestUntil = 0, arrestOpen = false;        // village key -> gold owed
-function bountyOf(v){ return v && v[0]!=='h' ? (bounty[vkey(v)]||0) : 0; }
+function bountyOf(v){ return v && v[0]!=='h' ? Math.max(bounty[vkey(v)]||0, bounty[provinceOfVillage(v).key]||0) : 0; }      // what this village wants you for, or what the whole province does
 function fineOf(v){ return Math.round(bountyOf(v)*guildCut('thieves', 10, 60)); }      // what you actually pay: the Thieves Guild has friends among the guard
 function witnessAt(x,y,z){                                   // a living villager close enough to have seen it
   const r = 10*stealthMul()*guildCut('thieves', 8, 48);
@@ -7054,6 +7087,9 @@ function crime(v, kind, extra){
   bounty[k] = Math.min(2000, was + C[0] + (extra||0));
   const nm = villageName(v[0], v[1]);
   if(!was){ skillToast('WANTED IN '+nm.toUpperCase()+'<br><small>'+C[1]+'</small>', true); logJournal('Wanted in '+nm+' for '+C[1]+'.'); }
+  if(kind==='assault' || kind==='murder'){ const P = provinceOfVillage(v), pw = bounty[P.key]||0;      // blood travels: half of it is owed in every village of the province
+    bounty[P.key] = Math.min(2000, pw + Math.round((C[0] + (extra||0))/2));
+    if(!pw) logJournal('Word of it will reach every guard in '+P.name+'.'); }
   scheduleSave();
 }
 function openArrest(m){
@@ -7061,10 +7097,10 @@ function openArrest(m){
 }
 function jailDays(b){ return Math.max(1, Math.min(7, Math.ceil(b/60))); }
 function arrestEnd(m, how){
-  const k = vkey(m.village), b = bounty[k]||0, nm = villageName(m.village[0], m.village[1]);
+  const k = vkey(m.village), b = bountyOf(m.village), nm = villageName(m.village[0], m.village[1]), pk = provinceOfVillage(m.village).key;
   arrestOpen = false; arrestUntil = performance.now() + 25000;
-  if(how==='pay'){ const f = fineOf(m.village); gold -= f; delete bounty[k]; talkView = 'talk'; talkLine = 'Paid in full. Keep your hands to yourself in future.'; logJournal('Paid a fine of '+f+' gold in '+nm+'.'); }
-  else if(how==='jail'){ const d = jailDays(b); delete bounty[k]; closeTalk(); advanceHours((d-1)*24 + ((1.02-tod)%1)*24); skillToast(d+(d===1?' DAY':' DAYS')+' IN THE CELLS<br><small>'+nm+'</small>', true); logJournal('Served '+d+(d===1?' day':' days')+' in the cells of '+nm+'.'); }
+  if(how==='pay'){ const f = fineOf(m.village); gold -= f; delete bounty[k]; delete bounty[pk]; talkView = 'talk'; talkLine = 'Paid in full. Keep your hands to yourself in future.'; logJournal('Paid a fine of '+f+' gold in '+nm+'.'); }
+  else if(how==='jail'){ const d = jailDays(b); delete bounty[k]; delete bounty[pk]; closeTalk(); advanceHours((d-1)*24 + ((1.02-tod)%1)*24); skillToast(d+(d===1?' DAY':' DAYS')+' IN THE CELLS<br><small>'+nm+'</small>', true); logJournal('Served '+d+(d===1?' day':' days')+' in the cells of '+nm+'.'); }
   else { bounty[k] = Math.min(2000, b + 60); addRep(m.village, -5); closeTalk(); for(const o of mobs) if(o.kind==='npc' && o.job==='guard' && !o.dead && Math.hypot(o.x-m.x,o.z-m.z)<40) o.angry = 60; logJournal('Resisted arrest in '+nm+'.'); }
   scheduleSave();
 }
@@ -7185,7 +7221,7 @@ function renderQuests(){
   const keys = new Set([...visitedV, ...Object.keys(villageRep).filter(k=>villageRep[k] && k[0]!=='h'), ...quests.filter(q=>q.village && q.village[0]!=='h').map(q=>vkey(q.village))]);
   const rows = [];
   for(const k of keys){ const [rx,rz] = k.split(',').map(Number), v = villageAt(rx,rz); if(!v || !v.houses) continue; const c = villageCentre(v), r = villageRep[k]||0;
-    rows.push({ r, d:Math.hypot(c[0]-player.x,c[1]-player.z), html:`<div class="skRow"><div class="skHead"><b>${villageName(rx,rz)}</b><span>${bounty[k] ? '<b style="color:#e06050">wanted: '+bounty[k]+'g</b> \u00b7 ' : ''}${repWord(r)}${r ? ' ('+(r>0?'+':'')+r+')' : ''}</span></div><div class="skBar thin"><i style="width:${(r+100)/2}%"></i></div><div class="skDesc">${far(c[0],c[1])}</div></div>` }); }
+    rows.push({ r, d:Math.hypot(c[0]-player.x,c[1]-player.z), html:`<div class="skRow"><div class="skHead"><b>${villageName(rx,rz)}</b><span>${bountyOf([rx,rz]) ? '<b style="color:#e06050">wanted: '+bountyOf([rx,rz])+'g</b> \u00b7 ' : ''}${repWord(r)}${r ? ' ('+(r>0?'+':'')+r+')' : ''}</span></div><div class="skBar thin"><i style="width:${(r+100)/2}%"></i></div><div class="skDesc">${far(c[0],c[1])}</div></div>` }); }
   rows.sort((p,q)=>p.d-q.d);
   if(rows.length){ h += '<div class="tkHd" style="margin-top:14px">STANDING</div>'; for(const R of rows) h += R.html; }
   return h;
@@ -7621,6 +7657,13 @@ function drawMap(){
   g.save(); g.translate(W/2, Hh/2); g.rotate(-a); g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 2;
   g.beginPath(); g.moveTo(0,9); g.lineTo(-6,-6); g.lineTo(0,-2); g.lineTo(6,-6); g.closePath(); g.stroke(); g.fill(); g.restore();
   g.fillStyle = '#8f8a7a'; g.textAlign = 'left'; g.font = '10px monospace'; g.fillText('N ↑', 8, 14);
+  if(worldGen>=2 && !isUnder(player.z) && !testWorld){
+    g.fillStyle = 'rgba(232,214,160,0.5)';
+    for(let sy=3; sy<Hh; sy+=6){ let last = null; for(let sx=0; sx<W; sx+=3){ const k = provinceAt(px+(sx-W/2)/S, pz+(sy-Hh/2)/S).key; if(last!==null && k!==last) g.fillRect(sx-1, sy-1, 2, 2); last = k; } }
+    for(let sx=3; sx<W; sx+=6){ let last = null; for(let sy=0; sy<Hh; sy+=3){ const k = provinceAt(px+(sx-W/2)/S, pz+(sy-Hh/2)/S).key; if(last!==null && k!==last) g.fillRect(sx-1, sy-1, 2, 2); last = k; } }
+    const nm = provinceAt(px,pz).name.slice(4).toUpperCase(); g.font = 'bold 11px monospace'; g.textAlign = 'center';
+    g.fillStyle = 'rgba(0,0,0,.6)'; const w = g.measureText(nm).width; g.fillRect(W/2-w/2-5, 4, w+10, 15); g.fillStyle = '#e8d6a0'; g.fillText(nm, W/2, 15);
+  }
 }
 function renderMapSide(){
   const el = document.getElementById('mapSide'), here = atPlace();
@@ -9020,7 +9063,7 @@ function updateMobs(){
   if(catSpawnT<=0){ catSpawnT = catnipHere ? 4.5 : 9; if(!underNow) trySpawnCats(); }
   ogreSpawnT -= dt; if(ogreSpawnT<=0){ ogreSpawnT = 20; if(!underNow){ trySpawnOgre(); trySpawnMino(); } else { trySpawnBeetles(); if(isUnder(player.z)) trySpawnDaedra(); } }
   if(NPCS_IN_WORLD){ npcSpawnT -= dt; if(npcSpawnT<=0){ npcSpawnT = 3; trySpawnNpcs(); questTick(); } }
-  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); lavaFireTick(); }
+  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); provinceTick(); lavaFireTick(); }
   const pcx=Math.floor(player.x), pcy=Math.floor(player.y), pcz=Math.floor(player.z);
   const inRatZone = ratAllowed(pcx,pcy,pcz);
   for(let i=mobs.length-1;i>=0;i--){
@@ -9802,6 +9845,7 @@ function placeBlock(){
   if(hit.b===WBP0+2){ wbHarvest(hit.x,hit.y,hit.z); return; }          // a full woolbloom gives its wool
   if(toggleLamp(hit.x,hit.y,hit.z)) return;                 // lanterns and lamps switch on and off
   if(IS_FURN[hit.b] && SH_HALF[hit.b]===2){ sitDown(hit.x,hit.y,hit.z,SH_FACE[hit.b]); return; }
+  if(hit.b===TSIGN0 || hit.b===TSIGN0+1){ const nm = tavernNear(hit.x,hit.z); skillToast(nm ? nm.toUpperCase()+'<br><small>food, a bed, and the talk of the road</small>' : 'A tavern sign<br><small>it hangs over no tavern</small>', true); return; }
   if(hit.b===CHEST){ openChest(hit.x,hit.y,hit.z); return; }
   if(IS_BED[hit.b]){ useBed(hit); return; }
   if(hit.b === CUTTER){ openCraft(3,'cut'); return; }       // the stone cutter opens the stonecutting menu
@@ -10811,6 +10855,12 @@ function blockIcon(b, top){
       const on = k===5 ? (x>=7 && x<=8 && y>=4 && y<=12) || (x===7 && y>=12 && y<=14) : k===4 ? (y>=5 && y<=10 && x>=1 && x<=14) : k===1 ? (y>=9 && y<=11) || ((x<=2 || x>=13) && y>=3 && y<9) : k===2 ? ((x>=3 && x<=12 && y>=7 && y<=8) || (x>=3 && x<=4 && y<7) || (x>=11 && x<=12 && y<7) || (x>=3 && x<=12 && y>=8 && y<=14 && x<=4)) : (y>=7 && y<=8) || ((x<=2 || x>=13) && y<7);
       if(!on) continue;
       img.data[i]=clamp255(wood[0]); img.data[i+1]=clamp255(wood[1]); img.data[i+2]=clamp255(wood[2]); img.data[i+3]=255;
+      continue;
+    }
+    if(b===TSIGN0 || b===TSIGN0+1){                     // a hanging sign: the bar and the board
+      const bar = y>=1 && y<=2, board = y>=4 && y<=13 && x>=2 && x<=13; if(!bar && !board) continue;
+      const c = texColor(SH_BASE[b],0,0,x,15-y), k = board && (x===2 || x===13 || y===4 || y===13) ? 0.7 : bar ? 0.6 : 1;
+      img.data[i]=clamp255(c[0]*k); img.data[i+1]=clamp255(c[1]*k); img.data[i+2]=clamp255(c[2]*k); img.data[i+3]=255;
       continue;
     }
     if(IS_VINE[b]){                                     // a hanging strand in its own colour (it has no base block to borrow a texture from)

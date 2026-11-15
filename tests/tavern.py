@@ -12,7 +12,12 @@ with sync_playwright() as p:
       const S=v=>v.houses.filter(h=>h.job!=='innkeeper').map(h=>[h.job,h.x,h.z,h.F,h.w,h.d,h.r].join(':')).join('|');
       for(let rx=-5;rx<=5;rx++) for(let rz=-5;rz<=5;rz++){ const v=villageAt(rx,rz); if(!v||!v.houses) continue; o.n++; sig[rx+','+rz]=S(v);
         if(v.tavern!==undefined){ o.t++; const h=v.houses[v.tavern]; if(h.guest && h.job==='innkeeper' && v.tavern===v.houses.length-1) o.g++; names.add(tavernName(rx,rz)); } }
-      o.names=names.size;
+      o.names=names.size; o.signs=0; o.lamps=0;
+      for(let rx=-5;rx<=5;rx++) for(let rz=-5;rz<=5;rz++){ const v=villageAt(rx,rz); if(!v||v.tavern===undefined) continue; let sg=0, lp=0;
+        for(const q of v.late){ if(q[3]===TSIGN0||q[3]===TSIGN0+1) sg++; if(q[3]===LANTERN0) lp++; }
+        let found=0; for(const arr of v.cells.values()) for(let i=1;i<arr.length;i+=2) if(arr[i]===TSIGN0||arr[i]===TSIGN0+1) found++;
+        if(sg===1 && found===1) o.signs++; if(lp===2) o.lamps++; }
+      { const v=villageAt(0,0), h=v.houses[v.tavern]; o.near=[tavernNear(h.x,h.z)===tavernName(0,0), tavernNear(h.x+60,h.z)===null]; }
       worldGen=6; villageCache.clear(); o.old=0; o.same=0; o.oldTav=0;                         // the same world as an older build made it
       for(const k in sig){ const [rx,rz]=k.split(',').map(Number), v=villageAt(rx,rz); if(!v||!v.houses) continue; o.old++; if(S(v)===sig[k] && v.houses.length===sig[k].split('|').length) o.same++; if(v.tavern!==undefined) o.oldTav++; }
       worldGen=7; villageCache.clear();
@@ -20,6 +25,7 @@ with sync_playwright() as p:
       player.x=v.cx+0.5; player.z=v.cz+0.5; player.y=v.g+12; fly=true; tod=0.3; return o; }""")
     print(json.dumps(r))
     if not (r['gen']==7 and r['t']>=0.9*r['n'] and r['g']==r['t'] and r['names']>=10): bad.append('taverns per village')
+    if not (r['signs']==r['t'] and r['lamps']==r['t'] and r['near']==[True,True]): bad.append('sign and lamps')
     if not (r['old']==r['n'] and r['same']==r['n'] and r['oldTav']==0): bad.append('older worlds changed')
     pg.wait_for_timeout(5000)
     t=pg.evaluate("""()=>{ const o={}, k=mobs.find(m=>m.kind==='npc' && m.job==='innkeeper'); if(!k) return {none:1};

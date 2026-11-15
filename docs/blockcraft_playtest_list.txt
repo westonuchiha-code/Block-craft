@@ -29,10 +29,18 @@ THE LIFTED WORLD
 [ ] GPU speed on the S21 Ultra and a PC (never measured on real hardware).
 
 TAVERNS (new worlds only; seed 12345: The Laughing Boar in the spawn village, the house with two lamps hanging by its door)
-[ ] Find the tavern by its two lamps. Does it read as a tavern, or just a bigger house? (A hanging sign is the obvious next step.)
+[ ] Find the tavern by its two lamps. Does it read as a tavern, or just a bigger house? There is a hanging sign beside the lamps: use it to read the name.
 [ ] Talk to the innkeeper: RENT A ROOM (8g, the spare bed), TRADE (hot food), ASK FOR NEWS (always has another rumour).
 [ ] Come by in the late afternoon: about two villagers in three walk over and stand about inside until well after dark, then go home.
     Does the village feel more alive for it? Do they block the doorway or crowd badly?
+
+PROVINCES (every world, old or new)
+[ ] The land is now divided into named baronies, counties and marches about 1,400 blocks across. Open the map: the name is at the
+    top and the border is a faint dotted line. Walk (or take a wagon) across one: a notice, and a line in the journal.
+[ ] ASK FOR NEWS: people now say which province their village stands in.
+[ ] Hit someone in one village, then visit another village in the same province: its guards should want you too (for half as much).
+    Theft stays local. Too harsh, or right?
+[ ] Do the names feel right (the March of Lormark, the Barony of Lorwold, the Duchy of Kelmoor)?
 
 DELVES (seed 12345: the Black Hideout, a bandit den, gate at x 100, z -198, about 250 blocks north of spawn)
 [ ] Finding the gate; the walk down the stair.

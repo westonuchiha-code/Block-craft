@@ -655,3 +655,11 @@ DONE  TAVERNS (Daggerfall): every village in a NEW world has a tavern - a bigger
       Checked on 3 seeds: 111 of 112 villages have one, all with the spare bed. New test tests/tavern.py (suite is now 43).
       Screenshot: proof/tavern.png. NOT done: a hanging sign, ale, anyone sitting down (they stand).
       Full suite on this build: 43/43 (proof/suite_tavern.log).
+DONE  TAVERN SIGN: a hanging sign sticks out from the wall beside each tavern's lamps; use it to read the tavern's name. It is a real
+      block (breakable, placeable). Lamps and sign are hung after the village paths are cut (2 of 12 taverns were losing them to a path
+      cut past the door). Both renderers match (tests/gpu.py has a new tavern scene; proof/tavern_gpu_cpu.png).
+DONE  PROVINCES (Daggerfall's regions): the land is divided into named baronies, counties, marches and duchies, about 1,400 blocks across
+      with 5-9 villages each. Works in every world, old or new (nothing is built; it is only which seat you stand nearest). Crossing a
+      border shows a notice and writes the journal; the map names the province and dots its border; villagers say which province they
+      are in. LAW: an assault or murder is now also owed, at half value, in every village of the province (guards there come for you);
+      theft stays local; paying or serving time clears it. New test tests/province.py (suite is now 44). Screenshot: proof/province_map.png.

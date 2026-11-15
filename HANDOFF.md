@@ -94,10 +94,15 @@ runs before optimising.
 - **World shape, 2026-11-14.** New worlds (`worldGen` 6) are lifted 40 blocks: `setWorldShape(40)` sets `YOFF`, `SEA` (56), `TOP_BUILD` (115),
   `TREELINE`, `SNOW_LINE`, cloud height (`uCloudY` in the shader) and the rat/cat/deep lines. These are now `let`, not `const`. `surfaceH`
   works in the old frame (`SEA0` = 16) and adds `YOFF`. Ores, lava, tuff stay counted from bedrock. Older worlds: `setWorldShape(0)`.
+- **Provinces, 2026-11-15.** No world generation: `provinceAt(x,z)` is the nearest of one jittered seat per 1536-block square (`PREG`), cached per
+  64-block square; `provinceOfVillage`, `provinceTick` (border toast + journal, `provSeen` in the save), the name and dotted border in `drawMap`.
+  Law: `crime()` also adds half of an assault or murder under the province's key (`'P'+x+','+z`) in `bounty`; `bountyOf(v)` is the larger of
+  the village's and the province's claim; paying or serving time clears both.
 - **Taverns, 2026-11-15.** New worlds (`worldGen` 7) get one tavern per village: in `planVillage`, after the sewer, a 9x7 `buildHouse(...,'innkeeper')`
   sited with its own dice (`vRng` from `SEED+470`) so every other building is exactly where an older build puts it (`tests/tavern.py` proves it).
   `V.tavern` is its index in `V.houses`; the house record has `guest` (the spare bed a rented room sets as `bedSpawn`). `INN_LOOK`, `SHOPS.innkeeper`,
   `tavernName(rx,rz)`, `tavernOf(m)`, `tavernSpot`, `npcDrinks`, `tavernHour()`; the evening branch in `updateNpc` sits just before "night: home to bed".
+  The sign is `TSIGN0` (2 ids); lamps and sign go in `V.late` and are put after the paths are cut. `tavernNear(x,z)`.
   `npcGoTo` takes a search budget (7000 for the walk across the village, 1500 otherwise).
 - **Delves (cavern dungeons), prototype 2026-11-14.** New worlds (`worldGen` 5) get great caverns with ruins: `delvePlan` / `delveBlock` /
   `delveTick` beside the crypt code; keys start with `D` and share `cryptState` / `cryptSeen` (`siteByKey`). See the task log for what is

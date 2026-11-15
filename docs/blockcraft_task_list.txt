@@ -698,3 +698,10 @@ DONE  PEDLARS ON THE ROADS: by day, now and then, a pedlar sets out on a road ne
       Full suite on this build: 48/49 on the run (proof/suite_society.log). The one failure was the tavern TEST itself: a pedlar now
       walks into its village and the test's own helper assumed everyone there has a house. Test fixed (and pedlars switched off in the
       tests that inspect villagers); rerun alone: tavern ok, law ok, people ok, guilds ok. The game was not changed.
+DONE  NOTICE BOARD, PAPER: the board now has three sheets of paper with lines of writing pinned to its faces, drawn the same by both
+      renderers (proof/board_gpu_cpu.png), and a proper icon.
+DONE  HONOURS: carrying out a ruler's posted bounty is remembered in that province. One makes you a Friend of it, three a Knight (your
+      fines there are halved), six its Champion; each also raises your standing a little in every village of the province you have
+      visited. Announced, journaled, listed under STANDING, mentioned on the notice board, saved. tests/board.py covers it.
+DONE  SAFEGUARD: a villager's long path search (to the tavern, or home from it) that finds no way now waits six seconds before trying
+      again instead of two, so a walled-in tavern cannot make the game hitch.

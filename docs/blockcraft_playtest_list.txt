@@ -53,7 +53,9 @@ RULERS, THE NOTICE BOARD, BLESSINGS, PEDLARS
     about. Flavour only so far. Do the names and titles sit right (Margrave Ansel, Baroness Sibyl, Lord Sheriff Leofric)?
 [ ] NEW WORLDS: a notice board stands at the edge of each village plaza. USE it: the place, province, ruler, date and next holiday;
     READ THE NOTICES marks a place on your map once a day; POSTED BOUNTY is the ruler's price on the nearest barrow or delve, which you
-    report to the village guard. It is plain wood with no paper on it: does it read as a notice board?
+    report to the village guard. It has three sheets of paper pinned to it. Does it read as a notice board from across the plaza?
+[ ] Carry out a ruler's bounty: you become a Friend of that province (three: a Knight, fines there halved; six: its Champion),
+    and every village of the province you have visited thinks a little better of you. Is that reward enough to care about?
 [ ] A cleric will bless you for 25 gold: until the sunrise after next, you heal half a heart every ten seconds. Worth it? Too strong?
 [ ] By day, stand near a road outside a village for a minute or two: a pedlar should come walking along it. Stop him and trade.
     Does he keep to the road? Is one at a time right, or should the roads be busier?

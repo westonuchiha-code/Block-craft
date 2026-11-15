@@ -104,7 +104,8 @@ runs before optimising.
 - **Rulers, notice board, blessings, pedlars, 2026-11-15.** `provinceInfo(P)` adds `ruler`, `rival`, `rivalRuler` (all derived). The notice board is
   `NOTICE0` (2 ids), put in `V.late` at `V.board` for `worldGen` 7; `openBoard` opens the talk panel with a pseudo-person (`m.board`), handled at the
   top of `renderTalk` and `talkAction` (`boardHead`, `boardAction`, `boardOffer`, `boardGuard`); its bounty is an ordinary `crypt` quest given in the
-  guard's name (`q.board`). Blessing: `blessDay`, `blessed()`, `blessCost()`, `blessTick()` (saved as `bless`). Pedlar: `travellerTick` (once a second,
+  guard's name (`q.board`); finishing one calls `provinceDeed` (`provDeeds` in the save, `honourOf`, `honourTitle`; a Knight's fines are halved in
+  `fineOf`). The papers on the board are `noticePaper` (CPU) and shaped kind 9 (shader): keep the two tables the same. Blessing: `blessDay`, `blessed()`, `blessCost()`, `blessTick()` (saved as `bless`). Pedlar: `travellerTick` (once a second,
   by day, one at a time), `pedlarSpawnAt`, `roadWalk` (the `m.road` branch in `updateNpc`), `SHOPS.pedlar`; he has no village, so no work and no crime.
 - **The horse, 2026-11-15.** `horse` = `{x,y,z,yaw,mounted}` in the save (one horse). It is a `BEAST` of kind `horse` with `tame:true` (no AI, cannot be hurt,
   never counted as wildlife) and `m.mine`; its boxes are in `beastBoxes`. `buyHorse` (farmer), `mountHorse` (use), `dismountHorse` (sneak, death),

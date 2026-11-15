@@ -25,12 +25,19 @@ with sync_playwright() as p:
       const G=boardGuard(0,0); o.guard=[G.home===q.giver, G.name===q.giverName];
       cryptCleared(q.crypt); o.done=q.state;
       openBoard(B[0]+40,B[2]); o.far=document.getElementById('talkMenu').classList.contains('show');
+      // honours: the first bounty makes you a Friend of the province, the third a Knight (fines halved), and it is saved
+      const P=provinceInfo(provinceOfVillage([0,0])), g0=gold, j0=journal.length; bounty={}; crime([0,0],'assault'); const f0=fineOf([0,0]);
+      finishQuest(q,true); o.hon1=[provDeeds[P.key], honourOf(P.key), honourTitle(P)==='Friend of '+P.name, gold-g0===q.reward, journal.slice(j0).some(e=>e.t.includes('names you Friend of'))];
+      provinceDeed([0,0]); provinceDeed([0,0]); o.hon3=[honourOf(P.key), fineOf([0,0])*2===f0, renderQuests().includes('Knight of '+P.name)];
+      openBoard(B[0],B[2]); o.known=html().includes('You are known here as Knight of'); talkAction('bye'); bounty={};
+      saveWorld(); o.saved=JSON.parse(localStorage.getItem(wkey(currentWorld,'world'))).provDeeds[P.key]===3;
       return o; }""")
     print(json.dumps(r)); print(json.dumps(t)); print(errs)
     if not (r['n']>=10 and r['ok']==r['n']): bad.append('a board in every village')
     if not (t['block']==[True,True,True] and t['open'] and 'Notice board' in t['title'] and 'IRONHOLD' in t['head'] and ' rules.' in t['head'] and 'Greening' in t['head']): bad.append('the board opens')
     if not (t['read1']==[1,True] and t['read2']): bad.append('notices')
     if not (t['offer'] and t['took'][0]==1 and t['took'][1]=='crypt' and t['took'][2]==1 and t['took'][5] and t['took'][6] and t['again'] and t['closed'] and t['guard']==[True,True] and t['done']=='done' and t['far'] is False): bad.append('the bounty')
+    if not (t['hon1']==[1,1,True,True,True] and t['hon3']==[2,True,True] and t['known'] and t['saved']): bad.append('honours')
     pg.screenshot(path='/tmp/board.png')
     b.close()
 print('BOARD TEST FAILED', bad) if bad else print('board ok')

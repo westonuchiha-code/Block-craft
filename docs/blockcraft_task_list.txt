@@ -611,3 +611,4 @@ DONE  TRAVEL CHOICES (Daggerfall's): each destination on the wagon map now has t
       RECKLESS: about 55% of the price and 60% of the hours; you arrive hungry, and there is a risk (8% plus 4% per 100 blocks, at most 50%)
       that robbers take 10-30% of your purse or the wagon overturns and you lose 3-6 health. Either way it goes in the journal.
       tests/travel.py (39 scripts in the suite).
+DONE  Suite checkpoint on the people + travel build: see proof/suite_travel.log.

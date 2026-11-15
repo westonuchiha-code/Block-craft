@@ -728,3 +728,8 @@ FIXED NO GUARD: about 40% of villages had no guard at all, so nobody there could
 FIXED THE INNKEEPER stood in the cell just inside the tavern door, in the patrons' way. Behind the bar now, evening and night.
 FIXED NO LETTER on seed 777: that world has no village in its first region, so it got no opening letter. The letter now comes from the
       nearest village with a tavern, and says how far and which way if you wake in the wild. (Suite is now 52.)
+      Full suite on this build: 52/52 (proof/suite_soak.log).
+DONE  SOAK TEST EXTENDED (the game file was not changed): it now also plans every village, crypt and delve across a 3,000-block square,
+      visits eight far places by day and night with wildlife on, digs four blocks and places three, crafts every recipe (294 of 296
+      make their item; the other two need a station), eats, kills a spider with a sword, fires the crossbow; and each step must
+      prove it did its job, not merely not crash. Both seeds: no errors.

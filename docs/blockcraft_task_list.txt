@@ -646,3 +646,4 @@ DONE  HELD-ITEM AUDIT: looked at all 209 kinds of thing in the hand (contact she
       Same hole closed for the gate field and fire. FIXED doors, windows, lattice windows, stained windows and iron bars: they were held
       edge-on so you only saw a thin strip; they are now held as their flat item picture, as Minecraft holds doors, panes and bars.
       Everything else sits by the one shared Minecraft transform. New test tests/hand.py (suite is now 42). Screenshot: proof/held_thin.png.
+      Full suite on this build: 42/42 (proof/suite_hand.log).

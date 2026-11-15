@@ -111,6 +111,12 @@ runs before optimising.
   kind `intro` whose giver is the first village's innkeeper; `questCount()` leaves it out of `QUEST_MAX`; it is turned in with SHOW THE LETTER.
   `hunterTick` / `hunterSpawn` (once a second): a `newBandit` marked `m.hunter` while `bounty[province key] >= 150`, outside villages, one at a time;
   `npcChase` gives a hunter a 3000-node search.
+- **Planning ahead on another core, 2026-11-15.** The first chunk generated in new country used to freeze the game for 0.2-0.5 s (planning that
+  region's villages, road edges, crypt and delve on the spot; delves had doubled it). `PLN` / `plStart` / `plTick` / `plGot` on the page and
+  `planJob` in a worker (the same script: `wkBlobUrl`, shared with the render workers) now plan the 5x5 delve regions round the player ahead of
+  time and install the results into `villageCache`, `cryptByNum` / `cryptCache`, `roadEdgeCache`, `delveByNum` only where nothing is there yet.
+  Plans depend only on seed, `worldGen` and `YOFF`, so the worker's are identical (`tests/plan.py` compares all of them); if one is not ready
+  the game plans on the spot as before. ANY NEW PLANNER OR CACHE that chunk generation consults should be added to `planJob` and `plGot`.
 - **Found by the soak test and the flaky tavern test, 2026-11-15.** (1) `ratWalk`: people are pushed apart, so several making for one cell (a doorway)
   could deadlock, each kept off its exact middle; a waypoint now counts as reached from further away the longer a person is held off it
   (`m.wpT`). (2) A new world's village always has a guard (`planVillage`, end): about 40% had none, so nobody there could arrest you. (3) The

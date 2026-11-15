@@ -5370,6 +5370,75 @@ function renderOverlay(){
 let R_Y0 = 0, R_STEP = 1;          // a render worker draws every R_STEP-th row starting at R_Y0; the game itself draws them all
 
 // ---------- multi-core rendering, part 2: starting the workers, handing out a frame, putting the rows back together ----------
+// the script a worker runs: this same file, with the page's objects stubbed out (render workers and the planning worker both use it)
+function wkBlobUrl(lvl){
+    const pre = `self.__BC_WORKER=true; self.__now=0;
+      const __stub = new Proxy(function(){}, { get:(t,k)=> k===Symbol.toPrimitive ? ()=>NaN : k===Symbol.iterator ? function*(){} : k==='then' ? undefined : __stub, apply:()=>__stub, construct:()=>__stub, set:()=>true, has:()=>false });
+      var document = __stub, window = self, alert = ()=>{}, requestAnimationFrame = ()=>0, Image = __stub, matchMedia = ()=>__stub;
+      var localStorage = { getItem:k=> k==='bc_res' ? '${lvl}' : null, setItem(){}, removeItem(){}, key(){ return null; }, length:0 };
+      self.setTimeout = ()=>0; self.setInterval = ()=>0; self.addEventListener = ()=>{};
+      try{ Object.defineProperty(self,'performance',{ value:{ now:()=>self.__now }, configurable:true }); }catch(e){}
+      try{ Object.defineProperty(self.navigator,'getGamepads',{ value:()=>[], configurable:true }); }catch(e){}
+    `;
+    const src = Array.from(document.querySelectorAll('script')).map(sc=>sc.textContent).join('\n;\n');
+    return URL.createObjectURL(new Blob([pre, src], { type:'text/javascript' }));
+}
+// ---------- planning ahead on another core ----------
+// The first time new land is touched, its villages, roads, crypts and delve have to be planned, and that used to happen all at once in
+// the middle of a frame (a freeze of a tenth to a third of a second on a PC, more on a phone, each time you crossed into new country).
+// One extra worker now does that planning for the land around you before you get there and hands the finished plans over; they are
+// put into the same caches the game would have filled itself. A plan is the same whoever works it out (it depends only on the seed
+// and the world version), so nothing changes but when the work is done; and if a plan is not ready in time, the game works it out
+// on the spot exactly as before.
+const PLN = { w:null, busy:false, asked:new Set(), fail:false, got:0, world:'' };
+function plStart(){
+  if(IS_WORKER || PLN.w || PLN.fail || typeof Worker==='undefined') return;
+  try{ PLN.w = new Worker(wkBlobUrl(resLevel)); PLN.w.onmessage = ev=>plGot(ev.data); PLN.w.onerror = ()=>{ PLN.fail = true; try{ PLN.w.terminate(); }catch(e){} PLN.w = null; }; }
+  catch(e){ PLN.fail = true; PLN.w = null; }
+}
+function plTick(){                                             // once a second: ask for the nearest region round you that nobody has planned yet
+  if(IS_WORKER || worldGen<4 || testWorld || !currentWorld || isUnder(player.z) || isTestZ(player.z)) return;
+  plStart(); if(!PLN.w || PLN.busy) return;
+  const wk = SEED+':'+worldGen+':'+YOFF; if(PLN.world!==wk){ PLN.world = wk; PLN.asked.clear(); }
+  const prx = Math.floor(player.x/DRS), prz = Math.floor(player.z/DRS); let best = null, bd = 1e18;
+  for(let a=-2;a<=2;a++) for(let c=-2;c<=2;c++){ const rx = prx+a, rz = prz+c, k = rx+','+rz; if(PLN.asked.has(k)) continue;
+    const d = Math.hypot((rx+0.5)*DRS-player.x, (rz+0.5)*DRS-player.z); if(d<bd){ bd = d; best = [rx,rz,k]; } }
+  if(!best) return;
+  PLN.asked.add(best[2]); PLN.busy = true;
+  try{ PLN.w.postMessage({ plan:1, seed:SEED, gen:worldGen, yoff:YOFF, drx:best[0], drz:best[1] }); }catch(e){ PLN.busy = false; PLN.fail = true; }
+}
+function plGot(d){
+  PLN.busy = false; if(!d || !d.plan) return;
+  if(d.err){ PLN.err = d.err; return; }
+  if(d.seed!==SEED || d.gen!==worldGen || d.yoff!==YOFF) return;                        // (an answer for a world you have since left)
+  for(const [k,v] of d.villages) if(!villageCache.has(k)) villageCache.set(k, v);
+  for(const [k,P] of d.crypts) if(!cryptByNum.has(k)){ cryptByNum.set(k, P); if(P){ const rx = Math.floor((k+65536)/131072), rz = k-rx*131072; cryptCache.set(rx+','+rz, P); } }
+  for(const [k,E] of d.edges) if(!roadEdgeCache.has(k)) roadEdgeCache.set(k, E);
+  for(const [k,P] of d.delves) if(!delveByNum.has(k)) delveByNum.set(k, P);
+  PLN.got++;
+}
+// in the planning worker: plan one region's surroundings, and send back everything planned so far that has not been sent yet
+function planJob(S){
+  const out = { plan:1, seed:S.seed, gen:S.gen, yoff:S.yoff, drx:S.drx, drz:S.drz, villages:[], crypts:[], edges:[], delves:[] };
+  try{
+    if(!planJob.sent || SEED!==S.seed || worldGen!==S.gen || YOFF!==S.yoff){
+      SEED = S.seed; worldGen = S.gen; setWorldShape(S.yoff); planJob.sent = new Set();
+      surfaceCache.clear(); colCache.clear(); treeCache.clear(); villageCache.clear(); cryptCache.clear(); cryptByNum.clear(); delveByNum.clear(); roadEdgeCache.clear(); roadChunkCache.clear();
+      roadMemoCx = 1e9; cryptMemoRx = 1e9; delveMemoRx = 1e9; }
+    const x0 = S.drx*DRS-96, x1 = (S.drx+1)*DRS+96, z0 = S.drz*DRS-96, z1 = (S.drz+1)*DRS+96;
+    for(let rx=Math.floor(x0/VREG); rx<=Math.floor(x1/VREG); rx++) for(let rz=Math.floor(z0/VREG); rz<=Math.floor(z1/VREG); rz++) villageAt(rx,rz);
+    for(let rx=Math.floor(x0/CRS); rx<=Math.floor(x1/CRS); rx++) for(let rz=Math.floor(z0/CRS); rz<=Math.floor(z1/CRS); rz++) cryptPlan(rx,rz);
+    for(let cx=Math.floor(x0/CS); cx<=Math.floor(x1/CS); cx++) for(let cz=Math.floor(z0/CS); cz<=Math.floor(z1/CS); cz++) roadChunk(cx,cz);      // (this is what works out the road edges)
+    delvePlan(S.drx, S.drz);
+    const sent = planJob.sent;
+    for(const [k,v] of villageCache) if(!sent.has('v'+k)){ sent.add('v'+k); out.villages.push([k,v]); }
+    for(const [k,P] of cryptByNum) if(!sent.has('c'+k)){ sent.add('c'+k); out.crypts.push([k,P]); }
+    for(const [k,E] of roadEdgeCache) if(!sent.has('e'+k)){ sent.add('e'+k); out.edges.push([k,E]); }
+    for(const [k,P] of delveByNum) if(!sent.has('d'+k)){ sent.add('d'+k); out.delves.push([k,P]); }
+    if(roadChunkCache.size>2000) roadChunkCache.clear();
+  }catch(e){ out.err = String(e && e.message || e); }
+  return out;
+}
 function wkStop(){
   for(const w of WK.list) try{ w.terminate(); }catch(e){}
   WK.list.length = 0; WK.on = false; WK.busy = false; WK.ready = 0;
@@ -5389,16 +5458,7 @@ function wkStart(){
     const cores = navigator.hardwareConcurrency || 4;
     const n = Math.max(2, Math.min(4, cores-1));
     let lvl = resLevel;
-    const pre = `self.__BC_WORKER=true; self.__now=0;
-      const __stub = new Proxy(function(){}, { get:(t,k)=> k===Symbol.toPrimitive ? ()=>NaN : k===Symbol.iterator ? function*(){} : k==='then' ? undefined : __stub, apply:()=>__stub, construct:()=>__stub, set:()=>true, has:()=>false });
-      var document = __stub, window = self, alert = ()=>{}, requestAnimationFrame = ()=>0, Image = __stub, matchMedia = ()=>__stub;
-      var localStorage = { getItem:k=> k==='bc_res' ? '${lvl}' : null, setItem(){}, removeItem(){}, key(){ return null; }, length:0 };
-      self.setTimeout = ()=>0; self.setInterval = ()=>0; self.addEventListener = ()=>{};
-      try{ Object.defineProperty(self,'performance',{ value:{ now:()=>self.__now }, configurable:true }); }catch(e){}
-      try{ Object.defineProperty(self.navigator,'getGamepads',{ value:()=>[], configurable:true }); }catch(e){}
-    `;
-    const src = Array.from(document.querySelectorAll('script')).map(sc=>sc.textContent).join('\n;\n');
-    const url = URL.createObjectURL(new Blob([pre, src], { type:'text/javascript' }));
+    const url = wkBlobUrl(lvl);
     WK.n = n; WK.ready = 0;
     for(let i=0;i<n;i++){
       const w = new Worker(url);
@@ -6497,6 +6557,7 @@ function wkWorkerInit(){
   self.onmessage = e=>{
     try{
       const S = e.data;
+      if(S.plan){ let out = planJob(S); try{ self.postMessage(out); }catch(err){ self.postMessage({ plan:1, err:'could not send: '+(err && err.message) }); } return; }
       if(S.reset){ SEED = S.seed; texMemo = new Array(256*3*3*256*4); DOOR_TEX.length = 0; chunks.clear(); models.clear(); plantCache.clear && plantCache.clear(); }
       for(const k of S.del) chunks.delete(k);
       for(const c of S.add){ const ch = { cx:c.cx, cz:c.cz, data:c.data, bio:c.bio, top:new Uint8Array(CS*CS), light:c.light }; computeDerived(ch, true); chunks.set(chunkKey(c.cx,c.cz), ch); }
@@ -9311,7 +9372,7 @@ function updateMobs(){
   if(catSpawnT<=0){ catSpawnT = catnipHere ? 4.5 : 9; if(!underNow) trySpawnCats(); }
   ogreSpawnT -= dt; if(ogreSpawnT<=0){ ogreSpawnT = 20; if(!underNow){ trySpawnOgre(); trySpawnMino(); } else { trySpawnBeetles(); if(isUnder(player.z)) trySpawnDaedra(); } }
   if(NPCS_IN_WORLD){ npcSpawnT -= dt; if(npcSpawnT<=0){ npcSpawnT = 3; trySpawnNpcs(); questTick(); } }
-  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); provinceTick(); horseTick(); blessTick(); travellerTick(); hunterTick(); lavaFireTick(); }
+  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); provinceTick(); horseTick(); blessTick(); travellerTick(); hunterTick(); plTick(); lavaFireTick(); }
   const pcx=Math.floor(player.x), pcy=Math.floor(player.y), pcz=Math.floor(player.z);
   const inRatZone = ratAllowed(pcx,pcy,pcz);
   for(let i=mobs.length-1;i>=0;i--){

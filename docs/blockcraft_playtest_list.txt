@@ -49,6 +49,11 @@ TAVERNS (new worlds only; seed 12345: The Laughing Boar in the spawn village, th
 [ ] Come by in the late afternoon: about two villagers in three walk over and stand about inside until well after dark, then go home.
     Does the village feel more alive for it? Do they block the doorway or crowd badly?
 
+SMOOTHNESS WHEN TRAVELLING (worth a look on the phone especially)
+[ ] Walking, and above all riding, into country you have never seen used to freeze the game for a fraction of a second each time a
+    new region began. That planning is now done in the background ahead of you. Ride in a straight line for a few minutes: is it
+    smooth? (If you go faster than the planning, by wagon or a very long gallop, the old short freeze can still happen.)
+
 THE OPENING LETTER, AND BOUNTY HUNTERS
 [ ] A new world starts with a letter (journal + quest list) sending you to the tavern keeper, who feeds you, hands over 25 gold and
     points you at the notice board and the news. Is that the right amount of hand-holding? Is the wording right for the game?

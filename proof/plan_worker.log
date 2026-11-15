@@ -1,0 +1,4 @@
+worker [25, 25, False, '', True]
+compared (sent, also worked out here, different): {"villages": [263, 263, 0], "crypts": [122, 122, 0], "edges": [77, 77, 0], "delves": [25, 25, 0]}
+first chunk of new land, ms: {"warm": [15, 9.8, 9.4, 11.8], "cold": [517.5, 192.1, 299, 187.9]} []
+plan ok

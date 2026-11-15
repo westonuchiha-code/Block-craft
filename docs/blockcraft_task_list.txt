@@ -705,3 +705,4 @@ DONE  HONOURS: carrying out a ruler's posted bounty is remembered in that provin
       visited. Announced, journaled, listed under STANDING, mentioned on the notice board, saved. tests/board.py covers it.
 DONE  SAFEGUARD: a villager's long path search (to the tavern, or home from it) that finds no way now waits six seconds before trying
       again instead of two, so a walled-in tavern cannot make the game hitch.
+      Full suite on this build: 49/49 (proof/suite_honours.log).

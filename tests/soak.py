@@ -57,7 +57,7 @@ STEPS = [
     updateHotbar(); return [n, made]; }"""),
  ('eat, cast, fight, shoot', """async ()=>{ const sleep=t=>new Promise(r=>setTimeout(r,t)); const o={};
     food=5; inv[STEAK]=3; HOTBAR[3]=STEAK; sel=3; updateHotbar(); placeHeld=true; for(let k=0;k<20 && food===5;k++) await sleep(500); placeHeld=false; o.food=food;
-    if(book && book.length){ mp=mpMax(); bookSel=0; o.cast=castBook(); await sleep(600); } else o.cast='no spell known';
+    { const keep=book, n0=0; let n=0; for(const fx in SPELL_FX) for(let pw=0;pw<3;pw++){ book=[{fx,pow:pw}]; bookSel=0; mp=999; castCool=0; if(castBook()) n++; await sleep(120); } book=keep; bookSel=0; mp=mpMax(); o.cast=n; await sleep(1200); }      // every spell at every strength
     { const X=window.__X; player.x=X[0]-3.5; player.z=X[1]+0.5; player.y=colInfo(X[0]-4,X[1]).h+1; player.yaw=-1.57; player.pitch=0; await sleep(600); }
     const bx=Math.floor(player.x+Math.sin(player.yaw)*2), bz=Math.floor(player.z-Math.cos(player.yaw)*2), by=Math.round(player.y);
     const m=newBeast('spider', bx, by, bz, 0); mobs.push(m); inv[IRON_SWORD]=1; HOTBAR[4]=IRON_SWORD; sel=4; updateHotbar();
@@ -91,7 +91,7 @@ with sync_playwright() as p:
             if st!=[False,False,False]: bad.append(seed+': left paused or a screen open after '+name+' '+str(st)); pg.evaluate("()=>{ if(talkNpc) closeTalk(); paused=false; craftOpen=false; }")
             if len(errs)>n0: bad.append(seed+': error during '+name)
             print(seed, '|', name, '|', json.dumps(r)[:200], '|', errs[n0:][:2])
-            want={ 'dig and build': lambda r: isinstance(r,list) and r[1]>=1 and r[2]>=1, 'craft everything': lambda r: r[1]>=0.9*r[0], 'eat, cast, fight, shoot': lambda r: r['food']>5 and r['killed'],
+            want={ 'dig and build': lambda r: isinstance(r,list) and r[1]>=1 and r[2]>=1, 'craft everything': lambda r: r[1]>=0.9*r[0], 'eat, cast, fight, shoot': lambda r: r['food']>5 and r['killed'] and r['cast']>=15,
                    'plan the whole region': lambda r: r[0]>=30 and r[1]>=0.9*r[0] and r[3]>=3, 'crime and the law': lambda r: str(r[0]).startswith('paid true'), 'buy and ride a horse': lambda r: r is True,
                    'talk to everyone': lambda r: r[0]>=4 and r[1]>=30, 'a delve': lambda r: isinstance(r,str) and r!='no delve', 'the Underworld': lambda r: r is True }
             if name in want:

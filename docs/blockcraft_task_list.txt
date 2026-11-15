@@ -733,3 +733,6 @@ DONE  SOAK TEST EXTENDED (the game file was not changed): it now also plans ever
       visits eight far places by day and night with wildlife on, digs four blocks and places three, crafts every recipe (294 of 296
       make their item; the other two need a station), eats, kills a spider with a sword, fires the crossbow; and each step must
       prove it did its job, not merely not crash. Both seeds: no errors.
+DONE  MANY-SEEDS TEST (tests/seeds.py): plans every village, crypt and delve over a wide area on six more seeds and checks the promises
+      hold everywhere. Run by hand on eight seeds first: 354 villages, every one with a guard and a notice board, 351 with a tavern,
+      every world with its opening letter, no errors. The soak now also casts every spell at every strength (15 of 15). Suite: 53.

@@ -29,6 +29,8 @@ PLAY = r"""async ()=>{ beastSpawnT=1e9; ogreSpawnT=1e9; hurt=function(){}; const
   quests.push({ id:99, kind:'crypt', delve:1, crypt:P.key, cname:P.name, state:'active', at:[P.ex,P.ez], reward:400, days:8, rep:25 });
   const boss=mobs.find(m=>m.master && m.crypt===P.key); o.master=boss?boss.kind:null; if(boss) spellDamage(boss, 1e6);
   o.cleared=!!(cryptState[P.key] && cryptState[P.key].cleared); o.quest=quests.find(q=>q.id===99).state; o.site=siteByKey(P.key).name===P.name;
+  // the automap: standing in a chamber notes it; underground the map is the delve, on the surface it is the land
+  o.automap=[delveHere()===P, (delveSeen[P.key]||[]).includes(P.heart)]; openMap(); o.automapSide=document.getElementById('mapSide').innerText.includes('chambers you have stood in'); closeMap();
   // the heirloom job: the cup is put in the shrine chest when the job is taken, and can be carried back
   let relic=null; const npc={id:1, home:'hr', name:'Edda', job:'villager', vc:[P.ex-150,P.ez+40], village:null, x:P.ex-150, z:P.ez+40};
   cryptState={}; for(let id=1;id<600 && !relic;id++){ npc.id=id; const q=questOffer(npc); if(q && q.relic) relic=q; }
@@ -70,7 +72,7 @@ with sync_playwright() as p:
         if not ok: bad.append(d['name'])
     if len(r)<3: bad.append('too few delves: %d' % len(r))
     g=pg.evaluate(PLAY); print('play', json.dumps(g))
-    if not (g['offer'] and g['seen'] and g['awake']>0 and g['chests']=='chest,chest' and min(g['loot'])>0 and g['master'] and g['cleared'] and g['quest']=='done' and g['site'] and g['relicOffer'] and g['idFree'] and g['inChest']==1 and g['canHandIn'] and g['goal'] and g['relicDone'] and g['banditDelve'] and g['bandits']>=3 and g['banditsAngry'] and g['banditsHit'] and g['chief'] and g['noTalk'] and g['banditCleared'] and g['rescueOffer'] and g['lostFound'] and g['lostTalk'] and g['following'] and g['keepsClose'] and g['rescued'] and g['rescueGoal'] and g['walkedOff'] and g['camp'] and g['hermit'] and g['campQuiet'] and g['campBlocks']=='bed,barrel,lantern,crate' and g['hermitWork'] and g['hermitTalk'] and g['hermitShop']): bad.append('play')
+    if not (g['offer'] and g['seen'] and g['awake']>0 and g['chests']=='chest,chest' and min(g['loot'])>0 and g['master'] and g['cleared'] and g['quest']=='done' and g['site'] and g['relicOffer'] and g['idFree'] and g['inChest']==1 and g['canHandIn'] and g['goal'] and g['relicDone'] and g['automap']==[True,True] and g['automapSide'] and g['banditDelve'] and g['bandits']>=3 and g['banditsAngry'] and g['banditsHit'] and g['chief'] and g['noTalk'] and g['banditCleared'] and g['rescueOffer'] and g['lostFound'] and g['lostTalk'] and g['following'] and g['keepsClose'] and g['rescued'] and g['rescueGoal'] and g['walkedOff'] and g['camp'] and g['hermit'] and g['campQuiet'] and g['campBlocks']=='bed,barrel,lantern,crate' and g['hermitWork'] and g['hermitTalk'] and g['hermitShop']): bad.append('play')
     print(errs); b.close()
 print('DELVE TEST FAILED:', bad) if bad else print('delves ok')
 sys.exit(1 if (bad or errs) else 0)

@@ -35,6 +35,7 @@ DELVES (seed 12345: the Black Hideout, a bandit den, gate at x 100, z -198, abou
 [ ] The master fight (bandit chief, brood mother or Crypt Lord). Three kinds of delve: bandits, spiders, the dead.
 [ ] Bandits are people who attack on sight. Do they read as bandits? Too many, too few?
 [ ] Digging shortcuts: fun or does it spoil it?
+[ ] Open the MAP underground: it becomes an automap of the delve. Does it help without giving too much away?
 [ ] Delves are about 1 per 9 regions of 256 blocks. Too rare?
 
 JOURNAL AND QUESTS

@@ -631,3 +631,9 @@ DONE  The game had no sound at all. Added a full set of effects, all synthesized
 TESTED tests/sound.py (41 scripts in the suite): all 37 effect variants render a real signal that neither clips nor is silent; each game event
       triggers its sound exactly once; the materials are classified right; the volume button cycles and saves.
 NOT TESTED  How any of it SOUNDS. No one has heard it. He must judge every effect by ear; expect tuning. No music.
+DONE  Suite checkpoint on the sound build: 41 of 41 pass (proof/suite_sound.log). That build was sent to him.
+DONE  AUTOMAP (Daggerfall's): open the map while underground in a delve and it shows that delve, not the land: every chamber you have stood in
+      (coloured by depth, labelled ruin / pool / pillars / camp / SHRINE), the tunnels between chambers you know, a dotted stub with a "?" for
+      each passage you have not followed, the gate and stair, your position and facing, "N of M chambers found" and how far below the gate you are.
+      Chambers are noted as you walk (delveSeen, saved with the world). On the surface the map is the land as before.
+      Covered by tests/delve.py. Screenshot: proof/automap.png.

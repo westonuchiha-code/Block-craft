@@ -1,0 +1,28 @@
+{
+  "name": "blockcraft",
+  "productName": "Blockcraft",
+  "version": "0.1.0",
+  "description": "Blockcraft: a voxel sandbox RPG (desktop build)",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "sync": "node sync.js",
+    "start": "node sync.js && electron .",
+    "test": "node sync.js && electron . --selftest",
+    "dist:win": "node sync.js && electron-builder --win portable nsis",
+    "dist:linux": "node sync.js && electron-builder --linux AppImage"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.blockcraft.game",
+    "productName": "Blockcraft",
+    "files": ["main.js", "preload.js", "game/**/*"],
+    "directories": { "output": "dist" },
+    "win": { "target": ["portable", "nsis"] },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
+    "linux": { "target": ["AppImage"], "category": "Game" }
+  }
+}

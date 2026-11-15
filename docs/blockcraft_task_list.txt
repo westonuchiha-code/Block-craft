@@ -591,3 +591,14 @@ DONE  5. HALF A BLOCK ABOVE SLABS. Walkers (people, cats, rats) now settle onto 
 TESTED tests/gait.py (38 scripts in the suite): all of the above by measurement. GPU = CPU in all 8 scenes with shadows in; multi-core = single (0).
       Pictures: proof/npc_before_after.png (previous build left, this build right).
 NOT DONE  Shadows are a round patch under the feet, not a sun-direction silhouette. Animals keep their old leg timing (only people were retimed).
+
+== DESKTOP (WINDOWS / PC) SHELL (2026-11-15) ==
+DONE  desktop/: an Electron shell around the one-file game. Full screen, no menu bar, F11 / Alt+Enter toggles, saves in the app's own
+      profile folder, one instance at a time. "npm start" runs it, "npm run dist:win" makes a portable .exe and an installer,
+      "npm test" is a self-test (makes a world, checks it runs and saves, screenshot). See desktop/README.md.
+TESTED On Linux in the build sandbox: starts, makes a world, ~27 frames a second on the CPU renderer (no graphics card here), saves, no errors
+      (proof/desktop_selftest.png). An unpacked Windows build was produced from Linux (about 110 MB zipped).
+NOT TESTED  Nothing has been run on Windows. The GitHub workflow (.github/workflows/desktop-build.yml, manual start only) has never been run.
+NOT DONE  icon, Steam integration, code signing.
+SKIPPED  third-person held items using the new 3D models: the body renderer only draws boxes, so it would need one box per sprite pixel
+      in both renderers. Left as the old simple boxes.

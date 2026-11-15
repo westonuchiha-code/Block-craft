@@ -1,0 +1,25 @@
+# Builds the Windows version of Blockcraft (a portable .exe and an installer) from desktop/.
+# It runs only when started by hand: GitHub -> Actions -> "Desktop build (Windows)" -> Run workflow.
+# When it finishes, the files are under "Artifacts" on that run's page.
+name: Desktop build (Windows)
+on:
+  workflow_dispatch:
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        working-directory: desktop
+        run: npm ci
+      - name: Build
+        working-directory: desktop
+        run: npm run dist:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blockcraft-windows
+          path: desktop/dist/*.exe
+          if-no-files-found: error

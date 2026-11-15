@@ -615,3 +615,7 @@ DONE  Suite checkpoint on the people + travel build: see proof/suite_travel.log.
 DONE  THIEVES GUILD HEIST: members get a job of their own from commoners about half the time: lift a chalk-marked strongbox (item 1142) from the
       chest in a named villager's house, in this village or a neighbouring one, within 4 days. Taking it while seen is theft like any other;
       unseen, it trains Stealth. Worth 12 guild standing. Outsiders are never offered it. Covered by tests/law.py.
+DONE  OLD SAVES: tests/compat.py (40 scripts in the suite) plays a little in the build handed over on 2026-11-14 (kept in tests/fixtures), then opens
+      that save in the current build. Everything survives: old low world shape (no lift, no delves), position, class and its extra hearts, items,
+      hotbar, gold, village standing, day, the quest in hand, block edits; and it loads again after the current build re-saves it.
+      One intended change shows: a mithril sword saved as top tier is now one tier below adamantite (his Daggerfall-order decision).

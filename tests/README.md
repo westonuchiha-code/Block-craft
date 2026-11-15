@@ -24,7 +24,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 
 ## Run
 
-- `bash suite.sh`: the regression suite (41 scripts, about 30 minutes). Each line prints `name rc=<exit code>`
+- `bash suite.sh`: the regression suite (42 scripts, about 30 minutes). Each line prints `name rc=<exit code>`
   and the script's last output line. A failure is a non-zero exit, `ERR` (traceback), or page errors in the
   printed list. Many scripts also print values meant to be read, not only asserted.
 - `python3 gpu.py`: renders 6 scenes with the CPU renderer and the GPU renderer at the same size and fails if
@@ -47,6 +47,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 | gait | people: ground shadows, legs matching the ground covered, smooth turning, bodies that take up room, standing on slabs |
 | travel | wagon travel: careful and reckless, cost, time, arriving fed and whole, the road's toll |
 | sound | sound: every effect renders a real, non-clipping signal; game events trigger their sounds; the volume button |
+| hand | every named thing (1,128) draws its icon and builds its held model without error; doors, windows, bars and vines are held as flat items |
 | delve | delves: lifted world shape, every chamber and the master reachable on foot, master kill, chests, quest, map entry |
 | sh2, sh4, sh5, sc, bb | stairs, slabs and other shaped blocks, recipes |
 | fe | fences |

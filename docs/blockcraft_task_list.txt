@@ -641,3 +641,8 @@ DONE  DELVES MORE COMMON: a region now tries up to 48 candidate sites (was 18) a
       22 / 17 / 28 delves (was 18 / 11 on the first two), and 89% / 74% / 93% of villages now have a delve within the 560 blocks a villager
       will send you (was 80% / 42%). Walk check still clean on all three seeds. Because a region keeps its best site, some delves in a
       world made on an earlier build of today will have moved.
+DONE  HELD-ITEM AUDIT: looked at all 209 kinds of thing in the hand (contact sheets), and checked all 1,128 named ids by script.
+      FIXED a crash: a gold vine on the hotbar (it is in the creative palette) stopped the whole game - its icon had no texture to borrow.
+      Same hole closed for the gate field and fire. FIXED doors, windows, lattice windows, stained windows and iron bars: they were held
+      edge-on so you only saw a thin strip; they are now held as their flat item picture, as Minecraft holds doors, panes and bars.
+      Everything else sits by the one shared Minecraft transform. New test tests/hand.py (suite is now 42). Screenshot: proof/held_thin.png.

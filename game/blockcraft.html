@@ -10771,11 +10771,17 @@ function blockIcon(b, top){
       img.data[i]=clamp255(wood[0]); img.data[i+1]=clamp255(wood[1]); img.data[i+2]=clamp255(wood[2]); img.data[i+3]=255;
       continue;
     }
+    if(IS_VINE[b]){                                     // a hanging strand in its own colour (it has no base block to borrow a texture from)
+      if(x<6 || x>9) continue;
+      const c = COLORS[b], k = ((y>>2)&1 ? 0.82 : 1) * (x===6 || x===9 ? 0.85 : 1);
+      img.data[i]=clamp255(c[0]*k); img.data[i+1]=clamp255(c[1]*k); img.data[i+2]=clamp255(c[2]*k); img.data[i+3]=255;
+      continue;
+    }
     if(IS_SHAPED[b]){                                   // slabs and stairs: a side-on picture of the shape
       const lowHalf = y>=8, hi = SH_HALF[b]===1;
       const filled = IS_SLAB[b] ? (hi ? !lowHalf : lowHalf) : (hi ? (!lowHalf || x>=8) : (lowHalf || x>=8));
       if(!filled) continue;
-      const col = texColor(SH_BASE[b],0,0,x,15-y), edge = (x===0 || x===15 || y===(IS_SLAB[b]&&hi?0:15)) ? 0.8 : 1;
+      const col = texColor(SH_BASE[b],0,0,x,15-y) || COLORS[b] || [200,200,200], edge = (x===0 || x===15 || y===(IS_SLAB[b]&&hi?0:15)) ? 0.8 : 1;
       img.data[i]=clamp255(col[0]*edge); img.data[i+1]=clamp255(col[1]*edge); img.data[i+2]=clamp255(col[2]*edge); img.data[i+3]=255;
       continue;
     }
@@ -10989,6 +10995,7 @@ function heldIconCells(id){
 // what kind of model an item is held as: 'tool', 'block' (a real block or shaped block) or 'item' (a sprite slab)
 function heldKind(id){
   if(TOOLS[id]) return 'tool';
+  if(IS_DOOR[id] || IS_WINDOW[id] || IS_VINE[id]) return 'item';      // thin sheets would be held edge-on; Minecraft holds doors, panes and bars as their flat item picture
   if(IS_SHAPED[id]) return 'block';
   if(COLORS[id] && !FLAT_ITEMS.has(id) && !IS_SAP[id] && !IS_FLOWER[id]) return 'block';
   return 'item';

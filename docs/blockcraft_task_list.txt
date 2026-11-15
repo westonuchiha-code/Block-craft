@@ -606,3 +606,8 @@ DONE  Screenshot tour (tests/tour.py) on the current build: 63 shots, zero page 
       world, shadows or held items. Two shots are the tour's own staging quirks (villager close-up faces a wall, as it did before;
       the test-hall shot is underground in lifted worlds because that step is only meaningful in a test world).
 DONE  Animals now swing round to a new heading over a few frames like people do (ratWalk); they used to snap.
+DONE  TRAVEL CHOICES (Daggerfall's): each destination on the wagon map now has two buttons.
+      CAREFUL: about 1.25x the old price and 1.4x the hours; you arrive fed (food at least 14) and at full health.
+      RECKLESS: about 55% of the price and 60% of the hours; you arrive hungry, and there is a risk (8% plus 4% per 100 blocks, at most 50%)
+      that robbers take 10-30% of your purse or the wagon overturns and you lose 3-6 health. Either way it goes in the journal.
+      tests/travel.py (39 scripts in the suite).

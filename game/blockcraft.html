@@ -7503,7 +7503,14 @@ function knownPlaces(){
   return out;
 }
 function atPlace(){ return knownPlaces().find(p=>Math.hypot(p.x-player.x, p.z-player.z) < 50) || null; }
-function wagonCost(p){ const d = Math.hypot(p.x-player.x, p.z-player.z); return { gold:Math.round(5 + d/15), hours:Math.max(1, Math.round(d/90)), d }; }
+// Two ways to travel, as in Daggerfall. CAREFUL: the driver keeps to the road and stops at the inns, so it costs more and takes
+// longer, but you arrive fed, rested and whole. RECKLESS: across country without stopping, cheaper and quicker, but you arrive
+// hungry, and the further you go the likelier it is that the road takes its toll (a fall, or robbers after your purse).
+function wagonCost(p, reckless){
+  const d = Math.hypot(p.x-player.x, p.z-player.z), g = Math.round(5 + d/15), h = Math.max(1, Math.round(d/90));
+  return reckless ? { gold:Math.max(2, Math.round(g*0.55)), hours:Math.max(1, Math.round(h*0.6)), d, risk:Math.min(0.5, 0.08 + d/2500) }
+                  : { gold:Math.round(g*1.25)+3, hours:Math.round(h*1.4)+1, d, risk:0 };
+}
 function drawMap(){
   const cv = document.getElementById('mapCanvas'), g = cv.getContext('2d'), W = cv.width, Hh = cv.height, S = 0.5*mapZoom;     // pixels per block
   g.fillStyle = '#0d0e0b'; g.fillRect(0,0,W,Hh); g.imageSmoothingEnabled = false;
@@ -7529,12 +7536,14 @@ function drawMap(){
 function renderMapSide(){
   const el = document.getElementById('mapSide'), here = atPlace();
   const dz = dangerAt(player.x, player.y, player.z);
-  let h = `<div class="skNote">You are in ${isUnder(player.z) ? 'the Underworld' : DANGER_NAMES[Math.min(5,Math.floor(Math.hypot(player.x,player.z)/450))]} (danger ${dz}). ${here ? 'You are at '+here.name+'.' : 'Wagons leave from villages and homesteads.'} Tap a place to travel there.</div>`;
+  let h = `<div class="skNote">You are in ${isUnder(player.z) ? 'the Underworld' : DANGER_NAMES[Math.min(5,Math.floor(Math.hypot(player.x,player.z)/450))]} (danger ${dz}). ${here ? 'You are at '+here.name+'.' : 'Wagons leave from villages and homesteads.'} Careful travel keeps to the road and the inns: dearer and slower, but you arrive fed and whole. Reckless is cheaper and quicker, and riskier the further you go.</div>`;
   if(isUnder(player.z)){ el.innerHTML = `<div class="skNote">You are in the Underworld (danger ${dz}). No roads, no wagons: only the way you came. The map fills in as you explore.</div>`; return; }
   for(const p of knownPlaces().sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))){
     const c = wagonCost(p), isHere = here && here.key===p.key;
     h += `<div class="tkRow"><span class="tkNm" style="color:${p.kind==='h'?'#8fdc6a':'#e3cf95'}">${p.name}</span><span class="tkPr">${isHere ? 'here' : Math.round(c.d/10)*10+' paces '+dirWord(player.x,player.z,p.x,p.z)}</span>`;
-    if(!isHere) h += `<button data-go="${p.key}" ${!here || gold<c.gold ? 'disabled' : ''}>WAGON ${c.gold}g · ${c.hours}h</button>`;
+    if(!isHere){ const r = wagonCost(p, true);
+      h += `<button data-go="${p.key}" title="By the road, stopping at inns: you arrive fed, rested and whole." ${!here || gold<c.gold ? 'disabled' : ''}>CAREFUL ${c.gold}g · ${c.hours}h</button>`
+         + `<button data-go="${p.key}" data-reckless="1" title="Across country without stopping: cheaper and quicker, but you arrive hungry and the road may take its toll." ${!here || gold<r.gold ? 'disabled' : ''}>RECKLESS ${r.gold}g · ${r.hours}h</button>`; }
     h += `</div>`;
   }
   el.innerHTML = h;
@@ -7550,10 +7559,15 @@ function advanceHours(hours){
   while(t>=1){ t -= 1; tod = 0.0001; rainDawn(false); villagerDawn(); homesteadDawn(); questDawn(); }
   tod = t; rainPrevTod = tod;
 }
-function wagonTo(key){
+function wagonTo(key, reckless){
   const p = knownPlaces().find(q=>q.key===key), here = atPlace(); if(!p || !here) return;
-  const c = wagonCost(p); if(gold<c.gold) return;
-  gold -= c.gold; food = Math.max(2, food - Math.min(6, Math.round(c.hours/2)));
+  const c = wagonCost(p, reckless); if(gold<c.gold) return;
+  gold -= c.gold; let toll = '';
+  if(reckless){ food = Math.max(2, food - Math.min(8, 2+Math.round(c.hours)));
+    if(Math.random()<c.risk){
+      if(Math.random()<0.5 && gold>10){ const lost = Math.round(gold*(0.1+Math.random()*0.2)); gold -= lost; toll = ` Robbers stopped the wagon on the way and took ${lost} gold.`; }
+      else { const hurtBy = 3+Math.floor(Math.random()*4); health = Math.max(2, health-hurtBy); toll = ' The wagon overturned on a bad stretch and you were thrown clear, bruised and bleeding.'; } } }
+  else { food = Math.min(20, Math.max(food, 14)); health = maxHP(); }      // fed at the inns and rested
   advanceHours(c.hours);
   player.x = p.x+0.5; player.z = p.z+0.5; player.vy = 0;
   updateChunks();
@@ -7563,7 +7577,8 @@ function wagonTo(key){
   if(best){ player.x = best[0]+0.5; player.y = best[1]; player.z = best[2]+0.5; } else player.y = colInfo(Math.floor(p.x),Math.floor(p.z)).h+2;
   fallPeakY = player.y; safeT = 2; vitalKey = '';
   for(let i=mobs.length-1;i>=0;i--) if(Math.hypot(mobs[i].x-player.x, mobs[i].z-player.z) > 70) mobs.splice(i,1);
-  closeMap(); sleepMsg(`After ${c.hours} hours on the road, you arrive at ${p.name}.`, 2600); scheduleSave();
+  closeMap(); sleepMsg(`After ${c.hours} hours ${reckless ? 'across country' : 'on the road'}, you arrive at ${p.name}.${toll}`, toll ? 4200 : 2600);
+  logJournal(`Travelled ${reckless ? 'recklessly' : 'carefully'} to ${p.name} (${c.hours} hours, ${c.gold} gold).${toll}`);
 }
 function villageCentre(v){ let x=0,z=0; for(const h of v.houses){ x+=h.out[0]; z+=h.out[2]; } return [x/v.houses.length, z/v.houses.length]; }
 function npcCanStand(x,y,z){ npcPathing = true; try{ return ratCanStand(x,y,z); } finally{ npcPathing = false; } }
@@ -12508,7 +12523,7 @@ document.getElementById('mapBtn').addEventListener('click', ()=>{ closeMenu(); p
 document.getElementById('mapClose').addEventListener('click', closeMap);
 document.getElementById('mapIn').addEventListener('click', ()=>{ mapZoom = Math.min(4, mapZoom*2); drawMap(); });
 document.getElementById('mapOut').addEventListener('click', ()=>{ mapZoom = Math.max(0.25, mapZoom/2); drawMap(); });
-document.getElementById('mapSide').addEventListener('click', e=>{ const b = e.target.closest('button'); if(b && !b.disabled && b.dataset.go) wagonTo(b.dataset.go); });
+document.getElementById('mapSide').addEventListener('click', e=>{ const b = e.target.closest('button'); if(b && !b.disabled && b.dataset.go) wagonTo(b.dataset.go, !!b.dataset.reckless); });
 document.getElementById('classGo').addEventListener('click', confirmClass);
 document.getElementById('questClose').addEventListener('click', closeQuests);
 document.getElementById('talkBody').addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b || b.disabled) return;

@@ -54,6 +54,9 @@ THE LAW (hit a villager, or take from a house chest with someone nearby, then wa
 [ ] Sneaking and stealing unseen: does it feel like a thief's game?
 [ ] Is it annoying that breaking a village wall counts as a crime when someone sees it?
 
+TRAVEL (open the map in a village: CAREFUL and RECKLESS buttons)
+[ ] Is the choice interesting? Careful costs more and takes longer but you arrive fed and healed; reckless is cheap, fast and risky.
+
 SMALLER THINGS
 [ ] No class picker at the start: does a fresh character feel right without one?
 [ ] Adamantite is now the top metal, mithril below it.

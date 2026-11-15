@@ -34,6 +34,14 @@ TAVERNS (new worlds only; seed 12345: The Laughing Boar in the spawn village, th
 [ ] Come by in the late afternoon: about two villagers in three walk over and stand about inside until well after dark, then go home.
     Does the village feel more alive for it? Do they block the doorway or crowd badly?
 
+THE HORSE (every world; a farmer sells one for 300 gold)
+[ ] Buy one (BUY A HORSE when talking to a farmer). Look at it standing: does it read as a horse? Screenshot in proof/horse.png.
+[ ] USE it to mount. You sit 0.85 higher, and its head and ears show at the bottom of the view. Is the head in the way, or right?
+[ ] Ride: 1.85x your speed (walking or running). Too fast, too slow? You cannot ride through a normal doorway.
+[ ] SNEAK (Z or R3) gets you down; the horse waits there and is marked on the map. Is sneak the right button for it?
+[ ] Third person in the saddle: do rider and horse look right together, turning, moving?
+[ ] It cannot be hurt. Wrong? (It also cannot be stolen, fed, or named.)
+
 CALENDAR AND HOLIDAYS (every world)
 [ ] The journal now shows dates (a new world wakes on the 1st of Greening, year 1) and tells you the next holiday.
 [ ] The 4th day of a new world is the Merchants' Fair: a notice at dawn, and everything in the shops a quarter cheaper for the day.

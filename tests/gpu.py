@@ -1,7 +1,7 @@
 from playwright.sync_api import sync_playwright
 from PIL import Image
 import json, sys, base64, io
-SCENES = sys.argv[1].split(',') if len(sys.argv)>1 else ['field','village','water','under','k_beasts','k_third','delve','k_delve','tavern']
+SCENES = sys.argv[1].split(',') if len(sys.argv)>1 else ['field','village','water','under','k_beasts','k_third','delve','k_delve','tavern','k_horse']
 bad = []
 CMP = r"""async (scene)=>{
   const sleep=t=>new Promise(r=>setTimeout(r,t));
@@ -24,6 +24,10 @@ CMP = r"""async (scene)=>{
     mobs.push(newCat(x-2,h+1,z+3)); mobs.push(newRat(x-3,h+1,z-2)); mobs.push(newWb(x+4,h+1,z+5)); const m=mobs[0]; m.hurtT=0.3; }
   if(scene==='k_village'){ const v=nearestVillage(2); player.x=v.cx+0.5; player.z=v.cz+6.5; player.y=colInfo(v.cx,v.cz+6).h+1; player.yaw=0; player.pitch=-0.1; tod=0.3; await sleep(2500);
     const npcs=mobs.filter(m=>m.kind==='npc'); npcs.slice(0,4).forEach((m,i)=>{ m.x=v.cx-1.5+i*1.2; m.z=v.cz+2.5; m.y=colInfo(Math.floor(m.x),Math.floor(m.z)).h; m.path=null; m.idleT=99; }); mobs.length=0; npcs.slice(0,4).forEach(m=>mobs.push(m)); }
+  if(scene==='k_horse'){ mobs.length=0; const [x,z,h]=flat(); player.x=x+0.5; player.z=z+0.5; player.y=h+1; player.yaw=0.5; player.pitch=0.25; tod=0.3; await sleep(2500);      // in the saddle, seen from outside, with a second horse standing by
+    for(let i=-3;i<=3;i++) for(let j=-3;j<=3;j++) for(let k=h+1;k<h+6;k++) setB(x+i,k,z+j,AIR);
+    mobs.length=0; horse={ x:player.x, y:h+1, z:player.z, yaw:0.5, mounted:false }; const m=horseSpawn(horse.x,horse.y,horse.z,0.5); mountHorse(m); bodyYaw=0.5; m.yaw=0.5;
+    const o=newBeast('horse',x+2,h+1,z-1,0); o.yaw=2.2; o.idleT=999; mobs.push(o); camMode=2; }
   if(scene==='k_ogre'){ mobs.length=0; const [x,z,h]=flat(); player.x=x-7.5; player.z=z+0.5; player.y=h+1; player.yaw=Math.PI/2; player.pitch=0.1; tod=0.3; await sleep(2500); const o=newOgre(x,h+1,z); o.hostile=false; o.idleT=999; mobs.push(o); }
   if(scene==='k_third'){ mobs.length=0; const [x,z,h]=flat(); player.x=x+0.5; player.z=z+0.5; player.y=h+1; player.yaw=0.6; player.pitch=0.3; tod=0.3; await sleep(2500);
     for(let k=0;k<4;k++){ const id=AR(4,k); inv[id]=1; equipArmor(id); } inv[MITH_SWORD]=1; HOTBAR[0]=MITH_SWORD; sel=0; updateHotbar(); camMode=2; mobs.length=0; }

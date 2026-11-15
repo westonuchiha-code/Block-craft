@@ -24,7 +24,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 
 ## Run
 
-- `bash suite.sh`: the regression suite (45 scripts, about 30 minutes). Each line prints `name rc=<exit code>`
+- `bash suite.sh`: the regression suite (46 scripts, about 30 minutes). Each line prints `name rc=<exit code>`
   and the script's last output line. A failure is a non-zero exit, `ERR` (traceback), or page errors in the
   printed list. Many scripts also print values meant to be read, not only asserted.
 - `python3 gpu.py`: renders 6 scenes with the CPU renderer and the GPU renderer at the same size and fails if
@@ -51,6 +51,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 | tavern | taverns: one per village with a spare bed; older worlds' villages unchanged; innkeeper's room, board and rumours; villagers gather in the evening and go home at night |
 | province | provinces: sizes and names; a border crossing is announced and logged; the map names the province; violent crime is owed across the province |
 | calendar | dates and months; the holiday table; each holiday's effect on real prices; the dawn notice, journal and talk |
+| horse | the horse: buying, mounting, riding speed and raised view, getting down, its place remembered and saved, no mounting under a low roof |
 | delve | delves: lifted world shape, every chamber and the master reachable on foot, master kill, chests, quest, map entry |
 | sh2, sh4, sh5, sc, bb | stairs, slabs and other shaped blocks, recipes |
 | fe | fences |

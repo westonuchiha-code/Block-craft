@@ -3339,7 +3339,7 @@ function saveWorld(){
   if(!currentWorld) return;
   const meta = {
     format: SAVE_FORMAT, version: SAVE_VERSION, name: currentWorldName, seed: SEED, gen: worldGen, test: testWorld ? 1 : 0, rain: [rainOn?1:0, rainLeftT],
-    inv, wear, hotbar: HOTBAR, grid2, tod, health, food, saturation, skills:{ v:skills, u:skillUses, g:skillGained }, gold, armor, book, bookSel, mp, fires:[...fires.values()].slice(0,300), crypts:cryptState, cryptSeen:[...cryptSeen], provSeen, journal, guilds, bounty, thefts, delveSeen, trained:trainedDay, homesteads, homesteadId, explored:[...explored], visited:[...visitedV], cls:playerClass, sacks:deathSacks, placed:packPlaced(), villagers:villagerState, quests, rep:villageRep, dayNo, questId, bed: bedSpawn, spell, spellCharges, swordSpell, chests: Object.fromEntries(chests),
+    inv, wear, hotbar: HOTBAR, grid2, tod, health, food, saturation, skills:{ v:skills, u:skillUses, g:skillGained }, gold, armor, book, bookSel, mp, fires:[...fires.values()].slice(0,300), crypts:cryptState, cryptSeen:[...cryptSeen], provSeen, horse, journal, guilds, bounty, thefts, delveSeen, trained:trainedDay, homesteads, homesteadId, explored:[...explored], visited:[...visitedV], cls:playerClass, sacks:deathSacks, placed:packPlaced(), villagers:villagerState, quests, rep:villageRep, dayNo, questId, bed: bedSpawn, spell, spellCharges, swordSpell, chests: Object.fromEntries(chests),
     player: { x:player.x, y:player.y, z:player.z, yaw:player.yaw, pitch:player.pitch }
   };
   try{
@@ -3550,7 +3550,7 @@ function loadWorld(id){
   explored = new Set(meta.explored || []); visitedV = new Set(meta.visited || []); mapTiles.clear(); roadEdgeCache.clear(); roadChunkCache.clear(); roadMemoCx = 1e9;
   fires.clear(); for(const f of (meta.fires||[])) fires.set(f.x+','+f.y+','+f.z, f);
   book = meta.book || []; bookSel = meta.bookSel || 0; mp = meta.mp===undefined ? 10 : meta.mp; wardT = wardPts = swiftT = swiftK = 0;
-  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; provSeen = meta.provSeen || []; provHere = null; guilds = meta.guilds || {}; bounty = meta.bounty || {}; thefts = meta.thefts || 0; delveSeen = meta.delveSeen || {}; arrestUntil = 0; arrestOpen = false; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
+  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; provSeen = meta.provSeen || []; provHere = null; horse = meta.horse || null; rideSet(riding()); guilds = meta.guilds || {}; bounty = meta.bounty || {}; thefts = meta.thefts || 0; delveSeen = meta.delveSeen || {}; arrestUntil = 0; arrestOpen = false; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
   trainedDay = meta.trained || {}; homesteads = meta.homesteads || []; homesteadId = meta.homesteadId || 1;
   gold = meta.gold || 0; playerClass = meta.cls || null; deathSacks = meta.sacks || []; placedMap = unpackPlaced(meta.placed);
   if(meta.inv && meta.inv[PISTOL]) delete inv[PISTOL];          // the pistol is gone from the world
@@ -3674,7 +3674,7 @@ let sel = 0;
 
 // ---------- collision ----------
 function collides(px,py,pz){
-  const x0=px-0.3, x1=px+0.3, z0=pz-0.3, z1=pz+0.3, y1=py+1.69;
+  const x0=px-0.3, x1=px+0.3, z0=pz-0.3, z1=pz+0.3, y1=py+BODY_H;
   const ya=Math.floor(py), yb=Math.floor(y1);
   for(let cx=Math.floor(x0); cx<=Math.floor(x1); cx++) for(let cz=Math.floor(z0); cz<=Math.floor(z1); cz++) for(let cy=ya-1; cy<=yb; cy++){
     const b = getB(cx, cy, cz);
@@ -3823,11 +3823,12 @@ function camVectors(){
 // ---------- third-person view ----------
 // camMode 0 = first person, 1 = behind you, 2 = in front of you (looking back at you). The camera is pushed back until a block is in the way.
 let camMode = 0;
+let EYE_H = 1.6, BODY_H = 1.69;      // where your eyes are and how tall you stand: both rise in the saddle (rideSet)
 const CAM = { x:0, y:0, z:0, f:[0,0,-1], r:[1,0,0], u:[0,1,0] };
 let bodyYaw = 0, limbAmp = 0;
 function cycleCamera(){ camMode = (camMode+1)%3; }
 function camSetup(){
-  const eyeX=player.x, eyeY=player.y+1.6, eyeZ=player.z;
+  const eyeX=player.x, eyeY=player.y+EYE_H, eyeZ=player.z;
   if(camMode===0){ const v=camVectors(); CAM.x=eyeX; CAM.y=eyeY; CAM.z=eyeZ; CAM.f=v.f; CAM.r=v.r; CAM.u=v.u; return; }
   const yaw = camMode===1 ? player.yaw : player.yaw+Math.PI, pitch = camMode===1 ? player.pitch : -player.pitch;
   const cp=Math.cos(pitch), sp=Math.sin(pitch), cy=Math.cos(yaw), sy=Math.sin(yaw);
@@ -3914,6 +3915,7 @@ function plPrep(){
   const sw = Math.sin(walkPhase*1.15) * 0.95 * limbAmp, punch = swingT>0 ? Math.sin((1-swingT)*Math.PI) : 0;
   PL.ra = sw + punch*1.9; PL.la = -sw; PL.rl = -sw; PL.ll = sw;
   PM.x = player.x; PM.y = player.y; PM.z = player.z;
+  if(riding()){ PM.y += RIDE_LIFT-0.06; PL.rl = -1.25; PL.ll = -1.25; PL.la = -0.5 - sw*0.15; if(!punch) PL.ra = -0.5 + sw*0.15; }      // in the saddle: legs forward, hands on the reins
 }
 // ray (world) against a character body (the player or an NPC): M = {skin, groups}, P = pose, pos = where the feet are, res = object to fill. Returns res or null.
 function playerIntersect(ox,oy,oz, dx,dy,dz, maxT){ return bodyIntersect(PLM, PL, PM, PL_RES, ox,oy,oz, dx,dy,dz, maxT); }
@@ -5332,7 +5334,7 @@ function renderOverlay(){
     drawHand();
   } else if(camMode===1){
     // behind the shoulder: you still aim from your eyes, so the crosshair sits on whatever your eyes are pointed at
-    const v = camVectors(), ex = player.x, ey = player.y+1.6, ez = player.z;
+    const v = camVectors(), ex = player.x, ey = player.y+EYE_H, ez = player.z;
     const h = cast(ex,ey,ez,v.f[0],v.f[1],v.f[2],40,undefined,HIT_S), mh = ratRay(ex,ey,ez,v.f[0],v.f[1],v.f[2],h ? h.t : 40), t = mh ? mh.t : h ? h.t : 40;
     const pr = projectPt([ex+v.f[0]*t, ey+v.f[1]*t, ez+v.f[2]*t], CAM.f, CAM.r, CAM.u, CAM.x, CAM.y, CAM.z);
     if(pr.zc>0.2){ const cx = Math.round(pr.px), cy = Math.round(pr.py); ctx.fillStyle='#fff'; ctx.fillRect(cx-1,cy,3,1); ctx.fillRect(cx,cy-1,1,3); }
@@ -5815,7 +5817,7 @@ vec4 MD(int i){ return texelFetch(uMdl, ivec2(i&1023, i>>10), 0); }
 struct MH { bool ok; float t; vec3 n; vec3 col; vec3 l; bool glow; float L; bool hurt; };
 vec3 mobPix(int pt, vec3 b0, vec3 b1, vec3 col, vec3 col2, vec3 p){
   const float T = 0.06;
-  int a = int(floor((p.x-b0.x)/T)), b = int(floor((p.y-b0.y)/T)), c = int(floor((p.z-b0.z)/T));
+  int a = int(floor((p.x-b0.x)/T+0.002)), b = int(floor((p.y-b0.y)/T+0.002)), c = int(floor((p.z-b0.z)/T+0.002));
   float n = h3(a*3+b, c*5+a, b*7+c, 611);
   if(pt==1) return n<0.30 ? col2 : n>0.93 ? vec3(255,255,252) : col;
   if(pt==2){
@@ -6444,7 +6446,7 @@ function renderFrame(){
   }
   const saps = []; for(const sp of saplings.values()) saps.push([sp.x,sp.y,sp.z]);
   const S = { now:performance.now(), reset:WK.reset, seed:SEED, tod, player:{ x:player.x, y:player.y, z:player.z, yaw:player.yaw, pitch:player.pitch },
-              camMode, bodyYaw, limbAmp, walkPhase, swingT, tan:TAN, held:(inv[HOTBAR[sel]]>0 ? HOTBAR[sel] : 0), charKey:JSON.stringify(dressedChar()), yoff:YOFF, shd:(camSetup(), buildShadows(), Array.from(SHD.subarray(0, SHDN*4))), crack: crack ? { x:crack.x, y:crack.y, z:crack.z, hits:crack.hits, need:crack.need } : null,
+              camMode, bodyYaw, limbAmp, walkPhase, swingT, tan:TAN, held:(inv[HOTBAR[sel]]>0 ? HOTBAR[sel] : 0), charKey:JSON.stringify(dressedChar()), yoff:YOFF, eye:EYE_H, ride:riding(), shd:(camSetup(), buildShadows(), Array.from(SHD.subarray(0, SHDN*4))), crack: crack ? { x:crack.x, y:crack.y, z:crack.z, hits:crack.hits, need:crack.need } : null,
               mobs:ms, saps, del:WK.del, edits:WK.edits, step:WK.n, y0:0,
               add:WK.add.map(c=>({ cx:c.cx, cz:c.cz, data:c.data, bio:c.bio, light:c.light })), relight:[] };
   for(const c of WK.relight) if(chunks.get(chunkKey(c.cx,c.cz))===c && !WK.add.includes(c)) S.relight.push({ cx:c.cx, cz:c.cz, light:c.light });
@@ -6474,6 +6476,7 @@ function wkWorkerInit(){
       camMode = S.camMode; bodyYaw = S.bodyYaw; limbAmp = S.limbAmp; walkPhase = S.walkPhase; swingT = S.swingT; crack = S.crack;
       if(S.charKey !== charKey){ charKey = S.charKey; CHAR = JSON.parse(charKey); }
       if((S.yoff|0) !== YOFF) setWorldShape(S.yoff);
+      EYE_H = S.eye || 1.6; wkRide = !!S.ride;
       { const a = S.shd || []; SHDN = a.length>>2; for(let i=0;i<a.length;i++) SHD[i] = a[i]; }
       wkHeld = S.held || 0;
       mobs.length = 0;
@@ -6536,7 +6539,7 @@ document.addEventListener('mousemove', e=>{
 const REACH = 4.5;
 function target(){
   const {f} = camVectors();
-  const ox=player.x, oy=player.y+1.6, oz=player.z;
+  const ox=player.x, oy=player.y+EYE_H, oz=player.z;
   let h = cast(ox,oy,oz, f[0],f[1],f[2], REACH), off = 0;
   for(let k=0; h && IS_LAVA[h.b] && k<4; k++){                     // you can't hit lava itself: aim through it
     off = h.t + 0.002;
@@ -6946,7 +6949,7 @@ function talkNews(m){
                      : `The ${R.name} lies about ${Math.round(d/10)*10} paces to the ${dirWord(hc[0],hc[1],R.ex,R.ez)}. The dead do not rest there. I have marked it for you.`);
       cryptSeen.add(R.key); logJournal(`${m.name} told of ${isD ? R.name+', a delve' : 'the '+R.name}, ${Math.round(d/10)*10} paces ${dirWord(hc[0],hc[1],R.ex,R.ez)} of ${here ? villageName(rx,rz) : 'here'}.`); } }
   { const th = holiday(), nh = nextHoliday(); if(th) lines.push(`It is ${th.name} today: ${th.what}.`); else if(nh && nh.days<=4) lines.push(`${nh.h.name[0].toUpperCase()+nh.h.name.slice(1)} is ${nh.days===1 ? 'tomorrow' : 'in '+nh.days+' days'}: ${nh.h.what}.`); }
-  const kinds = new Set(); for(const o of mobs) if(BEAST[o.kind] && Math.hypot(o.x-m.x,o.z-m.z)<70) kinds.add(o.kind);
+  const kinds = new Set(); for(const o of mobs) if(BEAST[o.kind] && !BEAST[o.kind].tame && Math.hypot(o.x-m.x,o.z-m.z)<70) kinds.add(o.kind);
   const nm = { daedra:'fire daedra', daedroth:'a daedroth', bat:'giant bats', fish:'slaughterfish', bear:'a grizzly bear', tiger:'a sabertooth', spider:'giant spiders', scorpion:'a giant scorpion', skeleton:'walking skeletons', zombie:'the walking dead', ghost:'a ghost', cryptlord:'a Crypt Lord' };
   if(kinds.size) lines.push(`Folk have seen ${[...kinds].map(k=>nm[k]).join(' and ')} close by. Be careful out there.`);
   const b = biomeAt(Math.floor(m.x), Math.floor(m.z));
@@ -7327,6 +7330,7 @@ function renderTalk(){
     { const gid = guildOfJob(m.job); if(gid && guildRank(gid)<0 && !(GUILDS[gid].secret && thefts<3)) h += `<button data-a="join">${GUILDS[gid].secret ? 'A WORD IN PRIVATE' : 'JOIN THE '+GUILDS[gid].name.toUpperCase()}</button>`; }
     if(TRAINS[m.job]) h += `<button data-a="train">TRAIN ${SKILLS.find(k=>k.id===TRAINS[m.job]).name.toUpperCase()} (${trainCost(TRAINS[m.job], m.job)}g)</button>`;
     if(m.job==='blacksmith'){ const rc = repairCost(); if(rc>0) h += `<button data-a="repair">REPAIR (${rc}g)</button>`; }
+    if(m.job==='farmer' && !horse) h += `<button data-a="horse">BUY A HORSE (${Math.round(HORSE_PRICE*holidayMul('buy'))}g)</button>`;
     if((m.job==='villager' || m.job==='innkeeper') && m.house && m.house.bed) h += `<button data-a="room">RENT A ROOM (${roomCost() ? roomCost()+'g' : 'free today'})</button>`;
     if(shop) h += `<button data-a="trade">TRADE</button>`;
     if(shop && shop.heal) h += `<button data-a="heal">HEALING</button>`;
@@ -7378,6 +7382,7 @@ function talkAction(a){
         clearTimeout(sleepMsg.t); sleepMsg.t = setTimeout(()=>{ advanceHours(((1.02-tod)%1)*24); scheduleSave(); if(el){ el.textContent = 'Good morning'; el.style.opacity = '0'; } }, 1300); return; }
       talkLine = 'The bed upstairs is yours. You feel rested. If you fall, you will wake up here.'; scheduleSave(); }
   }
+  else if(a==='horse'){ buyHorse(m); }
   else if(a==='repair'){ const rc = repairCost(); if(gold<rc) talkLine = `That'll be ${rc} gold. You have ${gold}.`; else { gold -= rc; doRepair(); talkLine = `Good as new. (${rc} gold)`; } }
   else if(a==='work'){
     const mine = quests.find(q=>q.giver===m.home);
@@ -7420,7 +7425,7 @@ const NPCS_IN_WORLD = true;
 let npcSpawnT = 1, villagerState = {};                       // per-resident record: { dead:1 } until sunrise, { gone:1 } once their bed is gone
 let npcPathing = false;                                      // while true, closed doors count as walkable (villagers open them)
 function npcAllowed(x,y,z){ return true; }
-function npcHostile(o){ return !o.dead && (BEAST[o.kind] || o.kind==='rat' || IS_BRUTE(o.kind)); }
+function npcHostile(o){ return !o.dead && ((BEAST[o.kind] && !BEAST[o.kind].tame) || o.kind==='rat' || IS_BRUTE(o.kind)); }
 // the villages whose regions are around the player
 function nearbyVillages(){
   const out = [], rx = Math.floor(player.x/VREG), rz = Math.floor(player.z/VREG);
@@ -7677,6 +7682,7 @@ function drawMap(){
   for(const k of cryptSeen){ const P = siteByKey(k); if(P) mark(P.ex, P.ez, cryptState[k] && cryptState[k].cleared ? '#8a8a9a' : k[0]==='D' ? '#e0a050' : '#b07ae0', P.name); }
   for(const q of quests){ const t = (q.kind==='hunt' || q.kind==='crypt' || q.kind==='rescue' || q.relic || q.heist) && q.state==='active' ? q.at : q.kind==='deliver' ? q.tvc : null; if(t) mark(t[0], t[1], '#e05040', q.kind==='hunt' ? BEAST_NAME[q.beast] : q.heist ? q.owner+"'s house" : (q.kind==='crypt' || q.kind==='rescue' || q.relic) ? q.cname : q.toName); }
   for(const sk of deathSacks) mark(sk.x, sk.z, '#ffe28c', 'your belongings');
+  if(horse && !horse.mounted && isUnder(horse.z)===isUnder(player.z)) mark(horse.x, horse.z, '#c89a6a', 'your horse');
   // you: an arrow pointing the way you face
   const f = camVectors().f, a = Math.atan2(f[0], f[2]);
   g.save(); g.translate(W/2, Hh/2); g.rotate(-a); g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 2;
@@ -7897,7 +7903,7 @@ function updateNpc(m, dt){
   let hd=0, hp=0;
   if(dp<9 && Math.abs(player.y-m.y)<5 && !m.foe){
     const want = Math.atan2(dxp,-dzp); let rel = want - m.vyaw; rel = Math.atan2(Math.sin(rel), Math.cos(rel));
-    hd = Math.max(-1.1, Math.min(1.1, rel)); hp = Math.max(-0.5, Math.min(0.5, Math.atan2((player.y+1.6)-(m.y+1.6), dp)));
+    hd = Math.max(-1.1, Math.min(1.1, rel)); hp = Math.max(-0.5, Math.min(0.5, Math.atan2((player.y+EYE_H)-(m.y+1.6), dp)));
   }
   P.hd += (hd-P.hd)*Math.min(1,0.15*frameScale); P.hp += (hp-P.hp)*Math.min(1,0.15*frameScale);
 }
@@ -8005,7 +8011,7 @@ function ratBoxes(m, out){
 const _rb = [];
 // pixel-art faces for boxes that carry a pattern (pt): 1 = fluffy grain, 2 = dandelion puff, 3 = the woolbloom's face, 4 = hoof
 function mobPix(B, px,py,pz){
-  const T = 0.06, a = Math.floor((px-B.x0)/T), b = Math.floor((py-B.y0)/T), c = Math.floor((pz-B.z0)/T);
+  const T = 0.06, a = Math.floor((px-B.x0)/T+0.002), b = Math.floor((py-B.y0)/T+0.002), c = Math.floor((pz-B.z0)/T+0.002);      // (the nudge keeps a face lying exactly on a texel line on the same side in the shader's 32-bit arithmetic)
   const n = h3(a*3+b, c*5+a, b*7+c, 611);
   if(B.pt===1) return n<0.30 ? B.col2 : n>0.93 ? [255,255,252] : B.col;
   if(B.pt===2){                                                           // a seed-head: fluffy white rim, darker seed cluster in the middle of each face
@@ -8065,7 +8071,7 @@ function ratIntersect(m, ox,oy,oz, dx,dy,dz, maxT){
 function ratRay(ox,oy,oz,dx,dy,dz,maxT){
   let best=null, bt=maxT;
   for(const m of mobs){
-    if(m.removed) continue;
+    if(m.removed || m.ridden) continue;                    // (you cannot strike or use the horse you are sitting on)
     const r = ratIntersect(m,ox,oy,oz,dx,dy,dz,bt);
     if(r){ bt = r.t; best = { m, t:r.t }; }
   }
@@ -8609,6 +8615,8 @@ const BEAST = {
               where:(b,y)=>b===3 || (b===2 && y>=CAT_MOUNTAIN_Y), drops:[[LEATHER,1,2],[RAW_MEAT,1,3]] },
   spider:   { hp:14, bite:2, cd:1.0, walk:0.045, run:0.1,  aggro:12, memory:18, reach:1.6, tall:1.0, br:1.6, rect:1.8, max:4, group:[1,3], weight:1.4, night:true,
               where:(b,y)=>b<=2, drops:[[SILK,1,3]] },
+  horse:    { hp:40, bite:0, cd:9, walk:0.03, run:0.1, aggro:0, memory:0, reach:0, tall:1.9, br:2.8, rect:3.0, max:0, group:[1,1], weight:0, tame:true,      // yours, bought from a farmer: it stands where you leave it
+              where:()=>false, drops:[] },
   skeleton: { hp:16, bite:3, cd:1.1, walk:0.035, run:0.09, aggro:14, memory:20, reach:1.6, tall:1.9, br:2.4, rect:2.4, max:3, group:[1,2], weight:1.2, night:true, undead:true,
               where:(b,y)=>true, drops:[[BONE,1,3]] },
   zombie:   { hp:22, bite:4, cd:1.3, walk:0.025, run:0.06, aggro:12, memory:25, reach:1.6, tall:1.9, br:2.4, rect:2.4, max:3, group:[1,3], weight:1.2, night:true, undead:true,
@@ -8748,7 +8756,7 @@ function newBeast(kind,x,y,z,lvl){
            phase:Math.random()*6, age:Math.random()*10, moving:false, kx:0, kz:0, stuckT:0, dayT:0 };
 }
 function beastHit(m, dmg){
-  if(m.dead || m.iframe>0) return;
+  if(m.dead || m.iframe>0 || BEAST[m.kind].tame) return;                // nobody hurts the horse
   const K = BEAST[m.kind];
   m.hp -= dmg; m.hurtT = 0.3; m.iframe = 0.3; m.angry = K.memory; m.replanT = 0;
   const dx=m.x-player.x, dz=m.z-player.z, d=Math.hypot(dx,dz)||1, kb = m.kind==='bear' ? 0.08 : 0.18;
@@ -8808,6 +8816,7 @@ function updateFlyer(m, dt){
   m.yaw = Math.atan2(m.vx, -m.vz) || m.yaw; m.moving = true;
 }
 function updateBeast(m, dt){
+  if(BEAST[m.kind].tame){ m.moving = false; m.idleT -= dt; if(m.idleT<=0){ m.idleT = 3+Math.random()*6; m.yaw += (Math.random()-0.5)*0.7; } return; }      // a horse waits
   if(BEAST[m.kind].fly || BEAST[m.kind].swim) return updateFlyer(m, dt);
   const K = BEAST[m.kind], cx=Math.floor(m.x), cy=Math.round(m.y), cz=Math.floor(m.z);
   m.atkA = Math.max(0, m.atkA - dt*3.5);
@@ -8894,7 +8903,7 @@ function trySpawnFlyers(cnt){
 function trySpawnBeasts(){
   { const c = {}; for(const m of mobs) if(m.kind==='bat' || m.kind==='fish') c[m.kind] = (c[m.kind]||0)+1; trySpawnFlyers(c); }
   const cnt = {}; let total = 0;
-  for(const m of mobs) if(BEAST[m.kind] && m.kind!=='bat' && m.kind!=='fish'){ cnt[m.kind] = (cnt[m.kind]||0)+1; total++; }
+  for(const m of mobs) if(BEAST[m.kind] && !BEAST[m.kind].tame && m.kind!=='bat' && m.kind!=='fish'){ cnt[m.kind] = (cnt[m.kind]||0)+1; total++; }
   const dl = dangerAt(player.x, player.y, player.z);
   if(total>=BEAST_TOTAL + Math.min(3, dl) || Math.random()>0.6 + dl*0.06) return;
   for(let attempt=0; attempt<30; attempt++){
@@ -8921,6 +8930,21 @@ function beastBoxes(m, out){
   const run = m.moving ? 1 : 0, ph = m.phase, A = m.atkA, hurtF = m.hurtT>0;
   const add = (cx,cy,cz,w,h,l,col,pt,col2,glow)=>out.push({x0:cx-w/2,x1:cx+w/2,y0:cy,y1:cy+h,z0:cz-l/2,z1:cz+l/2,col,col2,pt,glow:!!glow});
   const sw = i=>Math.sin(ph*1.5+(i===1||i===2?Math.PI:0))*0.09*run;
+  if(m.kind==='horse'){                                                                  // ridden, its legs follow your pace (m.phase is driven by rideFollow)
+    const C=[134,88,52], D=[98,62,36], MN=[44,32,24], SD=[92,52,30], bob = run*Math.abs(Math.sin(ph))*0.035, nod = run*Math.sin(ph*2)*0.02;
+    add(0,0.86+bob,-0.05, 0.56,0.62,1.52, C,5,D);                                          // the barrel
+    add(0,1.34+bob,0.62, 0.31,0.56,0.37, C,5,D);                                          // neck
+    add(0,1.5+bob,0.5, 0.1,0.46,0.31, MN,5,MN);                                           // mane
+    add(0,1.7+bob+nod,0.92, 0.28,0.31,0.34, C,5,D);                                       // head
+    add(0,1.68+bob+nod,1.2, 0.22,0.22,0.31, [112,72,44],5,D);                             // muzzle
+    add(-0.09,2.0+bob+nod,0.84, 0.07,0.13,0.07, D,5,D); add(0.09,2.0+bob+nod,0.84, 0.07,0.13,0.07, D,5,D);      // ears
+    add(-0.15,1.82+bob+nod,1.0, 0.03,0.07,0.07, [20,16,14],5,[20,16,14]); add(0.15,1.82+bob+nod,1.0, 0.03,0.07,0.07, [20,16,14],5,[20,16,14]);      // eyes
+    add(0,0.74+bob,-0.92, 0.14,0.62,0.14, MN,5,MN);                                      // tail
+    add(0,1.48+bob,-0.08, 0.61,0.07,0.52, SD,5,[70,40,24]);                               // saddle
+    const L = (x,z,i)=>{ const k = Math.sin(ph*1.5+(i===1||i===2?Math.PI:0))*0.2*run; add(x,0,z+k, 0.16,0.88+bob,0.16, D,5,[60,40,26]); add(x,0,z+k, 0.19,0.13,0.19, [36,28,22],5,[36,28,22]); };
+    L(-0.19,0.52,0); L(0.19,0.52,1); L(-0.19,-0.6,2); L(0.19,-0.6,3);
+    return out;
+  }
   if(m.kind==='bear'){
     const B=[112,78,50], D=[88,60,38], MZ=[172,136,96], bob = run*Math.abs(Math.sin(ph))*0.03;
     add(0,0.42+bob,-0.1, 0.88,0.7,1.4, B,5,D);                                         // the bulk
@@ -9088,7 +9112,7 @@ function updateMobs(){
   if(catSpawnT<=0){ catSpawnT = catnipHere ? 4.5 : 9; if(!underNow) trySpawnCats(); }
   ogreSpawnT -= dt; if(ogreSpawnT<=0){ ogreSpawnT = 20; if(!underNow){ trySpawnOgre(); trySpawnMino(); } else { trySpawnBeetles(); if(isUnder(player.z)) trySpawnDaedra(); } }
   if(NPCS_IN_WORLD){ npcSpawnT -= dt; if(npcSpawnT<=0){ npcSpawnT = 3; trySpawnNpcs(); questTick(); } }
-  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); provinceTick(); lavaFireTick(); }
+  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); provinceTick(); horseTick(); lavaFireTick(); }
   const pcx=Math.floor(player.x), pcy=Math.floor(player.y), pcz=Math.floor(player.z);
   const inRatZone = ratAllowed(pcx,pcy,pcz);
   for(let i=mobs.length-1;i>=0;i--){
@@ -9096,7 +9120,8 @@ function updateMobs(){
     m.age += dt; m.hurtT = Math.max(0,m.hurtT-dt); m.iframe = Math.max(0,m.iframe-dt); m.atkCd = Math.max(0,m.atkCd-dt);
     if(m.dead){ if(m.questId && !m.noted){ m.noted = true; questKilled(m); }
       if(m.home && !m.noted){ m.noted = true; villagerState[m.home] = { dead:1 }; scheduleSave(); } m.deadT += dt; if(m.deadT>0.5){ mobs.splice(i,1); } continue; }
-    if(lavaHas(Math.floor(m.x), Math.floor(m.y+0.2), Math.floor(m.z), m.y+0.2)){ m.hp = 0; m.dead = true; m.deadT = 0; m.path = null; continue; }     // lava kills rats and cats at once
+    if(!m.mine && lavaHas(Math.floor(m.x), Math.floor(m.y+0.2), Math.floor(m.z), m.y+0.2)){ m.hp = 0; m.dead = true; m.deadT = 0; m.path = null; continue; }     // lava kills rats and cats at once
+    if(m.ridden) continue;                                                        // the horse under you goes where you go (rideFollow)
     const far = Math.hypot(m.x-player.x, m.z-player.z);
     if(IS_BRUTE(m.kind)){ if(far>BRUTE[m.kind].far) mobs.splice(i,1); else updateOgre(m,dt); continue; }
     if((far>70 || Math.abs(m.y-player.y)>45) && !m.follow){ mobs.splice(i,1); continue; }      // too far away to matter (someone following you catches up instead)
@@ -9527,8 +9552,8 @@ function punch(){
   if(heldGun()){ fireWeapon(); return; }                    // a crossbow shoots instead of punching
   swingT = 1; snd('swing');
   const hit = target();
-  { const {f} = camVectors(), mh = ratRay(player.x, player.y+1.6, player.z, f[0],f[1],f[2], 3.2);
-    if(mh && (!hit || mh.t < Math.hypot(hit.x+0.5-player.x, hit.y+0.5-player.y-1.6, hit.z+0.5-player.z)-0.4)){      // a rat is in the way: hit it, not the block behind
+  { const {f} = camVectors(), mh = ratRay(player.x, player.y+EYE_H, player.z, f[0],f[1],f[2], 3.2);
+    if(mh && (!hit || mh.t < Math.hypot(hit.x+0.5-player.x, hit.y+0.5-player.y-EYE_H, hit.z+0.5-player.z)-0.4)){      // a rat is in the way: hit it, not the block behind
       { const armed = !!(TOOLS[HOTBAR[sel]] && inv[HOTBAR[sel]]>0); mobHit(mh.m, playerAttackDamage() + swordSpellHit(mh.m) + artifactHit(mh.m)); snd('thwack'); trainSkill(armed ? 'weapons' : 'unarmed'); } crack = null; return;
     } }
   if(!hit || hit.b===BEDROCK || hit.b===OBSIDIAN){ crack = null; return; }
@@ -9677,7 +9702,7 @@ function breakNow(hit, tool){
 }
 // A bucket scoops up a SOURCE block of its fluid (wood: water, stone: lava) or pours its fluid out as a new source where you aim.
 function bucketUse(id){
-  const {f} = camVectors(), ox=player.x, oy=player.y+1.6, oz=player.z;
+  const {f} = camVectors(), ox=player.x, oy=player.y+EYE_H, oz=player.z;
   const full = id===WATER_BUCKET || id===LAVA_BUCKET;
   const swapTo = nid => {                                      // the bucket changes into its filled / empty form
     inv[id]--; if(inv[id]<=0) delete inv[id];
@@ -9850,8 +9875,9 @@ function collidesBlockAt(id,x,y,z){
 }
 function placeBlock(){
   if(dead) return;
-  { const {f} = camVectors(), mh = ratRay(player.x, player.y+1.6, player.z, f[0],f[1],f[2], 3.6), hit = target();
-    if(mh && mh.m.kind==='npc' && (!hit || mh.t < Math.hypot(hit.x+0.5-player.x, hit.y+0.5-player.y-1.6, hit.z+0.5-player.z)) && openTalk(mh.m)) return; }   // use on a villager: talk
+  { const {f} = camVectors(), mh = ratRay(player.x, player.y+EYE_H, player.z, f[0],f[1],f[2], 3.6), hit = target();
+    if(mh && mh.m.kind==='horse' && mh.m.mine && (!hit || mh.t < Math.hypot(hit.x+0.5-player.x, hit.y+0.5-player.y-EYE_H, hit.z+0.5-player.z)) && mountHorse(mh.m)) return;      // use on your horse: mount
+    if(mh && mh.m.kind==='npc' && (!hit || mh.t < Math.hypot(hit.x+0.5-player.x, hit.y+0.5-player.y-EYE_H, hit.z+0.5-player.z)) && openTalk(mh.m)) return; }   // use on a villager: talk
   { const fb = HOTBAR[sel]; if(FOOD_VAL[fb] && inv[fb]>0) return; }
   { const ab = HOTBAR[sel]; if(ARMOR[ab] && inv[ab]>0){ equipArmor(ab); skillToast('wearing '+NAMES[ab]); swingT = 1; return; } }            // food is eaten by holding the button (see updateEating), never placed
   swingT = 1;
@@ -9885,7 +9911,7 @@ function placeBlock(){
   if(y<0 || y>=H) return;
   let placeId = b;
   if(IS_SHAPED[b]){
-    const {f} = camVectors(), eyeY = player.y+1.6;
+    const {f} = camVectors(), eyeY = player.y+EYE_H;
     const wy = eyeY + f[1]*hit.t;
     // two slabs of the same kind make one full block: aim at the open face of a slab of the same material
     if(IS_SLAB[b] && IS_SLAB[hit.b] && SH_MAT[hit.b]===SH_MAT[b] && ((hit.ny===1 && SH_HALF[hit.b]===0) || (hit.ny===-1 && SH_HALF[hit.b]===1))){
@@ -10616,7 +10642,65 @@ function toggleRun(){
   if(running && sneaking) toggleSneak();                // run and sneak exclude each other
 }
 let sneaking = false;     // toggled by R3 on the controller, or Z; slow, and you cannot walk off edges
+// ---------- your horse (Daggerfall: buy one, and the roads get shorter) ----------
+// One horse at a time, bought from a farmer. It is a real animal standing in the world where you left it (horse = its place when it is
+// not loaded). Use it to mount: you sit higher, move much faster, and cannot pass a doorway. Sneak gets you down.
+let horse = null;                                             // { x, y, z, yaw, mounted }
+const RIDE_LIFT = 0.85, HORSE_PRICE = 300;
+let wkRide = false;                                           // (a render worker is told whether you ride)
+function riding(){ return IS_WORKER ? wkRide : !!(horse && horse.mounted); }
+function horseMob(){ return mobs.find(m=>m.kind==='horse' && m.mine) || null; }
+function rideSet(on){ EYE_H = on ? 1.6+RIDE_LIFT : 1.6; BODY_H = on ? 1.69+RIDE_LIFT : 1.69; }
+function horseSpawn(x,y,z,yaw){ const m = newBeast('horse', Math.floor(x), y, Math.floor(z), 0); m.x = x; m.z = z; m.yaw = yaw||0; m.mine = true; m.idleT = 4; mobs.push(m); return m; }
+function headroom(h){ const x = Math.floor(player.x), z = Math.floor(player.z); for(let y=Math.floor(player.y+1.7); y<=Math.floor(player.y+h); y++){ const b = getB(x,y,z); if(b!==AIR && !PASS[b]) return false; } return true; }
+function mountHorse(m){
+  if(!horse || !m || !m.mine || dead) return false;
+  if(!headroom(1.69+RIDE_LIFT)){ skillToast('no room to mount here'); return true; }
+  if(sneaking) sneaking = false;
+  player.x = m.x; player.z = m.z; player.y = Math.max(player.y, m.y); player.vy = 0;
+  horse.mounted = true; m.ridden = true; rideSet(true); snd('step', { m:1, g:0.9 }); scheduleSave(); return true;
+}
+function dismountHorse(){
+  if(!riding()) return;
+  horse.mounted = false; rideSet(false);
+  let m = horseMob(); if(!m) m = horseSpawn(player.x, player.y, player.z, player.yaw);
+  m.ridden = false; m.moving = false; m.idleT = 5;
+  const px = Math.floor(player.x), py = Math.round(player.y), pz = Math.floor(player.z), rx = Math.round(Math.cos(player.yaw)), rz = Math.round(Math.sin(player.yaw));
+  for(const [ax,az] of [[-rx,-rz],[rx,rz],[0,0]]) if(npcCanStand(px+ax,py,pz+az)){ player.x = px+ax+0.5; player.z = pz+az+0.5; break; }      // you step down on its near side; it stays where it stood
+  horse.x = m.x; horse.y = m.y; horse.z = m.z; horse.yaw = m.yaw; scheduleSave();
+}
+// every frame in the saddle: the horse is under you, facing the way you ride, legs moving with the ground covered
+function rideFollow(dist){
+  if(!riding()) return; let m = horseMob(); if(!m){ m = horseSpawn(player.x, player.y, player.z, player.yaw); m.ridden = true; }
+  m.x = player.x; m.y = player.y; m.z = player.z; m.ridden = true; m.moving = dist>0.002; if(m.moving) m.phase += dist*2.6;
+  if(camMode!==0) m.yaw = bodyYaw;                          // seen from outside, horse and rider turn as one
+  else { let d = player.yaw - m.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));      // from the saddle: it turns into the way you ride, and you can look about a little without turning it
+    if(m.moving) m.yaw += d*Math.min(1, 0.2*frameScale); else if(Math.abs(d)>0.9) m.yaw += d - Math.sign(d)*0.9; }
+  horse.x = m.x; horse.y = m.y; horse.z = m.z; horse.yaw = m.yaw;
+}
+// once a second: a horse left behind is put back in the world when you come near it again, and its place is remembered
+function horseTick(){
+  if(!horse) return; const m = horseMob();
+  if(m){ if(m.dead){ if(riding()){ horse.mounted = false; rideSet(false); } horse = null; skillToast('YOUR HORSE IS DEAD', true); logJournal('The horse died.'); scheduleSave(); return; }
+    if(!horse.mounted){ horse.x = m.x; horse.y = m.y; horse.z = m.z; horse.yaw = m.yaw; } return; }
+  if(horse.mounted) return;
+  if(isUnder(player.z)!==isUnder(horse.z) || Math.hypot(horse.x-player.x, horse.z-player.z)>56) return;
+  if(!chunks.get(chunkKey(Math.floor(horse.x/CS), Math.floor(horse.z/CS)))) return;
+  horseSpawn(horse.x, horse.y, horse.z, horse.yaw);
+}
+function buyHorse(m){
+  const cost = Math.round(HORSE_PRICE*holidayMul('buy'));
+  if(horse){ talkLine = 'You have a horse already. One is plenty to feed.'; return; }
+  if(gold<cost){ talkLine = `A sound riding horse is ${cost} gold. You have ${gold}.`; return; }
+  gold -= cost; let at = null; const px = Math.floor(player.x), py = Math.round(player.y), pz = Math.floor(player.z);
+  for(let r=1; r<=4 && !at; r++) for(let a=0; a<8 && !at; a++){ const x = px+Math.round(Math.cos(a*0.785)*r), z = pz+Math.round(Math.sin(a*0.785)*r); if(npcCanStand(x,py,z) && npcCanStand(x,py,z+1)) at = [x,z]; }
+  if(!at) at = [px,pz];
+  horse = { x:at[0]+0.5, y:py, z:at[1]+0.5, yaw:player.yaw, mounted:false }; horseSpawn(horse.x, horse.y, horse.z, horse.yaw);
+  talkLine = `She is yours. Use her to climb up; sneak to get down. She will wait wherever you leave her. (${cost} gold)`;
+  logJournal('Bought a horse'+(m.village ? ' in '+villageName(m.village[0],m.village[1]) : '')+'.'); scheduleSave();
+}
 function toggleSneak(){
+  if(riding()){ dismountHorse(); return; }                 // in the saddle, sneak means get down
   sneaking = !sneaking;
   if(sneaking && running) toggleRun();
 }
@@ -11473,7 +11557,7 @@ function castSpell(){
   spendCast();
 }
 function castEffect(kind){
-  const { f, r } = camVectors(), ex = player.x, ey = player.y+1.6, ez = player.z;
+  const { f, r } = camVectors(), ex = player.x, ey = player.y+EYE_H, ez = player.z;
   const bh = cast(ex,ey,ez,f[0],f[1],f[2],30), bt = bh ? bh.t : 30;
   const mh = ratRay(ex,ey,ez,f[0],f[1],f[2],bt), at = mh ? mh.t : bt;
   const hand = [ex+f[0]*0.6+r[0]*0.32, ey+f[1]*0.6-0.28, ez+f[2]*0.6+r[2]*0.32];
@@ -11980,7 +12064,7 @@ function updateOgre(m, dt){
   P.ra = m.windup>0 ? -2.7*(1-m.windup/0.55) : m.swing>0 ? -2.7*(m.swing/0.35)+0.9*(1-m.swing/0.35) : sw*0.6;
   let rel = Math.atan2(dxp,-dzp)-m.yaw; rel = Math.atan2(Math.sin(rel),Math.cos(rel));
   P.hd = (m.hostile || dist<16) ? Math.max(-1,Math.min(1,rel)) : 0;
-  P.hp = (m.hostile || dist<16) ? Math.max(-0.7,Math.min(0.5, Math.atan2(player.y+1.6-(m.y+K.eye), dist||1))) : 0;
+  P.hp = (m.hostile || dist<16) ? Math.max(-0.7,Math.min(0.5, Math.atan2(player.y+EYE_H-(m.y+K.eye), dist||1))) : 0;
 }
 // a cyclops appears now and then, far off, on wide flat open ground with no trees, water or village near
 function trySpawnOgre(){
@@ -12052,7 +12136,7 @@ function heldGun(){ const id = HOTBAR[sel]; return GUN[id] && inv[id]>0 ? id : 0
 function fireWeapon(){
   const id = heldGun();
   if(!id || dead || paused || craftOpen || gunCool>0) return;
-  const G = GUN[id], { f, r } = camVectors(), ex = player.x, ey = player.y+1.6, ez = player.z;
+  const G = GUN[id], { f, r } = camVectors(), ex = player.x, ey = player.y+EYE_H, ez = player.z;
   gunCool = G.cool; gunKick = 1;
   // what the crosshair is on: the nearest of a block (its real shape) and a living thing
   let bt = G.range;
@@ -12293,7 +12377,7 @@ function skillMoveTick(dist, jumped){
   stealthT -= frameScale/60;
   if(sneaking && stealthT<=0){
     stealthT = 2;
-    for(const m of mobs){ if(m.dead) continue; const calm = BEAST[m.kind] ? m.angry<=0 : IS_BRUTE(m.kind) ? !m.hostile : false;
+    for(const m of mobs){ if(m.dead) continue; const calm = BEAST[m.kind] ? m.angry<=0 && !BEAST[m.kind].tame : IS_BRUTE(m.kind) ? !m.hostile : false;
       if(calm && Math.hypot(m.x-player.x,m.z-player.z)<16 && Math.abs(m.y-player.y)<6){ trainSkill('stealth'); break; } }
   }
 }
@@ -12446,6 +12530,7 @@ function drawSacks(){
   }
 }
 function die(){
+  if(riding()) dismountHorse();
   snd('death');
   const hadThings = Object.keys(inv).some(k=>inv[k]>0) || armor.some(a=>a);
   logJournal('Died.'+(hadThings ? ' Everything carried was left where you fell.' : ''));
@@ -12643,16 +12728,16 @@ function update(){
   const l=Math.hypot(mx,mz);
   if(l>1){ mx/=l; mz/=l; }
   // walk and run are close to Minecraft's ratio (sprint is about 1.3x walk)
-  const speed = (running ? 0.1 : 0.075) * (sneaking && onGroundLast ? 0.3 : 1) * (1 + skills.athletics/500) * (1 + swiftK) * frameScale;     // Athletics: up to 20% faster
+  const speed = (running ? 0.1 : 0.075) * (riding() ? 1.85 : 1) * (sneaking && onGroundLast ? 0.3 : 1) * (1 + skills.athletics/500) * (1 + swiftK) * frameScale;     // Athletics: up to 20% faster
   mx*=speed; mz*=speed;
 
   let jumped = false;
   const jumpKey = keys.Space || jumpQueued || jumpHeld || GP.jump;
   bodyInWater = waterHas(Math.floor(player.x), Math.floor(player.y+0.4), Math.floor(player.z), player.y+0.4);
-  headUnder   = waterHas(Math.floor(player.x), Math.floor(player.y+1.6), Math.floor(player.z), player.y+1.6);
+  headUnder   = waterHas(Math.floor(player.x), Math.floor(player.y+EYE_H), Math.floor(player.z), player.y+EYE_H);
   const inLava = lavaHas(Math.floor(player.x), Math.floor(player.y+0.1), Math.floor(player.z), player.y+0.1) ||
                  lavaHas(Math.floor(player.x), Math.floor(player.y+0.9), Math.floor(player.z), player.y+0.9);
-  { const headLava = lavaHas(Math.floor(player.x), Math.floor(player.y+1.6), Math.floor(player.z), player.y+1.6); const lo = document.getElementById('lavaov'); if(lo) lo.style.opacity = headLava ? '1' : '0'; }     // your view turns orange when your head is in lava
+  { const headLava = lavaHas(Math.floor(player.x), Math.floor(player.y+EYE_H), Math.floor(player.z), player.y+EYE_H); const lo = document.getElementById('lavaov'); if(lo) lo.style.opacity = headLava ? '1' : '0'; }     // your view turns orange when your head is in lava
   if(inLava){ lavaT -= frameScale/60; if(lavaT<=0){ hurt(2, true); lavaT = 0.5; } } else lavaT = 0;      // 2 hearts a second while you are in lava
   if(bodyInWater || inLava){
     // swimming: slower, you sink gently, and holding jump swims you up (and hops you out onto a ledge)
@@ -12690,6 +12775,7 @@ function update(){
   if(cactusT<=0 && !dead){ for(const [dx,dz] of H4){ for(const yo of [0.3,1.1]){ if(getB(Math.floor(player.x+dx*0.45), Math.floor(player.y+yo), Math.floor(player.z+dz*0.45))===CACTUS){ hurt(1, true); cactusT = 0.6; break; } } if(cactusT>0) break; } }
   survivalTick(Math.hypot(mx,mz), jumped); skillMoveTick(Math.hypot(mx,mz), jumped);
   updateEating();
+  rideFollow(Math.hypot(mx,mz));
   walkPhase += Math.hypot(mx,mz)*1.4;             // bob the hand by distance walked, not by frame count
   sndTick(Math.hypot(mx,mz), frameScale/60);
   { const mv = Math.hypot(mx,mz)/(0.075*frameScale), moving = mv>0.05;                    // the body (third person): limbs swing while you move, and the body turns to face where you look

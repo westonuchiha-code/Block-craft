@@ -94,6 +94,11 @@ runs before optimising.
 - **World shape, 2026-11-14.** New worlds (`worldGen` 6) are lifted 40 blocks: `setWorldShape(40)` sets `YOFF`, `SEA` (56), `TOP_BUILD` (115),
   `TREELINE`, `SNOW_LINE`, cloud height (`uCloudY` in the shader) and the rat/cat/deep lines. These are now `let`, not `const`. `surfaceH`
   works in the old frame (`SEA0` = 16) and adds `YOFF`. Ores, lava, tuff stay counted from bedrock. Older worlds: `setWorldShape(0)`.
+- **The horse, 2026-11-15.** `horse` = `{x,y,z,yaw,mounted}` in the save (one horse). It is a `BEAST` of kind `horse` with `tame:true` (no AI, cannot be hurt,
+  never counted as wildlife) and `m.mine`; its boxes are in `beastBoxes`. `buyHorse` (farmer), `mountHorse` (use), `dismountHorse` (sneak, death),
+  `rideFollow` (every frame: the mob sits under you, `m.ridden` skips its update and the mob ray), `horseTick` (once a second: remembers its place,
+  puts it back in the world when you return). Riding raises `EYE_H` and `BODY_H` (every former `player.y+1.6` now reads `EYE_H`); render workers get
+  both through `S.eye` / `S.ride`. `mobPix` (CPU and shader) nudges texel lookups by 0.002 so faces on a texel line agree in both renderers.
 - **Calendar, 2026-11-15.** `MONTHS` (8 x 12 days), `DAY0` (a new world is the 1st of Greening), `dateOf`, `dateStr`, `HOLIDAYS` (by day of year, each
   with multipliers), `holiday()`, `holidayMul(key)` (used by `buyPrice`, `sellPrice` for crops, `trainCost`, `roomCost`, `fineOf`, healing, spell
   cost, `wagonCost`), `nextHoliday()`, `holidayDawn()` (called from `questDawn`). Nothing new is saved: it all derives from `dayNo`.

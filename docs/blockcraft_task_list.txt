@@ -670,3 +670,11 @@ DONE  CALENDAR AND HOLIDAYS (Daggerfall): days now have dates - eight months of 
       Home (free bed at the inn, crops sell for half again), the Night of Lanterns (spells cost half), the Day of Pardons (fines halved),
       Thawfair (wagons half fare). The journal shows the date and the next holiday; villagers mention one when it is close.
       Works in every world; nothing new is saved. New test tests/calendar.py (suite is now 45).
+DONE  THE HORSE (Daggerfall): a farmer sells a riding horse for 300 gold. It is a real boxy animal standing in the world. USE it to mount:
+      you sit higher (view raised 0.85), its head and ears show at the bottom of your view, and you move 1.85x as fast (measured: 28.0
+      blocks against 15.3 on foot in the same time). SNEAK gets you down; it waits where you leave it, is marked on the map, and comes back
+      when you return even after it unloads; saved with the world. You cannot mount under a low roof or ride through a doorway. Third
+      person shows you in the saddle. Nobody can hurt it; guards and wildlife counts ignore it. Works in every world.
+      Both renderers match (new k_horse scene in tests/gpu.py). While matching them I found CPU and GPU could disagree on the grain of any
+      creature's hide where a face lies exactly on a texel line; both now round the same way (beasts scene now 0.01% different).
+      New test tests/horse.py (suite is now 46). Screenshot: proof/horse.png.

@@ -107,6 +107,10 @@ runs before optimising.
   guard's name (`q.board`); finishing one calls `provinceDeed` (`provDeeds` in the save, `honourOf`, `honourTitle`; a Knight's fines are halved in
   `fineOf`). The papers on the board are `noticePaper` (CPU) and shaped kind 9 (shader): keep the two tables the same. Blessing: `blessDay`, `blessed()`, `blessCost()`, `blessTick()` (saved as `bless`). Pedlar: `travellerTick` (once a second,
   by day, one at a time), `pedlarSpawnAt`, `roadWalk` (the `m.road` branch in `updateNpc`), `SHOPS.pedlar`; he has no village, so no work and no crime.
+- **The opening letter and bounty hunters, 2026-11-15.** `introLetter()` (called once after `spawnAtSurface` in a new `worldGen` 7 world) pushes a quest of
+  kind `intro` whose giver is the first village's innkeeper; `questCount()` leaves it out of `QUEST_MAX`; it is turned in with SHOW THE LETTER.
+  `hunterTick` / `hunterSpawn` (once a second): a `newBandit` marked `m.hunter` while `bounty[province key] >= 150`, outside villages, one at a time;
+  `npcChase` gives a hunter a 3000-node search.
 - **The horse, 2026-11-15.** `horse` = `{x,y,z,yaw,mounted}` in the save (one horse). It is a `BEAST` of kind `horse` with `tame:true` (no AI, cannot be hurt,
   never counted as wildlife) and `m.mine`; its boxes are in `beastBoxes`. `buyHorse` (farmer), `mountHorse` (use), `dismountHorse` (sneak, death),
   `rideFollow` (every frame: the mob sits under you, `m.ridden` skips its update and the mob ray), `horseTick` (once a second: remembers its place,

@@ -3,6 +3,7 @@ BLOCKCRAFT - PLAYTEST LIST
 == START HERE: A 15-MINUTE TOUR OF WHAT IS NEW (new world, seed 12345) ==
 Nobody has played any of this; it was all built and checked by scripts and screenshots. The sections below go into detail.
  1. You wake in Ironhold, in the March of Lormark. Sound is on (MENU -> SETTINGS -> SOUND if it annoys you).
+    A notice says there is a letter in your pocket: it is in your JOURNAL and under QUESTS, and sends you to the tavern keeper.
  2. Walk to the plaza. USE the wooden notice board at its edge: date, ruler, notices, and a posted bounty.
  3. Find the house with two hanging lamps and a sign: the tavern (The Laughing Boar). Talk to the innkeeper: room, food, rumours.
  4. Open the JOURNAL tab on your sheet: the date, the next holiday, what you have been told.
@@ -47,6 +48,12 @@ TAVERNS (new worlds only; seed 12345: The Laughing Boar in the spawn village, th
 [ ] Talk to the innkeeper: RENT A ROOM (8g, the spare bed), TRADE (hot food), ASK FOR NEWS (always has another rumour).
 [ ] Come by in the late afternoon: about two villagers in three walk over and stand about inside until well after dark, then go home.
     Does the village feel more alive for it? Do they block the doorway or crowd badly?
+
+THE OPENING LETTER, AND BOUNTY HUNTERS
+[ ] A new world starts with a letter (journal + quest list) sending you to the tavern keeper, who feeds you, hands over 25 gold and
+    points you at the notice board and the news. Is that the right amount of hand-holding? Is the wording right for the game?
+[ ] If a province wants you for 150 gold or more (two assaults, or a murder), a bounty hunter comes for you every few minutes
+    whenever you are outside a village, until you pay or serve. Killing him settles nothing. Fair, or too much?
 
 RULERS, THE NOTICE BOARD, BLESSINGS, PEDLARS
 [ ] Each province has a ruler (the border notice, the map panel and ASK FOR NEWS name them) and a rival neighbour that people gossip

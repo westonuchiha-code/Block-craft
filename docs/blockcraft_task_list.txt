@@ -706,3 +706,11 @@ DONE  HONOURS: carrying out a ruler's posted bounty is remembered in that provin
 DONE  SAFEGUARD: a villager's long path search (to the tavern, or home from it) that finds no way now waits six seconds before trying
       again instead of two, so a walled-in tavern cannot make the game hitch.
       Full suite on this build: 49/49 (proof/suite_honours.log).
+DONE  THE OPENING LETTER (Daggerfall opens with one): a new world starts with a notice, a journal entry and one line under QUESTS: an
+      unsigned letter sending you to the keeper of the first village's tavern. It never runs out and does not use one of your three
+      work slots. Show it to the keeper for a meal, 25 gold, and being told where to look next (the notice board, the news). It leads
+      a new player into everything built these two days. New worlds only. tests/intro.py.
+DONE  BOUNTY HUNTERS: while the province you are in holds 150 gold or more against you (blood, never theft), a bounty hunter comes
+      for you every few minutes whenever you are outside a village: announced, journaled, one at a time. He appears 22-30 blocks off and
+      closes in (measured: from 25.6 blocks to striking distance in under 25 seconds over rough ground). Killing him settles nothing;
+      paying or serving your time ends it. Every world. tests/hunter.py (suite is now 51).

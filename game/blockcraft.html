@@ -3583,7 +3583,7 @@ function loadWorld(id){
   refreshLock();
   updateChunks();
   if(testWorld) testChestFill();
-  if(!meta.player) { if(testWorld) testGoHall(); else spawnAtSurface(); }
+  if(!meta.player) { if(testWorld) testGoHall(); else { spawnAtSurface(); introLetter(); } }
   fallPeakY = player.y; safeT = 2;
   updateVitals();
   if(health <= 0) die();
@@ -7210,7 +7210,21 @@ function guildSheet(){
 // ---------- the journal: a dated record of what you have done, the places you have found and the work you have in hand ----------
 let journal = [];
 function logJournal(t){ journal.push({ d:dayNo, t }); if(journal.length>150) journal.splice(0, journal.length-150); scheduleSave(); }
+// ---------- how a new life begins: a letter in your pocket (Daggerfall opens with one too) ----------
+// A new world (worldGen 7, with a tavern in the first village) starts with one piece of work already written down: find the keeper of
+// that tavern. It costs nothing, never runs out, does not count against the work you may carry, and ends with a meal, a little gold
+// and being told where to look next: the notice board, and the news.
+function questCount(){ return quests.reduce((n,q)=>n+(q.kind==='intro' ? 0 : 1), 0); }
+function introLetter(){
+  if(worldGen<7 || testWorld || quests.length || journal.length) return;
+  const v = villageAt(0,0); if(!v || !v.houses || v.tavern===undefined) return;
+  const k = residentOf(0,0,v.tavern), P = provinceInfo(provinceOfVillage([0,0])), tav = tavernName(0,0), vn = villageName(0,0);
+  quests.push({ kind:'intro', id:questId++, giver:'0,0:'+v.tavern, giverName:k.name, giverJob:'innkeeper', village:[0,0], gvc:[v.cx,v.cz], due:dayNo+99999, days:99999, reward:25, rep:2, state:'done', tav, vn });
+  logJournal(`Woke near ${vn}, in ${P.name}, with a letter in my pocket. It is not signed. "Go to ${k.name}, who keeps ${tav} in ${vn}: the house with two lamps by its door. You will be fed there, and told how things stand. ${P.ruler} pays for capable hands; the notices are posted in the square."`);
+  skillToast('A LETTER IN YOUR POCKET<br><small>it is written in your journal</small>', true);
+}
 function questTitle(q){
+  if(q.kind==='intro') return 'the letter';
   return q.heist ? 'lift the strongbox from '+q.owner+"'s house in "+q.vname : q.kind==='rescue' ? 'bring '+q.who+' out of '+q.cname : q.relic ? 'bring back the heirloom from '+q.cname : q.kind==='crypt' ? (q.delve ? 'kill what rules '+q.cname : 'destroy the Crypt Lord of the '+q.cname) : q.kind==='hunt' ? 'hunt a '+BEAST_NAME[q.beast] : q.kind==='deliver' ? 'carry a parcel to '+q.toName
        : q.kind==='build' ? 'building work' : (q.order ? 'make ' : 'bring ')+q.n+' '+NAMES[q.item];
 }
@@ -7231,7 +7245,7 @@ function journalSheet(){
   return h;
 }
 function acceptQuest(m, q){
-  if(quests.length>=QUEST_MAX) return 'You already have as much work as you can carry.';
+  if(questCount()>=QUEST_MAX) return 'You already have as much work as you can carry.';
   if(!q.scaled){ q.reward = Math.round(q.reward*(1 + 0.08*(playerLevel()-1))); q.scaled = 1; }        // seasoned adventurers get paid more
   { const gid = guildOfJob(m.job); if(gid && guildRank(gid)>=0 && !q.guildPay){ q.reward = Math.round(q.reward*(1 + 0.08*(guildRank(gid)+1))); q.guildPay = 1; } }      // a guild pays its own better
   Object.assign(q, { id:questId++, giver:m.home, giverName:m.name, giverJob:m.job, village:m.village, gvc:m.vc, due:dayNo+q.days, state:'active' });
@@ -7268,10 +7282,11 @@ function renderQuests(){
   const far = (x,z)=>{ const d = Math.hypot(x-player.x,z-player.z); return d<15 ? 'right here' : `${Math.round(d/10)*10} paces ${dirWord(player.x,player.z,x,z)}`; };
   let h = '';
   for(const sk of deathSacks) h += `<div class="skRow"><div class="skHead"><b style="color:#ffe28c">Your lost belongings</b></div><div class="skDesc" style="color:#d8cfb8">A sack of everything you carried lies ${far(sk.x,sk.z)}. Look for the beam of light.</div></div>`;
-  if(!quests.length) h += '<div class="skNote">No work taken. Talk to villagers and ask them for work.</div>';
+  if(!questCount()) h += '<div class="skNote">No work taken. Talk to villagers and ask them for work.</div>';
   for(const q of quests){
     const left = q.due-dayNo, gv = q.gvc ? far(q.gvc[0],q.gvc[1]) : '';
     let goal = '';
+    if(q.kind==='intro'){ h += `<div class="skRow"><div class="skHead"><b>The letter</b><span></span></div><div class="skDesc" style="color:#d8cfb8">Find ${q.giverName}, who keeps ${q.tav} in ${q.vn} (${gv}): the house with two hanging lamps and a sign by its door.</div></div>`; continue; }
     if(q.kind==='hunt') goal = q.state==='done' ? `The ${BEAST_NAME[q.beast]} is dead. Return to ${q.giverName} (${gv}).` : `Kill the ${BEAST_NAME[q.beast]}: its den is ${far(q.at[0],q.at[1])}.`;
     else if(q.kind==='deliver') goal = `Take the parcel to ${q.toName} (${(JOB_TITLE[q.toJob]||'villager').toLowerCase()}), ${far(q.tvc[0],q.tvc[1])}.`;
     else if(q.kind==='crypt') goal = q.delve ? (q.state==='done' ? `The master of ${q.cname} is dead. Return to ${q.giverName} (${gv}).` : `Go down into ${q.cname} and kill what rules it, at the very bottom. Its gate is ${far(q.at[0],q.at[1])}.`) : q.state==='done' ? `The Crypt Lord is destroyed. Return to ${q.giverName} (${gv}).` : `Destroy the Crypt Lord in the ${q.cname}, ${far(q.at[0],q.at[1])}.`;
@@ -7379,9 +7394,9 @@ function boardAction(m, a){
     talkLine = lines.join(' '); scheduleSave();
   }
   else if(a==='bwork'){
-    const G = boardGuard(rx,rz), mine = quests.find(q=>q.board && q.giver===G.home);
-    if(mine) talkLine = `You have already taken the bounty on ${mine.cname}. ${G.name} of the watch is waiting to hear it is done.`;
-    else if(quests.length>=QUEST_MAX) talkLine = 'You have as much work as you can carry already.';
+    const G = boardGuard(rx,rz), mine = quests.find(q=>q.giver===G.home && q.kind!=='intro');
+    if(mine) talkLine = mine.board ? `You have already taken the bounty on ${mine.cname}. ${G.name} of the watch is waiting to hear it is done.` : `${G.name} of the watch, who answers for these bounties, is still waiting on other work from you. Finish that first.`;
+    else if(questCount()>=QUEST_MAX) talkLine = 'You have as much work as you can carry already.';
     else { const o = boardOffer(m); if(!o) talkLine = 'No bounty is posted. The land hereabouts is quiet, for now.'; else { talkOffer = o; talkLine = o.text; } }
   }
   else if(a==='accept' && talkOffer){ const G = boardGuard(rx,rz); acceptQuest({ home:G.home, name:G.name, job:'guard', village:m.village, vc:m.vc }, talkOffer); talkOffer = null;
@@ -7431,9 +7446,9 @@ function renderTalk(){
     h += `<div class="tkLine">\u201c${shunned ? 'We don\'t deal with your kind here. Leave.' : talkLine}\u201d</div><div class="tkBtns">`;
     if(talkOffer) h += `<button data-a="accept">ACCEPT</button><button data-a="decline">DECLINE</button>`;
     else if(!shunned){
-    const del = quests.find(q=>q.kind==='deliver' && q.to===m.home && inv[PARCEL]>0), back = quests.find(q=>q.giver===m.home && (q.kind==='hunt' || q.kind==='build' || q.kind==='crypt' || q.kind==='rescue' ? q.state==='done' : q.kind==='fetch' && (inv[q.item]||0)>=q.n));
+    const del = quests.find(q=>q.kind==='deliver' && q.to===m.home && inv[PARCEL]>0), back = quests.find(q=>q.giver===m.home && (q.kind==='hunt' || q.kind==='build' || q.kind==='crypt' || q.kind==='rescue' || q.kind==='intro' ? q.state==='done' : q.kind==='fetch' && (inv[q.item]||0)>=q.n));
     if(del) h += `<button data-a="deliver">GIVE PARCEL</button>`;
-    if(back) h += `<button data-a="turnin">${back.kind==='rescue' ? 'TELL THEM THE NEWS' : back.kind==='build' ? 'REPORT THE WORK' : back.kind==='hunt' || back.kind==='crypt' ? 'REPORT THE KILL' : 'HAND OVER '+back.n+' '+NAMES[back.item].toUpperCase()}</button>`;
+    if(back) h += `<button data-a="turnin">${back.kind==='intro' ? 'SHOW THE LETTER' : back.kind==='rescue' ? 'TELL THEM THE NEWS' : back.kind==='build' ? 'REPORT THE WORK' : back.kind==='hunt' || back.kind==='crypt' ? 'REPORT THE KILL' : 'HAND OVER '+back.n+' '+NAMES[back.item].toUpperCase()}</button>`;
     if(!m.pedlar) h += `<button data-a="work">ASK FOR WORK</button>`;
     { const gid = guildOfJob(m.job); if(gid && guildRank(gid)<0 && !(GUILDS[gid].secret && thefts<3)) h += `<button data-a="join">${GUILDS[gid].secret ? 'A WORD IN PRIVATE' : 'JOIN THE '+GUILDS[gid].name.toUpperCase()}</button>`; }
     if(TRAINS[m.job]) h += `<button data-a="train">TRAIN ${SKILLS.find(k=>k.id===TRAINS[m.job]).name.toUpperCase()} (${trainCost(TRAINS[m.job], m.job)}g)</button>`;
@@ -7495,15 +7510,18 @@ function talkAction(a){
   else if(a==='horse'){ buyHorse(m); }
   else if(a==='repair'){ const rc = repairCost(); if(gold<rc) talkLine = `That'll be ${rc} gold. You have ${gold}.`; else { gold -= rc; doRepair(); talkLine = `Good as new. (${rc} gold)`; } }
   else if(a==='work'){
-    const mine = quests.find(q=>q.giver===m.home);
+    const mine = quests.find(q=>q.giver===m.home && q.kind!=='intro');
     if(mine) talkLine = 'You already have work from me. ' + (mine.kind==='hunt' ? 'Is the beast dead yet?' : mine.kind==='deliver' ? 'Has my parcel reached ' + mine.toName + '?' : mine.kind==='build' ? 'How is the building coming along?' : mine.kind==='crypt' ? 'Is the crypt quiet yet?' : 'Where are my ' + NAMES[mine.item] + '?');
-    else if(quests.length>=QUEST_MAX) talkLine = 'You look busy enough already. Come back when you have finished your other work.';
+    else if(questCount()>=QUEST_MAX) talkLine = 'You look busy enough already. Come back when you have finished your other work.';
     else { talkOffer = questOffer(m); const r0 = talkOffer.reward; talkOffer.reward = Math.round(r0*(1 + 0.08*(playerLevel()-1))); talkOffer.scaled = 1; talkLine = talkOffer.text.replace(r0+' gold', talkOffer.reward+' gold'); }
   }
   else if(a==='accept' && talkOffer){ talkLine = acceptQuest(m, talkOffer); talkOffer = null; }
   else if(a==='decline'){ talkOffer = null; talkLine = 'Suit yourself.'; }
   else if(a==='deliver'){ const q = quests.find(q=>q.kind==='deliver' && q.to===m.home); if(q && inv[PARCEL]>0){ inv[PARCEL]--; finishQuest(q, true); talkLine = `Ah, from ${q.giverName}! Thank you. Here's ${q.reward} gold.`; } }
-  else if(a==='turnin'){ const q = quests.find(q=>q.giver===m.home);
+  else if(a==='turnin'){ const q = quests.find(q=>q.giver===m.home && q.kind==='intro') || quests.find(q=>q.giver===m.home);
+    if(q && q.kind==='intro'){ finishQuest(q, true); inv[MEAT_STEW] = (inv[MEAT_STEW]||0)+1; autoFillHotbar(MEAT_STEW); const P = provinceInfo(provinceOfVillage(m.village));
+      talkLine = `So you are the one. I was told to look out for you, and not by whom. Sit, eat. This was left for you: ${q.reward} gold. If it is work you want, ${P.ruler} posts bounties on the board in the square, and most folk here have something that needs doing. If you want to know how things stand, ask me for the news.`; }
+    else
     if(q && q.kind==='hunt' && q.state==='done'){ finishQuest(q, true); talkLine = `You killed it? The village owes you. ${q.reward} gold, as promised.`; }
     else if(q && q.kind==='crypt' && q.state==='done'){ finishQuest(q, true); talkLine = q.delve ? `You went to the bottom of ${q.cname} and came back? Then it is true, the thing is dead. ${q.reward} gold, and our thanks with it.` : `The Crypt Lord is gone? Then the dead will rest. ${q.reward} gold, with our thanks.`; }
     else if(q && q.kind==='rescue' && q.state==='done'){ finishQuest(q, true); talkLine = `${q.who} is alive? Out of that place? You have given us back more than gold can pay for. Here: ${q.reward} gold, all the same.`; }
@@ -7924,6 +7942,24 @@ function roadWalk(m, dt){
   if(p){ ratSetPath(m,p); return npcWalk(m, NPC_WALK*1.25); }
   return false;
 }
+// ---------- bounty hunters: a province that wants you badly enough does not wait for you to walk into a village ----------
+// While the province you are in holds 150 gold or more against you (so: for blood, never for theft), every few minutes out on the
+// road or in the wild a hunter comes for you. Killing them settles nothing: only paying or serving does.
+let hunterT = 45;
+function hunterSpawn(){
+  for(let k=0;k<30;k++){ const an = Math.random()*6.283, r = 22+Math.random()*8, x = Math.floor(player.x+Math.cos(an)*r), z = Math.floor(player.z+Math.sin(an)*r), y = colInfo(x,z).h+1;
+    if(Math.abs(y-player.y)>8 || !npcCanStand(x,y,z)) continue;
+    const m = newBandit(x,y,z, dangerAt(x,y,z), false); m.hunter = 1; m.name = m.ch.name+' the bounty hunter'; m.ch.topCol = '#2e3a4a'; m.ch.topTrim = '#b08a3a'; m.model = bodyModel(m.ch); m.angry = 90; mobs.push(m); return m; }
+  return null;
+}
+function hunterTick(){
+  if(worldGen<2 || testWorld || dead || isUnder(player.z) || isTestZ(player.z)) return;
+  const P = provinceAt(player.x, player.z), w = bounty[P.key]||0;
+  if(w<150){ hunterT = 45; return; }
+  if(--hunterT>0) return; hunterT = 200 + Math.floor(Math.random()*140);
+  if(nearVillage(Math.floor(player.x), Math.floor(player.z)) || mobs.some(m=>m.hunter && !m.dead)) return;      // not under the guards' eyes, and one at a time
+  if(hunterSpawn()){ skillToast('A BOUNTY HUNTER<br><small>'+provinceInfo(P).ruler+' wants '+w+' gold of you</small>', true); logJournal('A bounty hunter came for me in '+P.name+'.'); }
+}
 function npcDoors(m){
   if(m.door){ const [x,y,z] = m.door, b = getB(x,y,z);
     if(Math.hypot(x+0.5-m.x, z+0.5-m.z)>1.6){ if(IS_DOOR[b] && SH_OPEN[b] && !(Math.floor(player.x)===x && Math.floor(player.z)===z)) npcToggleDoor(x,y,z); m.door = null; } }
@@ -7948,8 +7984,8 @@ function npcFindFoe(m){
 function npcChase(m, tx, ty, tz, dt){
   m.replanT -= dt;
   if(m.replanT<=0 || !m.path || m.pi>=m.path.length){
-    m.replanT = 0.5+Math.random()*0.2;
-    const p = npcPath(m, (x,y,z)=>Math.hypot(x+0.5-tx,z+0.5-tz)<1.3 && Math.abs(y-ty)<2, 500);
+    m.replanT = (m.hunter ? 1.2 : 0.5)+Math.random()*0.2;
+    const p = npcPath(m, (x,y,z)=>Math.hypot(x+0.5-tx,z+0.5-tz)<1.3 && Math.abs(y-ty)<2, m.hunter ? 3000 : 500);      // (a hunter starts a long way off and looks further for the way)
     if(p) ratSetPath(m,p); else m.path = null;
   }
   if(m.path && npcWalk(m, NPC_RUN)) return true;
@@ -9263,7 +9299,7 @@ function updateMobs(){
   if(catSpawnT<=0){ catSpawnT = catnipHere ? 4.5 : 9; if(!underNow) trySpawnCats(); }
   ogreSpawnT -= dt; if(ogreSpawnT<=0){ ogreSpawnT = 20; if(!underNow){ trySpawnOgre(); trySpawnMino(); } else { trySpawnBeetles(); if(isUnder(player.z)) trySpawnDaedra(); } }
   if(NPCS_IN_WORLD){ npcSpawnT -= dt; if(npcSpawnT<=0){ npcSpawnT = 3; trySpawnNpcs(); questTick(); } }
-  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); provinceTick(); horseTick(); blessTick(); travellerTick(); lavaFireTick(); }
+  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); provinceTick(); horseTick(); blessTick(); travellerTick(); hunterTick(); lavaFireTick(); }
   const pcx=Math.floor(player.x), pcy=Math.floor(player.y), pcz=Math.floor(player.z);
   const inRatZone = ratAllowed(pcx,pcy,pcz);
   for(let i=mobs.length-1;i>=0;i--){

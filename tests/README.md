@@ -24,7 +24,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 
 ## Run
 
-- `bash suite.sh`: the regression suite (49 scripts, about 30 minutes). Each line prints `name rc=<exit code>`
+- `bash suite.sh`: the regression suite (51 scripts, about 30 minutes). Each line prints `name rc=<exit code>`
   and the script's last output line. A failure is a non-zero exit, `ERR` (traceback), or page errors in the
   printed list. Many scripts also print values meant to be read, not only asserted.
 - `python3 gpu.py`: renders 6 scenes with the CPU renderer and the GPU renderer at the same size and fails if
@@ -55,6 +55,8 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 | board | the notice board: one in every plaza, the panel, a rumour a day, the ruler's bounty reported to the guard |
 | bless | a temple blessing: cost, slow healing until the sunrise after next, fading, saved |
 | pedlar | a pedlar sets out on a road near you, follows it, trades, offers no work, is no witness |
+| intro | a new world's opening letter: in the quest list and journal, costs no work slot, never expires, ends at the tavern keeper |
+| hunter | bounty hunters: come only for 150 gold or more, only outside villages, one at a time, close in; killing one settles nothing |
 | delve | delves: lifted world shape, every chamber and the master reachable on foot, master kill, chests, quest, map entry |
 | sh2, sh4, sh5, sc, bb | stairs, slabs and other shaped blocks, recipes |
 | fe | fences |

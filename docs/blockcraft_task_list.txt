@@ -761,3 +761,4 @@ DONE  THE REALM MAP (Daggerfall's travel map): a REALM button on the map draws t
       the villages you have been to, the delves and barrows you have been told of, your horse, your lost belongings, a scale bar.
       Labels never overlap (nearest the middle first; one that would cover another is left out). It is painted once and reused, so
       it costs nothing to keep open (0.3 ms a redraw). Every world. Screenshot: proof/realm_map.png. In tests/province.py and the soak.
+      Full suite on this build (realm map + memory trim): 54/54 (proof/suite_realm.log).

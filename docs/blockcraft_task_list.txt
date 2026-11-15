@@ -752,3 +752,7 @@ FIXED FREEZE WHEN ENTERING NEW COUNTRY. Measured first: the first chunk generate
         this build riding, background planning off:    worst frame 94 ms, 2 over 50 ms
       So new land streams in more smoothly on a horse now than it did on foot at handover. (This sandbox's CPU; a phone will be slower
       across the board, but the comparison should hold.)
+DONE  MEMORY ON LONG JOURNEYS: the plans the game keeps for villages, roads, crypts and delves were never let go, so travelling a very
+      long way slowly used more and more memory (about 0.1 MB a village, 5 MB of road data for the country round one spot). Plans for
+      country more than about 1,700 blocks behind you are now dropped (and worked out again, the same, if you return). Nothing near you
+      is ever dropped. tests/plan.py checks it: 881 of 1,155 far entries dropped, the near ones kept, the planner carries on.

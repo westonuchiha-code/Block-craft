@@ -5398,7 +5398,7 @@ function plStart(){
 }
 function plTick(){                                             // once a second: ask for the nearest region round you that nobody has planned yet
   if(IS_WORKER || worldGen<4 || testWorld || !currentWorld || isUnder(player.z) || isTestZ(player.z)) return;
-  plStart(); if(!PLN.w || PLN.busy) return;
+  plTrim(); plStart(); if(!PLN.w || PLN.busy) return;
   const wk = SEED+':'+worldGen+':'+YOFF; if(PLN.world!==wk){ PLN.world = wk; PLN.asked.clear(); }
   const prx = Math.floor(player.x/DRS), prz = Math.floor(player.z/DRS); let best = null, bd = 1e18;
   for(let a=-2;a<=2;a++) for(let c=-2;c<=2;c++){ const rx = prx+a, rz = prz+c, k = rx+','+rz; if(PLN.asked.has(k)) continue;
@@ -5407,8 +5407,23 @@ function plTick(){                                             // once a second:
   PLN.asked.add(best[2]); PLN.busy = true;
   try{ PLN.w.postMessage({ plan:1, seed:SEED, gen:worldGen, yoff:YOFF, drx:best[0], drz:best[1] }); }catch(e){ PLN.busy = false; PLN.fail = true; }
 }
+// Plans for country you have left far behind are let go (they are worked out again, the same, if you ever come back), so a very long
+// journey does not slowly fill the memory. Nothing near you is ever dropped: people and quests only refer to places close by.
+let plTrimT = 0;
+function plTrim(force){
+  if(IS_WORKER) return; if(!force && ++plTrimT<30) return; plTrimT = 0;
+  const far = (M, size, R, lim)=>{ if(M.size<=lim) return 0; let n = 0; const px = player.x/size, pz = player.z/size;
+    for(const k of [...M.keys()]){ const rx = Math.floor((k+65536)/131072), rz = k-rx*131072; if(Math.abs(rx+0.5-px)>R || Math.abs(rz+0.5-pz)>R){ M.delete(k); n++; } } return n; };
+  let n = far(villageCache, VREG, 9, 500) + far(roadEdgeCache, VREG, 9, 140) + far(delveByNum, DRS, 7, 260);
+  if(cryptByNum.size>700){ const px = player.x/CRS, pz = player.z/CRS; for(const k of [...cryptByNum.keys()]){ const rx = Math.floor((k+65536)/131072), rz = k-rx*131072; if(Math.abs(rx+0.5-px)>11 || Math.abs(rz+0.5-pz)>11){ cryptByNum.delete(k); cryptCache.delete(rx+','+rz); n++; } } }
+  if(n){ roadMemoCx = 1e9; cryptMemoRx = 1e9; delveMemoRx = 1e9;
+    const prx = Math.floor(player.x/DRS), prz = Math.floor(player.z/DRS); for(const k of [...PLN.asked]){ const q = k.split(',').map(Number); if(Math.abs(q[0]-prx)>4 || Math.abs(q[1]-prz)>4) PLN.asked.delete(k); }
+    if(PLN.w) try{ PLN.w.postMessage({ plan:1, forget:1 }); }catch(e){} }
+  return n;
+}
 function plGot(d){
-  PLN.busy = false; if(!d || !d.plan) return;
+  if(!d || !d.plan || d.forgot) return;
+  PLN.busy = false;
   if(d.err){ PLN.err = d.err; return; }
   if(d.seed!==SEED || d.gen!==worldGen || d.yoff!==YOFF) return;                        // (an answer for a world you have since left)
   for(const [k,v] of d.villages) if(!villageCache.has(k)) villageCache.set(k, v);
@@ -5419,6 +5434,7 @@ function plGot(d){
 }
 // in the planning worker: plan one region's surroundings, and send back everything planned so far that has not been sent yet
 function planJob(S){
+  if(S.forget){ planJob.sent = null; return { plan:1, forgot:1 }; }      // (the page has let far country go: start again from nothing, so that whatever it asks for next is sent in full)
   const out = { plan:1, seed:S.seed, gen:S.gen, yoff:S.yoff, drx:S.drx, drz:S.drz, villages:[], crypts:[], edges:[], delves:[] };
   try{
     if(!planJob.sent || SEED!==S.seed || worldGen!==S.gen || YOFF!==S.yoff){

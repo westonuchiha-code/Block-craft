@@ -44,6 +44,16 @@ with sync_playwright() as p:
       return o; }""")
     print('first chunk of new land, ms:', json.dumps(t), errs)
     if not (max(t['warm'])<40 and max(t['cold'])>2*max(t['warm'])): bad.append('no freeze on planned land')
+    # 3. far country is let go, near country is kept, and the worker carries on afterwards
+    m=pg.evaluate("""()=>{ const prx=Math.floor(player.x/VREG), prz=Math.floor(player.z/VREG), near=villageAt(prx,prz), o={};
+      for(let a=30;a<70;a++) for(let c=-8;c<8;c++) villageAt(prx+a, prz+c);                       // as if you had been a long way east
+      o.before=villageCache.size; o.dropped=plTrim(true); o.after=villageCache.size; o.nearKept=villageAt(prx,prz)===near; o.farGone=!villageCache.has(chunkKey(prx+50,prz));
+      o.again=!!villageAt(prx+50,prz) || villageAt(prx+50,prz)===null; paused=false; PLN.busy=false; o.got0=PLN.got; player.x+=4*DRS; lastPCX=null; return o; }""")
+    for i in range(30):
+        pg.wait_for_timeout(1500); g=pg.evaluate("()=>[PLN.got, PLN.fail, PLN.err||'']")
+        if g[0]>m['got0']+2: break
+    print('trim', json.dumps(m), 'worker after', g)
+    if not (m['before']>600 and m['dropped']>300 and m['after']<m['before']-300 and m['nearKept'] and m['farGone'] and m['again'] and g[0]>m['got0']+2 and not g[1] and g[2]==''): bad.append('far country is let go')
     b.close()
 print('PLAN TEST FAILED', bad) if bad else print('plan ok')
 sys.exit(1 if (bad or errs) else 0)

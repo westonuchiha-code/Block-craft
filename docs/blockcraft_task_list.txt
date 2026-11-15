@@ -678,3 +678,6 @@ DONE  THE HORSE (Daggerfall): a farmer sells a riding horse for 300 gold. It is 
       Both renderers match (new k_horse scene in tests/gpu.py). While matching them I found CPU and GPU could disagree on the grain of any
       creature's hide where a face lies exactly on a texel line; both now round the same way (beasts scene now 0.01% different).
       New test tests/horse.py (suite is now 46). Screenshot: proof/horse.png.
+      Full suite on this build: 45/46 on the run (proof/suite_horse.log); the one failure was tests/tavern.py's "home at night" check, which
+      read villagers as not home when they had gone home and then stepped out to chase the night's rats (and the machine was overloaded by
+      other tests running alongside). The test now counts anyone who has been home; rerun alone it passes. The game itself was not changed.

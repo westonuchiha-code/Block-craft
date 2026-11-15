@@ -42,19 +42,20 @@ with sync_playwright() as p:
     q="""()=>{ const h=window.__h, W=(h.r&1)?h.d:h.w, D=(h.r&1)?h.w:h.d, inn=m=>Math.abs(m.x-0.5-h.x)<=(W-1)/2 && Math.abs(m.z-0.5-h.z)<=(D-1)/2;
       const L=mobs.filter(m=>m.kind==='npc' && m.job!=='guard' && m.job!=='innkeeper');
       return { drinkers:L.filter(npcDrinks).length, inTavern:L.filter(m=>npcDrinks(m)&&inn(m)).length, soberIn:L.filter(m=>!npcDrinks(m)&&inn(m)).length,
-               home:L.filter(m=>Math.hypot(m.x-0.5-m.house.inside[0], m.z-0.5-m.house.inside[2])<2.5).length, all:L.length, hour:tavernHour() }; }"""
+               home:(()=>{ window.__home=window.__home||new Set(); for(const m of L) if(Math.hypot(m.x-0.5-m.house.inside[0], m.z-0.5-m.house.inside[2])<2.5) window.__home.add(m.home); return L.filter(m=>window.__home.has(m.home)).length; })(),      // (has been home: at night some step out again to see off the rats)
+               all:L.length, hour:tavernHour() }; }"""
     e={}
-    for i in range(9):
+    for i in range(16):
         pg.wait_for_timeout(6000); pg.evaluate("()=>{ if(tod>0.5 || tod<0.42) tod=0.45; }"); e=pg.evaluate(q)
         if e['drinkers'] and e['inTavern']==e['drinkers']: break
     print('evening', json.dumps(e))
     if not (e['hour'] and e['drinkers']>=1 and e['inTavern']==e['drinkers'] and e['soberIn']==0): bad.append('evening at the tavern')
-    pg.evaluate("()=>{ tod=0.62; }"); n={}
-    for i in range(10):
+    pg.evaluate("()=>{ tod=0.62; window.__home=new Set(); }"); n={}
+    for i in range(16):
         pg.wait_for_timeout(6000); pg.evaluate("()=>{ if(tod>0.9 || tod<0.6) tod=0.62; }"); n=pg.evaluate(q)
         if n['home']==n['all']: break
     print('night', json.dumps(n)); print(errs)
-    if not (not n['hour'] and n['home']==n['all'] and n['all']>=3): bad.append('home at night')
+    if not (not n['hour'] and n['home']==n['all'] and n['all']>=3 and n['inTavern']==0): bad.append('home at night')
     b.close()
 print('TAVERN TEST FAILED', bad) if bad else print('tavern ok')
 sys.exit(1 if (bad or errs) else 0)

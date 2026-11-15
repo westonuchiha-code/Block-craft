@@ -2614,6 +2614,10 @@ function planVillage(cx,cz,rnd){
       if(!ok || hi-lo>4) continue;
       V.rects.push(R); starts.push(buildHouse(V,put,hOf,tr,hx,hz,w,d,r,Math.round(sum/cnt),'innkeeper')); V.tavern = V.houses.length-1;
     } }
+  // every village keeps a watch (worldGen 7): where no house is a guard's, an ordinary villager's becomes one, so that no trade is lost;
+  // failing that the fisher's or the miner's, and last of all whoever lives in the first house
+  if(worldGen>=7 && !V.houses.some(h=>h.job==='guard')){ let i = -1; for(const j of ['villager','fisher','miner']){ i = V.houses.findIndex(h=>h.job===j); if(i>=0) break; }
+    if(i<0) i = V.houses.findIndex(h=>h.job!=='innkeeper'); if(i>=0) V.houses[i].job = 'guard'; }
   // --- paths from every door to the plaza: two blocks wide, with steps cut or built wherever the ground rises or falls ---
   for(const st of starts){
     let x = st[0], z = st[1], L = st[2];
@@ -2869,7 +2873,7 @@ function buildHouse(V,put,hOf,rnd,hx,hz,w,d,r,F,job){
   const level = F, q = T(um,d);
   { const th = hOf(q[0],q[1]); for(let y=Math.min(th,F-1); y<F; y++) put(q[0],y,q[1],COBBLE); put(q[0],F,q[1],COBBLE); for(let y=F+1;y<=Math.max(F+2,th+1);y++) put(q[0],y,q[1],AIR); }
   const dq = T(um,d-1), iq = T(um,d-2), bq = T(1,2), oq = T(um,d);
-  V.houses.push({ job, door:[dq[0],F+1,dq[1]], inside:[iq[0],F+1,iq[1]], bed:[bq[0],F+1,bq[1]], guest: guest ? [guest[0],F+1,guest[1]] : null, out:[oq[0],F+1,oq[1]], x:hx, z:hz, F, w, d, r });
+  V.houses.push({ job, door:[dq[0],F+1,dq[1]], inside:[iq[0],F+1,iq[1]], bed:[bq[0],F+1,bq[1]], guest: guest ? [guest[0],F+1,guest[1]] : null, keep: job==='innkeeper' ? [T(w-3,2)[0],F+1,T(w-3,2)[1]] : null, out:[oq[0],F+1,oq[1]], x:hx, z:hz, F, w, d, r });
   return [q[0], q[1], level];
 }
 // a fenced field: wet tilled soil either side of a water channel, with ripe and growing crops
@@ -7217,10 +7221,13 @@ function logJournal(t){ journal.push({ d:dayNo, t }); if(journal.length>150) jou
 function questCount(){ return quests.reduce((n,q)=>n+(q.kind==='intro' ? 0 : 1), 0); }
 function introLetter(){
   if(worldGen<7 || testWorld || quests.length || journal.length) return;
-  const v = villageAt(0,0); if(!v || !v.houses || v.tavern===undefined) return;
-  const k = residentOf(0,0,v.tavern), P = provinceInfo(provinceOfVillage([0,0])), tav = tavernName(0,0), vn = villageName(0,0);
-  quests.push({ kind:'intro', id:questId++, giver:'0,0:'+v.tavern, giverName:k.name, giverJob:'innkeeper', village:[0,0], gvc:[v.cx,v.cz], due:dayNo+99999, days:99999, reward:25, rep:2, state:'done', tav, vn });
-  logJournal(`Woke near ${vn}, in ${P.name}, with a letter in my pocket. It is not signed. "Go to ${k.name}, who keeps ${tav} in ${vn}: the house with two lamps by its door. You will be fed there, and told how things stand. ${P.ruler} pays for capable hands; the notices are posted in the square."`);
+  const prx = Math.floor(player.x/VREG), prz = Math.floor(player.z/VREG); let best = null, bd = 1e18;      // the nearest village that has a tavern (the world's first village is not always at its origin)
+  for(let a=-3;a<=3;a++) for(let c=-3;c<=3;c++){ const v = villageAt(prx+a, prz+c); if(!v || !v.houses || v.tavern===undefined) continue; const d = Math.hypot(v.cx-player.x, v.cz-player.z); if(d<bd){ bd = d; best = [prx+a, prz+c, v]; } }
+  if(!best) return; const [rx,rz,v] = best;
+  const k = residentOf(rx,rz,v.tavern), P = provinceInfo(provinceOfVillage([rx,rz])), tav = tavernName(rx,rz), vn = villageName(rx,rz);
+  const where = bd<70 ? `near ${vn}` : `in the wild, about ${Math.round(bd/10)*10} paces ${dirWord(v.cx,v.cz,player.x,player.z)} of ${vn}`;
+  quests.push({ kind:'intro', id:questId++, giver:rx+','+rz+':'+v.tavern, giverName:k.name, giverJob:'innkeeper', village:[rx,rz], gvc:[v.cx,v.cz], due:dayNo+99999, days:99999, reward:25, rep:2, state:'done', tav, vn });
+  logJournal(`Woke ${where}, in ${P.name}, with a letter in my pocket. It is not signed. "Go to ${k.name}, who keeps ${tav} in ${vn}: the house with two lamps by its door. You will be fed there, and told how things stand. ${P.ruler} pays for capable hands; the notices are posted in the square."`);
   skillToast('A LETTER IN YOUR POCKET<br><small>it is written in your journal</small>', true);
 }
 function questTitle(q){
@@ -8041,11 +8048,12 @@ function updateNpc(m, dt){
     }
     walking = npcWalk(m, NPC_RUN);
   } else if(m.house && !guard && m.home && tavernHour() && (m.job==='innkeeper' || npcDrinks(m)) && tavernOf(m)){      // evening: the tavern fills up (its keeper minds the bar)
-    if(m.innDay!==dayNo || !m.innAt){ m.innDay = dayNo; m.innAt = m.job==='innkeeper' ? m.house.inside : tavernSpot(tavernOf(m), m); }
+    if(m.innDay!==dayNo || !m.innAt){ m.innDay = dayNo; m.innAt = m.job==='innkeeper' ? (m.house.keep && npcCanStand(m.house.keep[0],m.house.keep[1],m.house.keep[2]) ? m.house.keep : m.house.inside) : tavernSpot(tavernOf(m), m); }      // the keeper stands behind the bar, out of the doorway
     walking = m.innAt ? npcGoTo(m, m.innAt, dt, NPC_WALK*1.2, 7000) : false;      // the tavern can be right across the village: look further for the way
     if(!walking){ m.state = 'home'; if(Math.random()<dt*0.2) m.yaw += (Math.random()-0.5)*2; }
   } else if(m.house && ratNight && !guard){                                            // night: home to bed
-    walking = npcGoTo(m, m.house.inside, dt, NPC_WALK*1.4, Math.hypot(m.house.inside[0]-m.x, m.house.inside[2]-m.z)>14 ? 7000 : 1500);      // (a long way if they were at the tavern)
+    const hm = m.house.keep && npcCanStand(m.house.keep[0],m.house.keep[1],m.house.keep[2]) ? m.house.keep : m.house.inside;      // (an innkeeper's place is behind the bar, not in the doorway his patrons leave by)
+    walking = npcGoTo(m, hm, dt, NPC_WALK*1.4, Math.hypot(hm[0]-m.x, hm[2]-m.z)>14 ? 7000 : 1500);      // (a long way if they were at the tavern)
     if(!walking){ m.state = 'home'; if(Math.random()<dt*0.2) m.yaw += (Math.random()-0.5)*2; }
   } else if(m.road){                                                                   // a traveller on the road
     walking = roadWalk(m, dt); if(!walking) m.moving = false;
@@ -8407,7 +8415,11 @@ function ratWalk(m, speed){
     else { let t = Math.atan2(dx,-dz) - m.yaw; t = Math.atan2(Math.sin(t), Math.cos(t)); m.yaw += t*Math.min(1, 0.3*frameScale); } }      // animals swing round to a new heading over a few frames, they do not snap
   const ty = d<0.6 ? standY(n[0],n[1],n[2]) : Math.max(m.y, standY(n[0],n[1],n[2])), dyy = ty-m.y;      // rise early for a step up, sink onto a slab once over it
   m.y += Math.max(-0.4, Math.min(0.22, dyy));
-  if(d<0.12 && Math.abs(ty-m.y)<0.3){ m.pi++; }
+  // People give way to each other (they are pushed apart), so several making for the same cell - a doorway - could each be kept
+  // from ever standing on its exact middle. After a second of that, near enough counts, a little more each moment, and they file through.
+  if(m.kind==='npc'){ m.wpT = (m.wpI===m.pi ? (m.wpT||0) : 0) + frameScale/60; m.wpI = m.pi; }
+  const reach = m.kind==='npc' ? 0.12 + Math.min(0.62, Math.max(0, m.wpT-1)*0.3) : 0.12;
+  if(d<reach && Math.abs(ty-m.y)<0.3){ m.pi++; }
   m.moving = true; m.phase += step*5;
   return true;
 }

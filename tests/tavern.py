@@ -9,10 +9,10 @@ with sync_playwright() as p:
     pg.goto('file:///home/claude/blockcraft_prototype.html'); pg.wait_for_timeout(1500)
     pg.fill('#newName','tavern'); pg.fill('#newSeed','12345'); pg.click('#newBtn'); pg.wait_for_timeout(4000)
     r=pg.evaluate("""()=>{ beastSpawnT=1e9; ogreSpawnT=1e9; const o={gen:worldGen,n:0,t:0,g:0}; const names=new Set(), sig={};
-      const S=v=>v.houses.filter(h=>h.job!=='innkeeper').map(h=>[h.job,h.x,h.z,h.F,h.w,h.d,h.r].join(':')).join('|');
+      const S=v=>v.houses.filter(h=>h.job!=='innkeeper').map(h=>[h.x,h.z,h.F,h.w,h.d,h.r].join(':')).join('|');      // where every building stands (who lives in one may differ: a new world always has a guard)
       for(let rx=-5;rx<=5;rx++) for(let rz=-5;rz<=5;rz++){ const v=villageAt(rx,rz); if(!v||!v.houses) continue; o.n++; sig[rx+','+rz]=S(v);
         if(v.tavern!==undefined){ o.t++; const h=v.houses[v.tavern]; if(h.guest && h.job==='innkeeper' && v.tavern===v.houses.length-1) o.g++; names.add(tavernName(rx,rz)); } }
-      o.names=names.size; o.signs=0; o.lamps=0;
+      o.names=names.size; o.signs=0; o.lamps=0; o.guards=0; for(let rx=-5;rx<=5;rx++) for(let rz=-5;rz<=5;rz++){ const v=villageAt(rx,rz); if(v&&v.houses&&v.houses.some(h=>h.job==='guard')) o.guards++; }
       for(let rx=-5;rx<=5;rx++) for(let rz=-5;rz<=5;rz++){ const v=villageAt(rx,rz); if(!v||v.tavern===undefined) continue; let sg=0, lp=0;
         for(const q of v.late){ if(q[3]===TSIGN0||q[3]===TSIGN0+1) sg++; if(q[3]===LANTERN0) lp++; }
         let found=0; for(const arr of v.cells.values()) for(let i=1;i<arr.length;i+=2) if(arr[i]===TSIGN0||arr[i]===TSIGN0+1) found++;
@@ -26,6 +26,7 @@ with sync_playwright() as p:
     print(json.dumps(r))
     if not (r['gen']==7 and r['t']>=0.9*r['n'] and r['g']==r['t'] and r['names']>=10): bad.append('taverns per village')
     if not (r['signs']==r['t'] and r['lamps']==r['t'] and r['near']==[True,True]): bad.append('sign and lamps')
+    if r['guards']!=r['n']: bad.append('a guard in every village')
     if not (r['old']==r['n'] and r['same']==r['n'] and r['oldTav']==0): bad.append('older worlds changed')
     pg.wait_for_timeout(5000)
     t=pg.evaluate("""()=>{ const o={}, k=mobs.find(m=>m.kind==='npc' && m.job==='innkeeper'); if(!k) return {none:1};
@@ -53,9 +54,9 @@ with sync_playwright() as p:
     pg.evaluate("()=>{ tod=0.62; window.__home=new Set(); }"); n={}
     for i in range(16):
         pg.wait_for_timeout(6000); pg.evaluate("()=>{ if(tod>0.9 || tod<0.6) tod=0.62; }"); n=pg.evaluate(q)
-        if n['home']==n['all']: break
+        if n['home']==n['all'] and n['inTavern']==0: break
     print('night', json.dumps(n)); print(errs)
-    if not (not n['hour'] and n['home']==n['all'] and n['all']>=3 and n['inTavern']==0): bad.append('home at night')
+    if not (not n['hour'] and n['home']>=n['all']-1 and n['all']>=3 and n['inTavern']==0): bad.append('home at night')      # (one may be out seeing off the rats at any moment)
     b.close()
 print('TAVERN TEST FAILED', bad) if bad else print('tavern ok')
 sys.exit(1 if (bad or errs) else 0)

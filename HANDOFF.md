@@ -111,6 +111,11 @@ runs before optimising.
   kind `intro` whose giver is the first village's innkeeper; `questCount()` leaves it out of `QUEST_MAX`; it is turned in with SHOW THE LETTER.
   `hunterTick` / `hunterSpawn` (once a second): a `newBandit` marked `m.hunter` while `bounty[province key] >= 150`, outside villages, one at a time;
   `npcChase` gives a hunter a 3000-node search.
+- **Found by the soak test and the flaky tavern test, 2026-11-15.** (1) `ratWalk`: people are pushed apart, so several making for one cell (a doorway)
+  could deadlock, each kept off its exact middle; a waypoint now counts as reached from further away the longer a person is held off it
+  (`m.wpT`). (2) A new world's village always has a guard (`planVillage`, end): about 40% had none, so nobody there could arrest you. (3) The
+  innkeeper's place is `house.keep` (behind the bar), in the evening and at night, not the doorway cell. (4) `introLetter` uses the nearest
+  village with a tavern: a world's first village is not always in region 0,0. `tests/soak.py` is the long-session test; run it after any big change.
 - **The horse, 2026-11-15.** `horse` = `{x,y,z,yaw,mounted}` in the save (one horse). It is a `BEAST` of kind `horse` with `tame:true` (no AI, cannot be hurt,
   never counted as wildlife) and `m.mine`; its boxes are in `beastBoxes`. `buyHorse` (farmer), `mountHorse` (use), `dismountHorse` (sneak, death),
   `rideFollow` (every frame: the mob sits under you, `m.ridden` skips its update and the mob ray), `horseTick` (once a second: remembers its place,

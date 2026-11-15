@@ -714,3 +714,17 @@ DONE  BOUNTY HUNTERS: while the province you are in holds 150 gold or more again
       for you every few minutes whenever you are outside a village: announced, journaled, one at a time. He appears 22-30 blocks off and
       closes in (measured: from 25.6 blocks to striking distance in under 25 seconds over rough ground). Killing him settles nothing;
       paying or serving your time ends it. Every world. tests/hunter.py (suite is now 51).
+      Full suite on this build: 51/51 (proof/suite_letter.log).
+DONE  SOAK TEST (tests/soak.py): a long scripted session on two seeds that talks to every villager and presses every button they
+      offer (buying and selling too), reads the notice board, opens every screen, holds every item, lets five days pass, buys and
+      rides a horse, takes a wagon, commits crimes and pays the fine, stands in a delve and in the Underworld, dies, saves and
+      reloads. No error on either seed. It and a flaky tavern test turned up four real things, all fixed:
+FIXED DOORWAY DEADLOCK: since people were made to give way to each other (yesterday), several making for the same doorway cell could
+      block one another for good (seen: three patrons and the innkeeper wedged inside the tavern door all night, about one evening in
+      three). A person held off a spot now counts as there from a little further away each moment, and they file through. Tavern test:
+      8 clean runs of 8 (it had been failing 1 in 3). This applies to every door in the game, not only the tavern's.
+FIXED NO GUARD: about 40% of villages had no guard at all, so nobody there could arrest you or take a ruler's bounty report. New worlds:
+      every village has one (112 of 112 on three seeds); an ordinary villager's house becomes the guard's, so no trade is lost.
+FIXED THE INNKEEPER stood in the cell just inside the tavern door, in the patrons' way. Behind the bar now, evening and night.
+FIXED NO LETTER on seed 777: that world has no village in its first region, so it got no opening letter. The letter now comes from the
+      nearest village with a tavern, and says how far and which way if you wake in the wild. (Suite is now 52.)

@@ -88,6 +88,11 @@ CALENDAR AND HOLIDAYS (every world)
 [ ] Are eight holidays in a 96-day year too many, too few? Do the month names sit right (Frostwane, Seedfall, Greening, Highsun,
     Goldleaf, Harvestmoon, Emberfall, Deepwinter)?
 
+WHAT PEOPLE SAY
+[ ] Villagers now often open with something about the moment (night, rain, a holiday, your horse, your wounds, your honours, how the
+    village feels about you), and ASK FOR NEWS sometimes brings gossip about a named neighbour. Read a few: does the voice fit the
+    game? Any line that grates, tell me which and it goes.
+
 THE REALM MAP (every world)
 [ ] Open the map and press REALM: the country drawn right out, about 6,000 blocks across. Provinces in their own colours with borders,
     names and rulers; sea and lakes in blue; the villages you have visited and places you have been told of. + and - change the scale.

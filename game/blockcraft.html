@@ -7045,6 +7045,44 @@ function tavernSpot(h, m){
 }
 function npcDrinks(m){ let k = 5; for(let i=0;i<m.home.length;i++) k = (k*33 + m.home.charCodeAt(i))>>>0; return k%3!==0; }      // two villagers in three like an evening at the tavern
 function tavernHour(){ const s = Math.sin(tod*Math.PI*2), c = Math.cos(tod*Math.PI*2); return c<0 && s<0.45 && s>-0.5; }           // from late afternoon until well after dark
+// talk of the neighbours: now and then ASK FOR NEWS brings a line about someone else who lives in the village, by name and trade
+const NEIGHBOUR = {
+  guard:['{n} of the watch sleeps on duty, if you ask me.','{n} of the watch is fair. Hard, but fair.'], blacksmith:['{n} the smith shoes a horse faster than anyone in the province.','{n} the smith owes money to half the village.'],
+  baker:['{n} bakes before dawn. You can smell it from the square.','{n} the baker waters the flour, they say. I never said it.'], farmer:['{n} had the best harvest hereabouts. Sells a good horse, too.','{n} the farmer talks to the crows.'],
+  miner:['{n} came up from the deep white as flour, and will not say why.','{n} the miner knows where the iron is. Does not share.'], librarian:['{n} has read every book twice and will tell you so.','If it is written down, {n} the scholar has it.'],
+  cleric:['{n} at the temple mended my arm and asked for nothing.','{n} the cleric prays louder when the plate is empty.'], fisher:['{n} swears something took the net whole. Something big.','{n} the fisher has not caught a thing all week.'],
+  innkeeper:['{n} hears everything said under that roof. Everything.','{n} keeps a clean house and a short tab.'], villager:['{n} keeps to themselves. Nobody knows their business.','{n} is no better than they ought to be.'] };
+function neighbourLine(m, rx, rz){
+  const v = villageAt(rx,rz); if(!v || !v.houses || v.houses.length<2) return '';
+  const mine = m.home ? +String(m.home).split(':')[1] : -1; let i = Math.floor(h3((m.id||0)*3+1, dayNo*7+2, 9, SEED+771)*v.houses.length); if(i===mine) i = (i+1)%v.houses.length;
+  const ch = residentOf(rx,rz,i), L = NEIGHBOUR[ch.job]; if(!L) return '';
+  return L[Math.floor(h3((m.id||0)*5+3, dayNo*11+1, 10, SEED+772)*L.length)].replace('{n}', ch.name);
+}
+// what someone says first: often something about the moment (the hour, the weather, a holiday, your horse, your wounds, what you are
+// known for here), otherwise one of their trade's own lines
+const GREET_MORE = {
+  guard:['All quiet. I mean to keep it so.','If you see trouble, find me before you find it.'], cleric:['Light on your road, traveller.','The door is never barred here.'],
+  blacksmith:['Iron is honest. It breaks when you treat it badly.','If it has an edge, I made it or I can mend it.'], baker:['Bread first, then the day.','Mind the trays, they are hot.'],
+  farmer:['Rain when I want sun, sun when I want rain.','You have the look of someone who has never pulled a turnip.'], miner:['The deeper you go, the better the ore and the worse the company.','I keep a lamp lit for the ones still below.'],
+  librarian:['Ask, and I will find the page.','Half of what they say in the tavern is in these books, and the other half is wrong.'], fisher:['They bite at dawn and laugh at me by noon.','Careful by the deep water. It is not only fish down there.'],
+  villager:['You have come a long way, by the dust on you.','Nothing much happens here, and we like it that way.'], innkeeper:['Mind your head on the beam.','There is always room for one more by the fire.'],
+  pedlar:['Buy something or tell me a story. Either pays for the stop.','I have walked every road in this province twice.'] };
+function greetLine(m){
+  const base = (GREET[m.job] || GREET.villager).concat(GREET_MORE[m.job] || []), pick = a=>a[Math.floor(Math.random()*a.length)], ctx = [];
+  if(!m.hermit && !m.bandit){
+    const th = holiday(), v = m.village && m.village[0]!=='h' ? m.village : null, r = v ? honourOf(provinceOfVillage(v).key) : 0, rep = repOf(m.village);
+    if(th) ctx.push(`A good ${th.name.replace(/^the /,'')} to you.`, `You picked the day to come: it is ${th.name}.`);
+    if(ratNight) ctx.push('You are abroad late.', 'Mind the dark. The rats come up at night.');
+    if(rainOn && !ratNight) ctx.push('Foul weather for the road.', 'Come in out of the wet.');
+    if(riding()) ctx.push('That is a fine horse.', 'You ride well. Mind she does not eat my thatch.');
+    if(health <= maxHP()/3) ctx.push(m.job==='cleric' ? 'You are bleeding. Let me see to that.' : 'You are bleeding. The temple could see to that.');
+    if(blessed()) ctx.push('The light is on you, I see.');
+    if(r>=1) ctx.push(`We know your name here, ${HONOURS[r]}.`, r>=2 ? 'An honour to have you under this roof.' : 'They speak well of you at the board.');
+    if(rep>=40) ctx.push('Always good to see you.', 'Back again? Good.');
+    else if(rep<=-15) ctx.push('Oh. It is you.', 'Say your piece and go.');
+  }
+  return ctx.length && Math.random()<0.45 ? pick(ctx) : pick(base);
+}
 const DIR8 = ['north','north-east','east','south-east','south','south-west','west','north-west'];
 function talkNews(m){
   const [rx,rz] = villageRegionOf(m), here = hsOf(m) ? null : villageAt(rx,rz), hc = m.vc || (here ? villageCentre(here) : [m.x,m.z]);
@@ -7053,6 +7091,7 @@ function talkNews(m){
     const c = villageCentre(v), d = Math.hypot(c[0]-hc[0], c[1]-hc[1]); if(d<bd){ bd = d; best = [c[0], c[1], villageName(rx+a, rz+b)]; } }
   const lines = [];
   if(here && m.village){ const P = provinceInfo(provinceOfVillage(m.village)); lines.push(`${villageName(rx,rz)} stands in ${P.name}, under ${P.ruler}.`);
+    if(h3((m.id||0)*7+3, dayNo*13+1, 5, SEED+767)>=0.62){ const nl = neighbourLine(m, rx, rz); if(nl) lines.push(nl); }      // (or a word about a neighbour)
     if(h3((m.id||0)*7+3, dayNo*13+1, 5, SEED+767)<0.3) lines.push([`They say ${P.ruler} and ${P.rivalRuler} of ${P.rival.split(' of ')[1]} have not spoken in a year.`, `There is bad blood between us and ${P.rival}. Mind what you say across the border.`, `${P.ruler} has doubled the watch on the ${P.rival.slice(4).split(' of ')[1]} road, or so the carters tell it.`][Math.floor(h3((m.id||0)*5+1, dayNo*3+2, 6, SEED+768)*3)]); }
   if(best){ const ang = Math.atan2(best[0]-hc[0], -(best[1]-hc[1])), k = ((Math.round(ang/(Math.PI/4))%8)+8)%8;          // -z is north
     lines.push(`${best.length>2 ? best[2] : 'The nearest village'} lies about ${Math.round(bd/10)*10} paces to the ${DIR8[k]}.`); }
@@ -7490,7 +7529,7 @@ function boardAction(m, a){
 function openTalk(m){
   if(paused || craftOpen || m.angry>0 || m.dead || m.bandit) return false;
   talkNpc = m; talkView = 'talk'; m.talkT = 0; talkOffer = null;
-  const g = GREET[m.job] || GREET.villager; talkLine = g[Math.floor(Math.random()*g.length)];
+  talkLine = greetLine(m);
   if(m.job==='innkeeper' && m.village && Math.random()<0.5) talkLine = `Welcome to ${tavernName(m.village[0],m.village[1])}. `+talkLine;
   craftOpen = true;
   m.yaw = Math.atan2(player.x-m.x, -(player.z-m.z)); m.path = null; m.state = 'idle'; m.idleT = 6;
@@ -10985,7 +11024,9 @@ function mountHorse(m){
   if(!headroom(1.69+RIDE_LIFT)){ skillToast('no room to mount here'); return true; }
   if(sneaking) sneaking = false;
   player.x = m.x; player.z = m.z; player.y = Math.max(player.y, m.y); player.vy = 0;
-  horse.mounted = true; m.ridden = true; rideSet(true); snd('step', { m:1, g:0.9 }); scheduleSave(); return true;
+  horse.mounted = true; m.ridden = true; rideSet(true); snd('step', { m:1, g:0.9 }); scheduleSave();
+  if((mountHorse.n = (mountHorse.n||0)+1) <= 3) skillToast('IN THE SADDLE<br><small>sneak to get down</small>');      // (said the first few times: there is nowhere else the game tells you)
+  return true;
 }
 function dismountHorse(){
   if(!riding()) return;

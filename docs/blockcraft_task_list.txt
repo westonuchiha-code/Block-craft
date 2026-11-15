@@ -762,3 +762,8 @@ DONE  THE REALM MAP (Daggerfall's travel map): a REALM button on the map draws t
       Labels never overlap (nearest the middle first; one that would cover another is left out). It is painted once and reused, so
       it costs nothing to keep open (0.3 ms a redraw). Every world. Screenshot: proof/realm_map.png. In tests/province.py and the soak.
       Full suite on this build (realm map + memory trim): 54/54 (proof/suite_realm.log).
+DONE  MORE TO SAY: every trade has more opening lines, and nearly half the time a villager now says something about the moment instead:
+      the hour ("You are abroad late."), rain, today's holiday, your horse, your wounds (a cleric offers to see to them), a blessing on
+      you, your honours in the province ("We know your name here, Knight."), and whether the village likes you. ASK FOR NEWS sometimes
+      brings a line about a neighbour by name ("Ansel the smith owes money to half the village."). Mounting a horse says "sneak to get
+      down" the first three times, since nothing else in the game tells you. tests/greet.py (suite is now 55).

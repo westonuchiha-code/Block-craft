@@ -24,7 +24,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 
 ## Run
 
-- `bash suite.sh`: the regression suite (54 scripts, about 30 minutes). Each line prints `name rc=<exit code>`
+- `bash suite.sh`: the regression suite (55 scripts, about 30 minutes). Each line prints `name rc=<exit code>`
   and the script's last output line. A failure is a non-zero exit, `ERR` (traceback), or page errors in the
   printed list. Many scripts also print values meant to be read, not only asserted.
 - `python3 gpu.py`: renders 6 scenes with the CPU renderer and the GPU renderer at the same size and fails if
@@ -60,6 +60,7 @@ sed -i "s#cd /tmp#cd \"$PWD\"#" suite.sh
 | soak | a long scripted session on two seeds: every villager spoken to and every button pressed, every screen, five days, a horse, a wagon, crime and arrest, a delve, the Underworld, death, save and reload. Nothing may throw; the game must still be running |
 | seeds | six more seeds: every village, crypt and delve planned over a wide area without error; a guard and a notice board in every village, a tavern in nearly all, the opening letter in every world |
 | plan | planning ahead on another core: the worker's plans equal the game's own (every village, crypt, road edge and delve compared), arrive for the land round you, and the first chunk of planned land generates without a freeze |
+| greet | what people say first: every trade's lines, and the lines about the moment (night, rain, a holiday, your wounds, your horse, your honours, your standing); talk of the neighbours in the news |
 | delve | delves: lifted world shape, every chamber and the master reachable on foot, master kill, chests, quest, map entry |
 | sh2, sh4, sh5, sc, bb | stairs, slabs and other shaped blocks, recipes |
 | fe | fences |

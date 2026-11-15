@@ -745,3 +745,10 @@ FIXED FREEZE WHEN ENTERING NEW COUNTRY. Measured first: the first chunk generate
       the game plans on the spot as it always did, so nothing can go missing. No world changes: every world, old or new.
       New test tests/plan.py (suite is now 54). Frame rate and ordinary chunk speed are unchanged from the handover build.
       Full suite on this build: 54/54 (proof/suite_plan.log).
+      MEASURED SMOOTHNESS: a minute gliding east over land never seen before, counting every frame (60 a second, 3,600 frames):
+        handover build at running pace (6 blocks/s):   worst frame 62 ms, 1 frame over 50 ms
+        this build at running pace:                    worst frame 36 ms, none over 50 ms
+        this build at riding pace (11 blocks/s):       worst frame 44 ms, none over 50 ms
+        this build riding, background planning off:    worst frame 94 ms, 2 over 50 ms
+      So new land streams in more smoothly on a horse now than it did on foot at handover. (This sandbox's CPU; a phone will be slower
+      across the board, but the comparison should hold.)

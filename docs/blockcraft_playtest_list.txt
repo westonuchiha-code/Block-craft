@@ -7,7 +7,7 @@ Nobody has played any of this; it was all built and checked by scripts and scree
  2. Walk to the plaza. USE the wooden notice board at its edge: date, ruler, notices, and a posted bounty.
  3. Find the house with two hanging lamps and a sign: the tavern (The Laughing Boar). Talk to the innkeeper: room, food, rumours.
  4. Open the JOURNAL tab on your sheet: the date, the next holiday, what you have been told.
- 5. Open the map: the province name at the top, its border as a dotted line, places you were told about.
+ 5. Open the map: the province name at the top, its border as a dotted line, places you were told about. Press REALM for the whole country.
  6. Find a farmer and BUY A HORSE (300 gold, so this one may have to wait until you have earned it). USE it to mount, SNEAK to get down.
  7. Ride out along a road. By day a pedlar may come walking the other way. Cross a province border: a notice appears.
  8. Follow a rumour to a delve gate (seed 12345: the Black Hideout, gate at x 100, z -198). Inside, the map becomes an automap.
@@ -87,6 +87,12 @@ CALENDAR AND HOLIDAYS (every world)
     halved fines, half-fare wagons. Villagers mention a holiday when it is within four days.
 [ ] Are eight holidays in a 96-day year too many, too few? Do the month names sit right (Frostwane, Seedfall, Greening, Highsun,
     Goldleaf, Harvestmoon, Emberfall, Deepwinter)?
+
+THE REALM MAP (every world)
+[ ] Open the map and press REALM: the country drawn right out, about 6,000 blocks across. Provinces in their own colours with borders,
+    names and rulers; sea and lakes in blue; the villages you have visited and places you have been told of. + and - change the scale.
+    LOCAL goes back to the ordinary map. Screenshot: proof/realm_map.png.
+[ ] Does it give the sense of a big country? Should unvisited provinces be hidden until you hear of them, as a discovery?
 
 PROVINCES (every world, old or new)
 [ ] The land is now divided into named baronies, counties and marches about 1,400 blocks across. Open the map: the name is at the

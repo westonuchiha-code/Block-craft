@@ -35,6 +35,11 @@ with sync_playwright() as p:
     if not (c['here'] and c['seen']==2 and c['j']=='Crossed into '+r['to']+'.' and c['toast'] and r['from']!=r['to']): bad.append('crossing a border')
     pg.evaluate("()=>{ openMap(); }"); pg.wait_for_timeout(1200)
     m=pg.evaluate("""()=>{ const cv=document.getElementById('mapCanvas'), d=cv.getContext('2d').getImageData(0,0,cv.width,24).data; let gold=0; for(let i=0;i<d.length;i+=4) if(d[i]>200 && d[i+1]>190 && d[i+2]>130 && d[i+2]<190) gold++; return gold; }""")
+    rl=pg.evaluate("""()=>{ const btn=document.getElementById('mapRealm'), cv=document.getElementById('mapCanvas'); btn.click(); const lab=btn.textContent;
+      const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data, cols=new Set(); let sea=0, n=0; for(let i=0;i<d.length;i+=16){ cols.add((d[i]>>3)<<10|(d[i+1]>>3)<<5|(d[i+2]>>3)); n++; if(d[i+2]>d[i]+30) sea++; }
+      const t=performance.now(); drawMap(); const again=performance.now()-t; mapZoom=2; drawMap(); mapZoom=0.5; drawMap(); mapZoom=1; btn.click(); return { lab, back:btn.textContent, colours:cols.size, seaShare:+(sea/n).toFixed(2), againMs:+again.toFixed(1), realm:mapRealm }; }""")
+    print('realm map', json.dumps(rl))
+    if not (rl['lab']=='LOCAL' and rl['back']=='REALM' and rl['colours']>=40 and 0.02<rl['seaShare']<0.9 and rl['againMs']<25 and rl['realm'] is False): bad.append('the realm map')
     print('map title pixels', m, errs)
     if m<40: bad.append('map names the province')
     b.close()

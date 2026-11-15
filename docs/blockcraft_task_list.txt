@@ -756,3 +756,8 @@ DONE  MEMORY ON LONG JOURNEYS: the plans the game keeps for villages, roads, cry
       long way slowly used more and more memory (about 0.1 MB a village, 5 MB of road data for the country round one spot). Plans for
       country more than about 1,700 blocks behind you are now dropped (and worked out again, the same, if you return). Nothing near you
       is ever dropped. tests/plan.py checks it: 881 of 1,155 far entries dropped, the near ones kept, the planner carries on.
+DONE  THE REALM MAP (Daggerfall's travel map): a REALM button on the map draws the country right out, about 6,000 blocks across (+ and -
+      change the scale): each province in its own colour with its border, name and ruler, sea and lakes in blue, snow on the heights,
+      the villages you have been to, the delves and barrows you have been told of, your horse, your lost belongings, a scale bar.
+      Labels never overlap (nearest the middle first; one that would cover another is left out). It is painted once and reused, so
+      it costs nothing to keep open (0.3 ms a redraw). Every world. Screenshot: proof/realm_map.png. In tests/province.py and the soak.

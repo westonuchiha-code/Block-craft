@@ -460,7 +460,7 @@ body.padmode.gpui #gpCursor { display:block; }
 <div id="skillMenu"><div id="skillPanel"><div id="skillTop"><h2>Character</h2><button id="skillClose">DONE</button></div><div id="skillList"></div></div></div>
 <div id="questMenu"><div id="skillPanel" class="qPanel"><div id="skillTop"><h2>Quests</h2><button id="questClose">DONE</button></div><div id="questList"></div></div></div>
 <div id="classMenu"><div id="classPanel"><h2>Choose your class</h2><div class="clSub">It sets where your skills start and which you learn faster. Anyone can still do anything.</div><div id="classList"></div><button id="classGo" disabled>BEGIN</button></div></div>
-<div id="mapMenu"><div id="mapPanel"><div id="skillTop"><h2>Map</h2><span><button id="mapOut">&minus;</button> <button id="mapIn">+</button> <button id="mapClose">DONE</button></span></div><div><canvas id="mapCanvas" width="360" height="300"></canvas></div><div id="mapSide"></div></div></div>
+<div id="mapMenu"><div id="mapPanel"><div id="skillTop"><h2>Map</h2><span><button id="mapRealm">REALM</button> <button id="mapOut">&minus;</button> <button id="mapIn">+</button> <button id="mapClose">DONE</button></span></div><div><canvas id="mapCanvas" width="360" height="300"></canvas></div><div id="mapSide"></div></div></div>
 <div id="smMenu"><div id="smPanel" class="tkPanelX"><div id="skillTop"><h2>Spellmaker</h2></div><div id="smBody"></div></div></div>
 <div id="skillToast"></div>
 <div id="talkMenu"><div id="talkPanel"><div id="talkTop"><h2 id="talkName"></h2><span id="talkGold"></span></div><div id="talkBody"></div></div></div>
@@ -7881,7 +7881,57 @@ function drawAutomap(P){
   g.font = '10px monospace'; g.fillStyle = '#8f8a7a'; g.fillText(`${seen.length} of ${P.nodes.length} chambers found${cleared ? ' · cleared' : ''} · ${Math.max(0, Math.round(P.h-player.y))} below the gate`, 10, 30);
   g.fillText('N ↑', W-34, 16);
 }
+// ---------- the realm: the map drawn right out, as a map of the provinces (Daggerfall's travel map) ----------
+// Land and sea come from the land's own heights, each province is tinted its own colour with its border, name and ruler, and the
+// villages you have been to and the places you have been told of are marked. Nothing here is hidden: it is a map you carry.
+let mapRealm = false; const REALM = { cv:null, key:'' };
+function provinceTint(key){ const q = key.slice(1).split(',').map(Number), t = h3(q[0],48,q[1],SEED+769), u = h3(q[0],49,q[1],SEED+770);      // parchment greens, ochres and russets
+  return [150+Math.round(t*60), 150+Math.round(u*40), 96+Math.round((1-t)*40)]; }
+function drawRealm(){
+  const cv = document.getElementById('mapCanvas'), g = cv.getContext('2d'), W = cv.width, Hh = cv.height;
+  const span = 6000/Math.max(0.25, Math.min(4, mapZoom)), S = W/span, C = 4;                    // blocks across the picture; pixels per block; the size of one painted cell
+  const cx = Math.round(player.x/200)*200, cz = Math.round(player.z/200)*200, key = SEED+':'+worldGen+':'+YOFF+':'+W+'x'+Hh+':'+span+':'+cx+','+cz;
+  if(REALM.key!==key){                                           // the country is painted once and kept until you have moved a fair way or changed the scale
+    const oc = REALM.cv || (REALM.cv = document.createElement('canvas')); oc.width = W; oc.height = Hh; const og = oc.getContext('2d'), nx = Math.ceil(W/C), nz = Math.ceil(Hh/C), keys = new Array(nx*nz);
+    for(let j=0;j<nz;j++) for(let i=0;i<nx;i++){ const wx = Math.floor(cx + (i*C+C/2-W/2)/S), wz = Math.floor(cz + (j*C+C/2-Hh/2)/S);
+      if(isUnder(wz) || isTestZ(wz)){ keys[j*nx+i] = ''; og.fillStyle = '#0d0e0b'; og.fillRect(i*C,j*C,C,C); continue; }
+      const q = C/S*0.3, hs = [surfaceH(wx,wz), surfaceH(Math.floor(wx-q),Math.floor(wz-q)), surfaceH(Math.floor(wx+q),Math.floor(wz-q)), surfaceH(Math.floor(wx-q),Math.floor(wz+q)), surfaceH(Math.floor(wx+q),Math.floor(wz+q))].sort((a,b)=>a-b);
+      const h = hs[2], P = provinceAt(wx,wz); keys[j*nx+i] = P.key;                       // the middle of five soundings: a pond is not the sea
+      if(h<=SEA){ const d = Math.max(0, Math.min(1, (SEA-h)/14)); og.fillStyle = `rgb(${Math.round(74-30*d)},${Math.round(112-36*d)},${Math.round(150-30*d)})`; }
+      else { const t = provinceTint(P.key), k = 0.78 + Math.min(0.3, (h-SEA)/160), sn = h>=SNOW_LINE-2 ? 0.55 : 0; og.fillStyle = `rgb(${Math.round(t[0]*k+(240-t[0]*k)*sn)},${Math.round(t[1]*k+(240-t[1]*k)*sn)},${Math.round(t[2]*k+(244-t[2]*k)*sn)})`; }
+      og.fillRect(i*C,j*C,C,C); }
+    og.fillStyle = 'rgba(60,40,24,0.55)';                         // borders
+    for(let j=0;j<nz;j++) for(let i=0;i<nx;i++){ const k = keys[j*nx+i]; if(!k) continue; if(i+1<nx && keys[j*nx+i+1] && keys[j*nx+i+1]!==k) og.fillRect(i*C+C-1,j*C,2,C); if(j+1<nz && keys[(j+1)*nx+i] && keys[(j+1)*nx+i]!==k) og.fillRect(i*C,j*C+C-1,C,2); }
+    REALM.key = key; }
+  g.imageSmoothingEnabled = false; g.drawImage(REALM.cv, Math.round((cx-player.x)*S), Math.round((cz-player.z)*S));
+  const toS = (x,z)=>[W/2+(x-player.x)*S, Hh/2+(z-player.z)*S];
+  // labels never overlap: each claims its box, nearest the middle of the map first, and one that would cover another is left out
+  const boxes = [], claim = (x0,y0,x1,y1)=>{ for(const B of boxes) if(x0<B[2] && x1>B[0] && y0<B[3] && y1>B[1]) return false; boxes.push([x0,y0,x1,y1]); return true; };
+  g.textAlign = 'center';
+  { const b0 = Math.floor((player.x-span/2)/PREG)-1, b1 = Math.floor((player.x+span/2)/PREG)+1, c0 = Math.floor((player.z-Hh/S/2)/PREG)-1, c1 = Math.floor((player.z+Hh/S/2)/PREG)+1, here = provinceAt(player.x,player.z).key, L = [];
+    for(let bx=b0;bx<=b1;bx++) for(let bz=c0;bz<=c1;bz++){ const st = provinceSeat(bx,bz); if(isUnder(st[1])) continue; const [sx,sy] = toS(st[0],st[1]); if(sx<30||sy<24||sx>W-30||sy>Hh-24) continue; L.push([bx,bz,sx,sy,('P'+bx+','+bz)===here ? -1 : Math.hypot(sx-W/2,sy-Hh/2)]); }
+    L.sort((p,q)=>p[4]-q[4]); const ruler = span<=7000;
+    for(const [bx,bz,sx,sy,d] of L){ const nm = provinceName(bx,bz).slice(4).toUpperCase(), rl = provinceRuler(bx,bz);
+      g.font = 'bold 10px monospace'; const w = Math.max(g.measureText(nm).width, ruler ? rl.length*5.6 : 0);
+      if(!claim(sx-w/2-4, sy-10, sx+w/2+4, sy+(ruler ? 13 : 4))) continue;
+      g.fillStyle = 'rgba(250,244,224,0.6)'; g.fillRect(sx-w/2-3, sy-9, w+6, ruler ? 21 : 12);
+      g.fillStyle = d<0 ? '#7a1c10' : '#3a2a18'; g.fillText(nm, sx, sy); if(ruler){ g.font = '9px monospace'; g.fillStyle = '#5a4630'; g.fillText(rl, sx, sy+10); } } }
+  // what you know: villages you have been to, places you have been told of, your horse, your belongings
+  g.font = '9px monospace';
+  for(const p of knownPlaces().sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))){ const [sx,sy] = toS(p.x,p.z); if(sx<0||sy<0||sx>W||sy>Hh) continue;
+    g.fillStyle = '#1c140c'; g.fillRect(sx-3,sy-3,6,6); g.fillStyle = p.kind==='h' ? '#8fdc6a' : '#f0e2b0'; g.fillRect(sx-2,sy-2,4,4);
+    const w = p.name.length*5.5; if(span<=7000 && claim(sx-w/2-2, sy-14, sx+w/2+2, sy-3)){ g.fillStyle = 'rgba(250,244,224,0.5)'; g.fillRect(sx-w/2-2, sy-13, w+4, 10); g.fillStyle = '#20160c'; g.fillText(p.name, sx, sy-5); } }
+  for(const k of cryptSeen){ const P = siteByKey(k); if(!P) continue; const [sx,sy] = toS(P.ex,P.ez); if(sx<0||sy<0||sx>W||sy>Hh) continue; g.fillStyle = '#1c140c'; g.fillRect(sx-3,sy-3,6,6); g.fillStyle = k[0]==='D' ? '#e0a040' : '#b8b0c8'; g.fillRect(sx-2,sy-2,4,4); }
+  if(horse && !horse.mounted && isUnder(horse.z)===isUnder(player.z)){ const [sx,sy] = toS(horse.x,horse.z); g.fillStyle = '#1c140c'; g.fillRect(sx-3,sy-3,6,6); g.fillStyle = '#c89a6a'; g.fillRect(sx-2,sy-2,4,4); }
+  for(const sk of deathSacks){ const [sx,sy] = toS(sk.x,sk.z); g.fillStyle = '#1c140c'; g.fillRect(sx-3,sy-3,6,6); g.fillStyle = '#ffe28c'; g.fillRect(sx-2,sy-2,4,4); }
+  // you, the compass, the scale
+  { const f = camVectors().f, a = Math.atan2(f[0], f[2]); g.save(); g.translate(W/2, Hh/2); g.rotate(-a); g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.moveTo(0,8); g.lineTo(-5,-5); g.lineTo(0,-2); g.lineTo(5,-5); g.closePath(); g.stroke(); g.fill(); g.restore(); }
+  g.textAlign = 'left'; g.font = '10px monospace'; g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(4,4,34,14); g.fillStyle = '#e8d6a0'; g.fillText('N \u2191', 8, 14);
+  { const len = 1000*S; g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(6, Hh-20, len+10, 16); g.fillStyle = '#e8d6a0'; g.fillRect(10, Hh-9, len, 2); g.fillRect(10, Hh-12, 1, 5); g.fillRect(10+len-1, Hh-12, 1, 5); g.font = '9px monospace'; g.fillText('1000 paces', 12, Hh-11); }
+}
 function drawMap(){
+  document.getElementById('mapRealm').textContent = mapRealm ? 'LOCAL' : 'REALM';
+  if(mapRealm && worldGen>=2 && !testWorld && !isUnder(player.z)){ drawRealm(); return; }
   { const P = delveHere(); if(P){ delveMark(P); drawAutomap(P); return; } }
   const cv = document.getElementById('mapCanvas'), g = cv.getContext('2d'), W = cv.width, Hh = cv.height, S = 0.5*mapZoom;     // pixels per block
   g.fillStyle = '#0d0e0b'; g.fillRect(0,0,W,Hh); g.imageSmoothingEnabled = false;
@@ -13178,6 +13228,7 @@ document.getElementById('smBody').addEventListener('click', e=>{ const b = e.tar
   renderSpellmaker(); });
 document.getElementById('mapBtn').addEventListener('click', ()=>{ closeMenu(); paused = false; openMap(); });
 document.getElementById('mapClose').addEventListener('click', closeMap);
+document.getElementById('mapRealm').addEventListener('click', ()=>{ mapRealm = !mapRealm; drawMap(); });
 document.getElementById('mapIn').addEventListener('click', ()=>{ mapZoom = Math.min(4, mapZoom*2); drawMap(); });
 document.getElementById('mapOut').addEventListener('click', ()=>{ mapZoom = Math.max(0.25, mapZoom/2); drawMap(); });
 document.getElementById('mapSide').addEventListener('click', e=>{ const b = e.target.closest('button'); if(b && !b.disabled && b.dataset.go) wagonTo(b.dataset.go, !!b.dataset.reckless); });

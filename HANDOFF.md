@@ -111,6 +111,9 @@ runs before optimising.
   kind `intro` whose giver is the first village's innkeeper; `questCount()` leaves it out of `QUEST_MAX`; it is turned in with SHOW THE LETTER.
   `hunterTick` / `hunterSpawn` (once a second): a `newBandit` marked `m.hunter` while `bounty[province key] >= 150`, outside villages, one at a time;
   `npcChase` gives a hunter a 3000-node search.
+- **The realm map, 2026-11-15.** `mapRealm` (the REALM / LOCAL button in the map header) makes `drawMap` call `drawRealm`: land and sea from `surfaceH`
+  (the middle of five soundings per 4-pixel cell), provinces tinted by `provinceTint`, labels placed nearest-first with no overlaps, painted once
+  into `REALM.cv` and reused until you move 200 blocks or change the scale.
 - **Planning ahead on another core, 2026-11-15.** The first chunk generated in new country used to freeze the game for 0.2-0.5 s (planning that
   region's villages, road edges, crypt and delve on the spot; delves had doubled it). `PLN` / `plStart` / `plTick` / `plGot` on the page and
   `planJob` in a worker (the same script: `wkBlobUrl`, shared with the render workers) now plan the 5x5 delve regions round the player ahead of

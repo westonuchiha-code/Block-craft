@@ -8032,7 +8032,9 @@ function ratWalk(m, speed){
   if(!m.path || m.pi>=m.path.length){ m.moving=false; return false; }
   const n = m.path[m.pi], tx=n[0]+0.5, tz=n[2]+0.5, dx=tx-m.x, dz=tz-m.z, d=Math.hypot(dx,dz);
   const step = Math.min(d, speed*frameScale);
-  if(d>0.001){ m.x += dx/d*step; m.z += dz/d*step; m.yaw = Math.atan2(dx,-dz); }
+  if(d>0.001){ m.x += dx/d*step; m.z += dz/d*step;
+    if(m.kind==='npc') m.yaw = Math.atan2(dx,-dz);                          // (people turn through m.vyaw, in updateNpc)
+    else { let t = Math.atan2(dx,-dz) - m.yaw; t = Math.atan2(Math.sin(t), Math.cos(t)); m.yaw += t*Math.min(1, 0.3*frameScale); } }      // animals swing round to a new heading over a few frames, they do not snap
   const ty = d<0.6 ? standY(n[0],n[1],n[2]) : Math.max(m.y, standY(n[0],n[1],n[2])), dyy = ty-m.y;      // rise early for a step up, sink onto a slab once over it
   m.y += Math.max(-0.4, Math.min(0.22, dyy));
   if(d<0.12 && Math.abs(ty-m.y)<0.3){ m.pi++; }

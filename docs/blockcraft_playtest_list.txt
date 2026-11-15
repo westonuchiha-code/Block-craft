@@ -1,5 +1,19 @@
 BLOCKCRAFT - PLAYTEST LIST
 
+== START HERE: A 15-MINUTE TOUR OF WHAT IS NEW (new world, seed 12345) ==
+Nobody has played any of this; it was all built and checked by scripts and screenshots. The sections below go into detail.
+ 1. You wake in Ironhold, in the March of Lormark. Sound is on (MENU -> SETTINGS -> SOUND if it annoys you).
+ 2. Walk to the plaza. USE the wooden notice board at its edge: date, ruler, notices, and a posted bounty.
+ 3. Find the house with two hanging lamps and a sign: the tavern (The Laughing Boar). Talk to the innkeeper: room, food, rumours.
+ 4. Open the JOURNAL tab on your sheet: the date, the next holiday, what you have been told.
+ 5. Open the map: the province name at the top, its border as a dotted line, places you were told about.
+ 6. Find a farmer and BUY A HORSE (300g; give yourself gold in creative if you need to). USE it to mount, SNEAK to get down.
+ 7. Ride out along a road. By day a pedlar may come walking the other way. Cross a province border: a notice appears.
+ 8. Follow a rumour to a delve gate (seed 12345: the Black Hideout, gate at x 100, z -198). Inside, the map becomes an automap.
+ 9. Come back to the village in the late afternoon: villagers drift into the tavern, and go home after dark.
+10. Hit a villager, then visit another village in the same province: the guards there want you too. Pay, serve, or run.
+11. Day 4 is the Merchants' Fair: a notice at dawn, shops a quarter cheaper for the day.
+
 == TO LOOK AT WHEN YOU ARE BACK (built 2026-11-14 onward, checked by scripts and screenshots only) ==
 Start a NEW world for all of this (old worlds keep the old low land and have no delves).
 

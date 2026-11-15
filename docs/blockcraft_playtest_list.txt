@@ -34,6 +34,16 @@ TAVERNS (new worlds only; seed 12345: The Laughing Boar in the spawn village, th
 [ ] Come by in the late afternoon: about two villagers in three walk over and stand about inside until well after dark, then go home.
     Does the village feel more alive for it? Do they block the doorway or crowd badly?
 
+RULERS, THE NOTICE BOARD, BLESSINGS, PEDLARS
+[ ] Each province has a ruler (the border notice, the map panel and ASK FOR NEWS name them) and a rival neighbour that people gossip
+    about. Flavour only so far. Do the names and titles sit right (Margrave Ansel, Baroness Sibyl, Lord Sheriff Leofric)?
+[ ] NEW WORLDS: a notice board stands at the edge of each village plaza. USE it: the place, province, ruler, date and next holiday;
+    READ THE NOTICES marks a place on your map once a day; POSTED BOUNTY is the ruler's price on the nearest barrow or delve, which you
+    report to the village guard. It is plain wood with no paper on it: does it read as a notice board?
+[ ] A cleric will bless you for 25 gold: until the sunrise after next, you heal half a heart every ten seconds. Worth it? Too strong?
+[ ] By day, stand near a road outside a village for a minute or two: a pedlar should come walking along it. Stop him and trade.
+    Does he keep to the road? Is one at a time right, or should the roads be busier?
+
 THE HORSE (every world; a farmer sells one for 300 gold)
 [ ] Buy one (BUY A HORSE when talking to a farmer). Look at it standing: does it read as a horse? Screenshot in proof/horse.png.
 [ ] USE it to mount. You sit 0.85 higher, and its head and ears show at the bottom of the view. Is the head in the way, or right?

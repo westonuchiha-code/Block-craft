@@ -1264,6 +1264,7 @@ const crops = new Map();                        // "x,y,z" -> { x, y, z, t: seco
 const DROP = {};
 // ---------- shaped blocks: slabs and stairs (ids 256+). Each is a few boxes inside one cell, wearing the texture of its material ----------
 const SH_MATS = [PLANK_IDS[0],PLANK_IDS[1],PLANK_IDS[2],PLANK_IDS[3],COBBLE,STONE,STONE_BRICK,FLAGSTONE,SHINGLE,SLATE,THATCH];
+const NOTICE0 = 1145;     // a village notice board: two posts, a board and a little roof (1145 stands along x, 1146 along z)
 const TSIGN0 = 1143;      // a tavern's hanging sign: a bar under the eave and a board below it (1143 hangs along x, 1144 along z)
 const SIGNPOST = 1131, SPELLMAKER = 1132, FIRE = 1135, TINDERBOX = 1136;
 const IS_SHAPED = new Uint8Array(NB), IS_SLAB = new Uint8Array(NB), IS_STAIR = new Uint8Array(NB);
@@ -1345,6 +1346,9 @@ const slabId = (m,h)=> m<6 ? 256+m*2+h : SH_OFF(m)+h, stairId = (m,h,f)=> m<6 ? 
   // a signpost: a post with a board; use it to read where the road goes
   IS_SHAPED[SIGNPOST]=1; SH_BOXES[SIGNPOST]=[[.4375,0,.4375,.5625,1.25,.5625],[.0625,.75,.4375,.9375,1.0,.5625],[.4375,.95,.0625,.5625,1.2,.9375]];      // two boards, pointing two ways SH_COL[SIGNPOST]=[[.4375,0,.4375,.5625,1.25,.5625]];
   SH_BASE[SIGNPOST]=PLANK_IDS[0]; SH_MAT[SIGNPOST]=0; COLORS[SIGNPOST]=COLORS[PLANK_IDS[0]]; NAMES[SIGNPOST]='signpost';
+  for(let o=0;o<2;o++){ const id = NOTICE0+o, R = b=>o ? [b[2],b[1],b[0],b[5],b[4],b[3]] : b; IS_SHAPED[id]=1;
+    SH_BOXES[id] = [[.0625,0,.4375,.1875,1.45,.5625],[.8125,0,.4375,.9375,1.45,.5625],[.0625,.55,.46,.9375,1.4,.54],[0,1.4,.34,1,1.5,.66]].map(R); SH_COL[id] = [[.0625,0,.4375,.9375,1.5,.5625]].map(R);
+    SH_BASE[id]=PLANK_IDS[1]; SH_MAT[id]=1; COLORS[id]=COLORS[PLANK_IDS[1]]; NAMES[id]='notice board'; }
   for(let o=0;o<2;o++){ const id = TSIGN0+o; IS_SHAPED[id]=1; SH_BOXES[id] = o ? [[.4375,.875,0,.5625,1,1],[.4375,.1875,.125,.5625,.875,.875]] : [[0,.875,.4375,1,1,.5625],[.125,.1875,.4375,.875,.875,.5625]];
     SH_BASE[id]=PLANK_IDS[3]; SH_MAT[id]=3; COLORS[id]=COLORS[PLANK_IDS[3]]; NAMES[id]='tavern sign'; }
   // beds: two cells, a low mattress on a plank frame; the head cell also has a headboard at its far end
@@ -2596,6 +2600,7 @@ function planVillage(cx,cz,rnd){
   buildSewer(V,put,hOf,rnd,starts);
   // --- the tavern (worlds from worldGen 7): one bigger house with an innkeeper. It is sited last, with its own dice, so every
   //     other building of the village stands exactly where it would without it ---
+  if(worldGen>=7){ V.board = [cx-3, g+1, cz-5]; V.late.push([cx-3, g+1, cz-5, NOTICE0]); }      // the notice board stands at the edge of the plaza
   if(worldGen>=7){ const tr = vRng(Math.floor(h3(cx,91,cz,SEED+470)*4294967295));
     for(let tries=0; tries<200 && V.tavern===undefined; tries++){
       const ang = tr()*6.283, dist = 15 + tr()*(15 + tries*0.04), hx = Math.round(cx+Math.cos(ang)*dist), hz = Math.round(cz+Math.sin(ang)*dist), w = 9, d = 7;
@@ -2903,6 +2908,16 @@ function villageName(rx,rz){ const a = Math.floor(h3(rx,31,rz,SEED+700)*VN_A.len
 const PREG = VREG*8;
 const PV_T = ['Barony','County','March','Duchy','Shire','Fief','Reach','Wardship'];
 const PV_A = ['Dun','Wyr','Ald','Car','Mor','Glen','Tor','Bryn','Hal','Esk','Lor','Vey','Kel','Ran','Sil','Orm'], PV_B = ['moor','wold','mark','ness','garth','land','vale','rock','fell','holm','crest','wick'];
+const PV_RULER = { Barony:['Baron','Baroness'], County:['Count','Countess'], March:['Margrave','Margravine'], Duchy:['Duke','Duchess'], Shire:['Lord Sheriff','Lady Sheriff'], Fief:['Lord','Lady'], Reach:['Lord Warden','Lady Warden'], Wardship:['Lord Protector','Lady Protector'] };
+const PV_HE = ['Aldric','Bertram','Cedric','Edric','Godwin','Hamon','Leofric','Osric','Rainald','Theobald','Wulfric','Ansel'], PV_SHE = ['Adela','Berenice','Clarice','Edith','Elowen','Hawise','Isolde','Mirabel','Rosamund','Sibyl','Ysolt','Maud'];
+// who rules a province, and which neighbour it quarrels with (the nearest other seat): the same for the life of the world
+function provinceSeat(bx,bz){ return [(bx+0.15+0.7*h3(bx,41,bz,SEED+760))*PREG, (bz+0.15+0.7*h3(bx,42,bz,SEED+761))*PREG]; }
+function provinceName(bx,bz){ return 'the '+PV_T[Math.floor(h3(bx,43,bz,SEED+762)*PV_T.length)]+' of '+PV_A[Math.floor(h3(bx,44,bz,SEED+763)*PV_A.length)]+PV_B[Math.floor(h3(bx,45,bz,SEED+764)*PV_B.length)]; }
+function provinceRuler(bx,bz){ const she = h3(bx,46,bz,SEED+765)<0.5 ? 1 : 0, T = PV_RULER[PV_T[Math.floor(h3(bx,43,bz,SEED+762)*PV_T.length)]][she];
+  return T+' '+(she ? PV_SHE : PV_HE)[Math.floor(h3(bx,47,bz,SEED+766)*12)]; }
+function provinceInfo(P){ if(P.ruler) return P; const [bx,bz] = P.key.slice(1).split(',').map(Number), s0 = provinceSeat(bx,bz); let bd = 1e18, rv = null;
+  for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){ if(!a && !b) continue; const q = provinceSeat(bx+a,bz+b), d = (q[0]-s0[0])**2+(q[1]-s0[1])**2; if(d<bd){ bd = d; rv = [bx+a,bz+b]; } }
+  P.ruler = provinceRuler(bx,bz); P.rival = provinceName(rv[0],rv[1]); P.rivalRuler = provinceRuler(rv[0],rv[1]); return P; }
 const provCache = new Map(); let provCacheSeed = null;
 function provinceAt(x,z){
   if(provCacheSeed!==SEED){ provCache.clear(); provCacheSeed = SEED; }
@@ -2910,7 +2925,7 @@ function provinceAt(x,z){
   const mx = qx*64+32, mz = qz*64+32, cx = Math.floor(mx/PREG), cz = Math.floor(mz/PREG); let bd = 1e18, bx = 0, bz = 0;
   for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){ const sx = (cx+a+0.15+0.7*h3(cx+a,41,cz+b,SEED+760))*PREG, sz = (cz+b+0.15+0.7*h3(cx+a,42,cz+b,SEED+761))*PREG, d = (sx-mx)*(sx-mx)+(sz-mz)*(sz-mz);
     if(d<bd){ bd = d; bx = cx+a; bz = cz+b; } }
-  P = { key:'P'+bx+','+bz, name:'the '+PV_T[Math.floor(h3(bx,43,bz,SEED+762)*PV_T.length)]+' of '+PV_A[Math.floor(h3(bx,44,bz,SEED+763)*PV_A.length)]+PV_B[Math.floor(h3(bx,45,bz,SEED+764)*PV_B.length)] };
+  P = { key:'P'+bx+','+bz, name:provinceName(bx,bz) };
   if(provCache.size>20000) provCache.clear(); provCache.set(ck, P); return P;
 }
 function provinceOfVillage(v){ return provinceAt((v[0]+0.5)*VREG, (v[1]+0.5)*VREG); }
@@ -2920,7 +2935,7 @@ function provinceTick(){
   const P = provinceAt(player.x, player.z); if(provHere===P.key) return;
   const first = provHere===null; provHere = P.key;
   if(!provSeen.includes(P.key)){ provSeen.push(P.key); if(!first) logJournal('Crossed into '+P.name+'.'); scheduleSave(); }
-  if(!first){ const w = bounty[P.key]||0; skillToast(P.name.slice(4).toUpperCase()+'<br><small>'+(w ? 'you are wanted here' : 'you cross the border')+'</small>', true); }
+  if(!first){ const w = bounty[P.key]||0; skillToast(P.name.slice(4).toUpperCase()+'<br><small>'+(w ? 'you are wanted here' : 'you cross the border')+' \u00b7 '+provinceInfo(P).ruler+' rules here</small>', true); }
 }
 const roadEdgeCache = new Map(), roadChunkCache = new Map();
 function inVillageRects(v,x,z,m){ for(const R of v.rects) if(x>=R.x0-m && x<=R.x1+m && z>=R.z0-m && z<=R.z1+m) return true; return false; }
@@ -3339,7 +3354,7 @@ function saveWorld(){
   if(!currentWorld) return;
   const meta = {
     format: SAVE_FORMAT, version: SAVE_VERSION, name: currentWorldName, seed: SEED, gen: worldGen, test: testWorld ? 1 : 0, rain: [rainOn?1:0, rainLeftT],
-    inv, wear, hotbar: HOTBAR, grid2, tod, health, food, saturation, skills:{ v:skills, u:skillUses, g:skillGained }, gold, armor, book, bookSel, mp, fires:[...fires.values()].slice(0,300), crypts:cryptState, cryptSeen:[...cryptSeen], provSeen, horse, journal, guilds, bounty, thefts, delveSeen, trained:trainedDay, homesteads, homesteadId, explored:[...explored], visited:[...visitedV], cls:playerClass, sacks:deathSacks, placed:packPlaced(), villagers:villagerState, quests, rep:villageRep, dayNo, questId, bed: bedSpawn, spell, spellCharges, swordSpell, chests: Object.fromEntries(chests),
+    inv, wear, hotbar: HOTBAR, grid2, tod, health, food, saturation, skills:{ v:skills, u:skillUses, g:skillGained }, gold, armor, book, bookSel, mp, fires:[...fires.values()].slice(0,300), crypts:cryptState, cryptSeen:[...cryptSeen], provSeen, horse, bless:blessDay, journal, guilds, bounty, thefts, delveSeen, trained:trainedDay, homesteads, homesteadId, explored:[...explored], visited:[...visitedV], cls:playerClass, sacks:deathSacks, placed:packPlaced(), villagers:villagerState, quests, rep:villageRep, dayNo, questId, bed: bedSpawn, spell, spellCharges, swordSpell, chests: Object.fromEntries(chests),
     player: { x:player.x, y:player.y, z:player.z, yaw:player.yaw, pitch:player.pitch }
   };
   try{
@@ -3550,7 +3565,7 @@ function loadWorld(id){
   explored = new Set(meta.explored || []); visitedV = new Set(meta.visited || []); mapTiles.clear(); roadEdgeCache.clear(); roadChunkCache.clear(); roadMemoCx = 1e9;
   fires.clear(); for(const f of (meta.fires||[])) fires.set(f.x+','+f.y+','+f.z, f);
   book = meta.book || []; bookSel = meta.bookSel || 0; mp = meta.mp===undefined ? 10 : meta.mp; wardT = wardPts = swiftT = swiftK = 0;
-  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; provSeen = meta.provSeen || []; provHere = null; horse = meta.horse || null; rideSet(riding()); guilds = meta.guilds || {}; bounty = meta.bounty || {}; thefts = meta.thefts || 0; delveSeen = meta.delveSeen || {}; arrestUntil = 0; arrestOpen = false; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
+  cryptState = meta.crypts || {}; cryptSeen = new Set(meta.cryptSeen || []); journal = meta.journal || []; provSeen = meta.provSeen || []; provHere = null; horse = meta.horse || null; blessDay = meta.bless===undefined ? -1 : meta.bless; rideSet(riding()); guilds = meta.guilds || {}; bounty = meta.bounty || {}; thefts = meta.thefts || 0; delveSeen = meta.delveSeen || {}; arrestUntil = 0; arrestOpen = false; cryptPop.clear(); cryptCache.clear(); cryptByNum.clear(); cryptMemoRx = 1e9; delvePop.clear(); delveByNum.clear(); delveMemoRx = 1e9;
   trainedDay = meta.trained || {}; homesteads = meta.homesteads || []; homesteadId = meta.homesteadId || 1;
   gold = meta.gold || 0; playerClass = meta.cls || null; deathSacks = meta.sacks || []; placedMap = unpackPlaced(meta.placed);
   if(meta.inv && meta.inv[PISTOL]) delete inv[PISTOL];          // the pistol is gone from the world
@@ -6598,7 +6613,7 @@ function artifactHit(m){
   return 0;
 }
 // which tool kind mines each block faster
-const KIND = { [SIGNPOST]:'axe', [TSIGN0]:'axe', [TSIGN0+1]:'axe', [SPELLMAKER]:'pick', [IRON_ORE]:'pick', [ADAM_ORE]:'pick', [MITH_ORE]:'pick', [ANDESITE]:'pick', [GRANITE]:'pick', [DIORITE]:'pick', [TUFF]:'pick', [MOSSROCK]:'pick', [COOK_TABLE]:'pick', [FURNACE]:'pick', [STONE_BRICK]:'pick', [MOSSY_BRICK]:'pick', [FLAGSTONE]:'pick', [PILLAR]:'pick', [CARVED]:'pick', [CUTTER]:'pick', [CHEST]:'axe', [FLESH]:'pick', [FLESH2]:'pick', [BONE]:'pick', [RUST]:'pick', [LAMP]:'pick', [GATE]:'pick', [EMBER]:'pick', [ICE]:'pick', [SANDSTONE]:'pick', [PALM_LOG]:'axe', [PALM_LEAF]:'sword', [BARREL]:'axe', [CRATE]:'axe', [SHROOM_STEM]:'axe', [CAP_R]:'axe', [CAP_T]:'axe', [DARKWOOD]:'axe', [SLATE]:'pick', [PLASTER]:'pick', [FRAME]:'axe', [FRAME_X]:'axe', [FRAME_D1]:'axe', [FRAME_D2]:'axe', [BEAM]:'axe', [SHINGLE]:'axe', [BOOKSHELF]:'axe', [PATH]:'shovel', [HEDGE]:'sword', [STONE]:'pick', [COBBLE]:'pick', [COAL]:'pick', [LOG]:'axe', [PLANKS]:'axe', [CRAFT_TABLE]:'axe',
+const KIND = { [SIGNPOST]:'axe', [TSIGN0]:'axe', [TSIGN0+1]:'axe', [NOTICE0]:'axe', [NOTICE0+1]:'axe', [SPELLMAKER]:'pick', [IRON_ORE]:'pick', [ADAM_ORE]:'pick', [MITH_ORE]:'pick', [ANDESITE]:'pick', [GRANITE]:'pick', [DIORITE]:'pick', [TUFF]:'pick', [MOSSROCK]:'pick', [COOK_TABLE]:'pick', [FURNACE]:'pick', [STONE_BRICK]:'pick', [MOSSY_BRICK]:'pick', [FLAGSTONE]:'pick', [PILLAR]:'pick', [CARVED]:'pick', [CUTTER]:'pick', [CHEST]:'axe', [FLESH]:'pick', [FLESH2]:'pick', [BONE]:'pick', [RUST]:'pick', [LAMP]:'pick', [GATE]:'pick', [EMBER]:'pick', [ICE]:'pick', [SANDSTONE]:'pick', [PALM_LOG]:'axe', [PALM_LEAF]:'sword', [BARREL]:'axe', [CRATE]:'axe', [SHROOM_STEM]:'axe', [CAP_R]:'axe', [CAP_T]:'axe', [DARKWOOD]:'axe', [SLATE]:'pick', [PLASTER]:'pick', [FRAME]:'axe', [FRAME_X]:'axe', [FRAME_D1]:'axe', [FRAME_D2]:'axe', [BEAM]:'axe', [SHINGLE]:'axe', [BOOKSHELF]:'axe', [PATH]:'shovel', [HEDGE]:'sword', [STONE]:'pick', [COBBLE]:'pick', [COAL]:'pick', [LOG]:'axe', [PLANKS]:'axe', [CRAFT_TABLE]:'axe',
                [TILLED]:'shovel', [TILLED_WET]:'shovel', [DIRT]:'shovel', [GRASS]:'shovel', [SNOW]:'shovel', [SAND]:'shovel', [GRAVEL]:'shovel', [LEAVES]:'sword' };
 // lowest pickaxe tier that can get the drop from a block
 const REQ_TIER = { [SPELLMAKER]:1, [IRON_ORE]:2, [MITH_ORE]:3, [ADAM_ORE]:4, [ANDESITE]:1, [GRANITE]:1, [DIORITE]:1, [TUFF]:1, [MOSSROCK]:1, [STONE]:1, [COBBLE]:1, [COAL]:1, [FURNACE]:1, [STONE_BRICK]:1, [MOSSY_BRICK]:1, [FLAGSTONE]:1, [PILLAR]:1, [CARVED]:1, [CUTTER]:1, [SLATE]:1, [RUST]:1, [GATE]:1, [EMBER]:1 };
@@ -6612,7 +6627,7 @@ for(let id=256; id<NB; id++) if(IS_WINDOW[id]){ if(SH_HALF[id]===2){ HARD[id]=3;
 for(let id=256; id<NB; id++) if(IS_BED[id]){ HARD[id]=0.4; HAND_OK.add(id); }
 for(let id=256; id<NB; id++) if(IS_LANTERN[id] || IS_PORTAL[id] || IS_VINE[id]){ HARD[id]=0.3; HAND_OK.add(id); }
 for(let id=0; id<NB; id++) if(id===GLOW || IS_LAVA[id] || IS_LANTERN[id] || IS_PORTAL[id] || IS_VINE[id] || id===GLOWMOSS || id===CAP_T || id===LAMP || id===EMBER || id===CANDLE || id===FIRE) IS_EMIT[id] = 1;   // these give light and are drawn at full brightness
-HARD[FIRE]=0; HAND_OK.add(FIRE); DROP[FIRE]=0; DROP[TSIGN0+1]=TSIGN0; FLAT_ITEMS.add(TINDERBOX);
+HARD[FIRE]=0; HAND_OK.add(FIRE); DROP[FIRE]=0; DROP[TSIGN0+1]=TSIGN0; DROP[NOTICE0+1]=NOTICE0; FLAT_ITEMS.add(TINDERBOX);
 // what burns: anything made of wood, leaves, straw, cloth or paper, and plants
 const IS_FLAM = new Uint8Array(NB);
 for(let id=0; id<NB; id++){
@@ -6669,7 +6684,7 @@ const TIER_POW = { 1:1.25, 2:1.7, 3:2.5, 4:3.4, 5:4.5 };          // wood, stone
 const HITS = {};
 { const S = (ids,v)=>{ for(const id of [].concat(ids)) HITS[id] = v; };
   S([DIRT, GRASS, TILLED, TILLED_WET], 4.5); S([GRAVEL, PATH], 5); S(SAND, 4); S([SNOW, GLASS, GLOW], 2); S([PUMPKIN, MELON], 4);
-  S([STONE, ANDESITE, GRANITE, DIORITE, MOSSROCK], 9); S(TUFF, 8); S(COBBLE, 10); S(COAL, 11); S(SIGNPOST, 4); S([TSIGN0, TSIGN0+1], 4); S(SPELLMAKER, 10); S(IRON_ORE, 12); S(MITH_ORE, 16); S(ADAM_ORE, 20); S(CRAFT_TABLE, 6); S(COOK_TABLE, 8); S(FURNACE, 12);
+  S([STONE, ANDESITE, GRANITE, DIORITE, MOSSROCK], 9); S(TUFF, 8); S(COBBLE, 10); S(COAL, 11); S(SIGNPOST, 4); S([TSIGN0, TSIGN0+1], 4); S([NOTICE0, NOTICE0+1], 6); S(SPELLMAKER, 10); S(IRON_ORE, 12); S(MITH_ORE, 16); S(ADAM_ORE, 20); S(CRAFT_TABLE, 6); S(COOK_TABLE, 8); S(FURNACE, 12);
   for(let id=0; id<NB; id++){ if(IS_LOG[id]) HITS[id] = 8; else if(IS_LEAF[id]) HITS[id] = 2; }
   for(const id of PLANK_IDS) HITS[id] = 6; }
 function baseHits(b){
@@ -6898,9 +6913,10 @@ const SHOPS = {
   cleric:     { title:'Temple offerings', sell:[FIRE_POTION, BOLT_POTION, CANDLE, LANTERN0+1], buy:[GLOWMOSS, EMBER, BONE, CANDLE], heal:true },
   fisher:     { title:'Fisher\'s stall', sell:[WOOD_BUCKET, WATER_BUCKET, RAW_FISH, COOKED_FISH, RAW_MEAT], buy:[RAW_FISH, COOKED_FISH, RAW_MEAT, LEATHER, SILK] },
   innkeeper:  { title:'The tavern\'s board', sell:[MEAT_STEW, STEAK, COOKED_FISH, ...DISHES.map(d=>d.id), CANDLE, TINDERBOX], buy:[...CROPS_SOLD, RAW_MEAT, RAW_FISH, FLOUR, BARREL] },
+  pedlar:     { title:'The pedlar\'s pack', sell:[CANDLE, TINDERBOX, WOOD_BUCKET, LANTERN0+1, FIRE_POTION, BOLT_POTION, IRON_INGOT, STEAK, ...[0,1,2,3,4,5].map(i=>DYE0+i), SEEDS], buy:[SILK, LEATHER, CHITIN, BONE, GLOWMOSS, EMBER, IRON_INGOT, MITH_INGOT, ADAM_INGOT, COAL_ITEM] },
   villager:   { title:'Odds and ends', sell:[STICK, PLANKS, CRAFT_TABLE, BED0, WOOL0, CANDLE], buy:[SILK, WOOL0, LEATHER, LITTER, HAY, BED0, CHEST, ...[0,1,2,3].flatMap(w=>[tableId(w), chairId(w,0), benchId(w,0), doorId(w,0,0,0)]), ...Array.from({length:12},(_,i)=>RUG0+i)] }
 };
-const JOB_TITLE = { hermit:'Hermit', farmer:'Farmer', baker:'Baker', blacksmith:'Smith', miner:'Miner', librarian:'Scholar', cleric:'Cleric', fisher:'Fisher', villager:'Villager', guard:'Guard', innkeeper:'Innkeeper' };
+const JOB_TITLE = { hermit:'Hermit', farmer:'Farmer', baker:'Baker', blacksmith:'Smith', miner:'Miner', librarian:'Scholar', cleric:'Cleric', fisher:'Fisher', villager:'Villager', guard:'Guard', innkeeper:'Innkeeper', pedlar:'Pedlar' };
 const GREET = {
   hermit:['Light and a living voice. Sit, if you mean no harm.','You came down through all that? Then you will want what I sell.','Mind the moss. It glows, but it does not warm.','I have lived down here longer than I lived up there.'],
   guard:['Keep your blade sheathed inside the walls.','Move along, traveller.','The beasts grow bold near the woods. Stay sharp.'],
@@ -6912,6 +6928,7 @@ const GREET = {
   librarian:['Knowledge is the sharpest weapon.','Mind the books. They are older than you.'],
   fisher:['The water\'s calm today.','I trade in whatever the hunt brings in.'],
   innkeeper:['Sit anywhere. The stew is hot.','A bed, a bowl, or the talk of the road? I sell all three.','Travellers bring the news here before anywhere else.'],
+  pedlar:['Well met on the road. Care to see the pack?','I walk from village to village. Buy now; I will not be back this way for a month.','Roads are safer by day. Mostly.'],
   villager:['Fine day, isn\'t it?','Welcome, stranger.','Not many travellers come through here.']
 };
 // every tavern has a name, the same one for the life of the world
@@ -6938,7 +6955,8 @@ function talkNews(m){
   for(let a=-3;a<=3;a++) for(let b=-3;b<=3;b++){ if(!a && !b) continue; const v = villageAt(rx+a, rz+b); if(!v || !v.houses) continue;
     const c = villageCentre(v), d = Math.hypot(c[0]-hc[0], c[1]-hc[1]); if(d<bd){ bd = d; best = [c[0], c[1], villageName(rx+a, rz+b)]; } }
   const lines = [];
-  if(here && m.village) lines.push(`${villageName(rx,rz)} stands in ${provinceOfVillage(m.village).name}.`);
+  if(here && m.village){ const P = provinceInfo(provinceOfVillage(m.village)); lines.push(`${villageName(rx,rz)} stands in ${P.name}, under ${P.ruler}.`);
+    if(h3((m.id||0)*7+3, dayNo*13+1, 5, SEED+767)<0.3) lines.push([`They say ${P.ruler} and ${P.rivalRuler} of ${P.rival.split(' of ')[1]} have not spoken in a year.`, `There is bad blood between us and ${P.rival}. Mind what you say across the border.`, `${P.ruler} has doubled the watch on the ${P.rival.slice(4).split(' of ')[1]} road, or so the carters tell it.`][Math.floor(h3((m.id||0)*5+1, dayNo*3+2, 6, SEED+768)*3)]); }
   if(best){ const ang = Math.atan2(best[0]-hc[0], -(best[1]-hc[1])), k = ((Math.round(ang/(Math.PI/4))%8)+8)%8;          // -z is north
     lines.push(`${best.length>2 ? best[2] : 'The nearest village'} lies about ${Math.round(bd/10)*10} paces to the ${DIR8[k]}.`); }
   else lines.push('No other village for many days\' walk, they say.');
@@ -6991,6 +7009,11 @@ function nextHoliday(){ for(let k=1;k<=YEAR_DAYS;k++){ const h = holidayOn(dayNo
 function holidayDawn(){ const h = holiday(); if(!h) return; const nm = h.name.replace(/^the /,'');
   skillToast(nm.toUpperCase()+'<br><small>'+h.what+'</small>', true); logJournal('Today is '+h.name+': '+h.what+'.'); }
 function buyPrice(id){ return Math.max(1, Math.round((PRICE[id]||1)*(1 - repOf(talkNpc && talkNpc.village)/400)*(isClass('thief') ? 0.85 : 1)*holidayMul('buy'))); }
+// a temple's blessing (Daggerfall's temples): for a donation, your wounds close on their own until the sunrise after next
+let blessDay = -1, blessAcc = 0;
+function blessed(){ return blessDay>=dayNo; }
+function blessCost(){ return Math.round(25*guildCut('temple', 10, 60)*holidayMul('heal')); }
+function blessTick(){ if(!blessed() || dead || health>=maxHP()){ blessAcc = 0; return; } if(++blessAcc>=10){ blessAcc = 0; health = Math.min(maxHP(), health+1); vitalKey = ''; } }      // (called once a second) one half-heart every ten seconds
 function roomCost(){ return Math.round(8*holidayMul('room')); }
 function dirWord(fx,fz,tx,tz){ const ang = Math.atan2(tx-fx, -(tz-fz)); return DIR8[((Math.round(ang/(Math.PI/4))%8)+8)%8]; }
 const FETCH_WANTS = { blacksmith:[LEATHER,CHITIN,COAL_ITEM,IRON_ORE,IRON_INGOT], baker:[WHEAT,RAW_MEAT,CARROT], farmer:[BONE,WOOL0,HAY], miner:[COAL_ITEM,COBBLE,IRON_ORE], librarian:[SILK,GLOWMOSS,EMBER],
@@ -7210,7 +7233,7 @@ function finishQuest(q, ok){
   else { addRep(q.village, -5); if(q.kind==='deliver' && inv[PARCEL]>0) inv[PARCEL]--; if(q.relic && inv[HEIRLOOM]>0) inv[HEIRLOOM]--; if(q.heist && inv[STRONGBOX]>0) inv[STRONGBOX]--; skillToast('QUEST FAILED<br><small>'+q.giverName+' is disappointed</small>', true); }
   scheduleSave();
 }
-function questDawn(){ dayNo++; for(const q of quests.slice()) if(dayNo>q.due && q.state!=='done') finishQuest(q, false); holidayDawn(); }
+function questDawn(){ dayNo++; for(const q of quests.slice()) if(dayNo>q.due && q.state!=='done') finishQuest(q, false); holidayDawn(); if(blessDay===dayNo-1) skillToast('the blessing fades'); }
 // the hunted beast appears at its den when you come near, and is a little tougher than most
 function questTick(){
   for(const q of quests){
@@ -7285,6 +7308,54 @@ function doRepair(){
   const t = HOTBAR[sel]; if(TOOLS[t] && wear[t]) wear[t] = wear[t].map(()=>TOOLS[t].dur);
 }
 let talkNpc = null, talkView = 'talk', talkLine = '', talkOffer = null;
+// ---------- the notice board in a village's plaza ----------
+// Using it opens the talk panel with the board in place of a person: where you are and who rules, the date and the next holiday,
+// what you are wanted for, the day's notices (one tells you of a place, as a rumour would), and the ruler's standing bounty on
+// whatever troubles the land nearby. The bounty is reported to the village's guard.
+const boardDay = {};                                          // village key -> the day you last read its notices
+function boardGuard(rx,rz){ const v = villageAt(rx,rz); let i = v.houses.findIndex(h=>h.job==='guard'); if(i<0 && v.houses[0].job==='villager') i = 0; if(i<0) i = v.tavern!==undefined ? v.tavern : 0;
+  const ch = residentOf(rx,rz,i); return { home:rx+','+rz+':'+i, name:ch.name, job:ch.job }; }
+function boardHead(m){ const [rx,rz] = m.village, P = provinceInfo(provinceOfVillage(m.village)), th = holiday(), nh = nextHoliday(), w = bountyOf(m.village);
+  return `${villageName(rx,rz).toUpperCase()}, in ${P.name}. ${P.ruler} rules. Today is the ${dateStr(dayNo)}${th ? ': '+th.name+' ('+th.what+')' : ''}.`
+       + (!th && nh ? ` ${nh.h.name[0].toUpperCase()+nh.h.name.slice(1)} falls in ${nh.days} ${nh.days===1 ? 'day' : 'days'}.` : '')
+       + (w ? ` A fresh notice: WANTED, a stranger of your description. ${w} gold.` : ''); }
+function boardOffer(m){ const [rx,rz] = m.village, vc = m.vc, P = provinceInfo(provinceOfVillage(m.village));
+  const C = [...cryptNear(vc[0], vc[1], 700), ...delveNear(vc[0], vc[1], 1000)].filter(S=>!(cryptState[S.key] && cryptState[S.key].cleared) && !quests.some(q=>q.crypt===S.key))
+            .sort((a,b)=>Math.hypot(a.ex-vc[0],a.ez-vc[1])-Math.hypot(b.ex-vc[0],b.ez-vc[1]))[0];
+  if(!C) return null; const d = Math.hypot(C.ex-vc[0], C.ez-vc[1]), isD = C.key[0]==='D', reward = (isD ? 280 : 140) + Math.round(d/4), days = isD ? 10 : 6, G = boardGuard(rx,rz);
+  return { kind:'crypt', delve:isD ? 1 : undefined, crypt:C.key, cname:C.name, at:[C.ex,C.ez], days, reward, rep:20, board:1,
+           text:`BY ORDER OF ${P.ruler.toUpperCase()}: ${reward} gold to whoever ends the trouble at ${isD ? C.name : 'the '+C.name}, ${Math.round(d/10)*10} paces ${dirWord(vc[0],vc[1],C.ex,C.ez)} of ${villageName(rx,rz)}, within ${days} days. Report to ${G.name} of the watch.` }; }
+function openBoard(x,z){
+  if(paused || craftOpen) return; const rx0 = Math.floor(x/VREG), rz0 = Math.floor(z/VREG); let m = null;
+  for(let a=-1;a<=1 && !m;a++) for(let b=-1;b<=1 && !m;b++){ const v = villageAt(rx0+a,rz0+b); if(v && v.board && Math.abs(v.board[0]-x)<=1 && Math.abs(v.board[2]-z)<=1)
+    m = { board:true, id:0, name:'Notice board', job:'board', village:[rx0+a,rz0+b], vc:[v.cx,v.cz], home:'board:'+(rx0+a)+','+(rz0+b), x:x+0.5, y:player.y, z:z+0.5, pose:{} }; }
+  if(!m){ skillToast('A notice board<br><small>nothing is pinned to it</small>', true); return; }
+  talkNpc = m; talkView = 'talk'; talkOffer = null; talkLine = boardHead(m); craftOpen = true;
+  renderTalk(); document.getElementById('talkMenu').classList.add('show'); if(document.pointerLockElement) document.exitPointerLock();
+}
+function boardAction(m, a){
+  const [rx,rz] = m.village, k = vkey(m.village);
+  if(a==='bread'){
+    if(boardDay[k]===dayNo){ talkLine = 'Nothing new has been pinned up since you last looked.'; return; }
+    boardDay[k] = dayNo; const hc = m.vc;
+    const R = [...cryptNear(hc[0], hc[1], 500), ...delveNear(hc[0], hc[1], 800)].filter(P=>!cryptSeen.has(P.key)).sort((p,q)=>Math.hypot(p.ex-hc[0],p.ez-hc[1])-Math.hypot(q.ex-hc[0],q.ez-hc[1]))[0];
+    const P = provinceInfo(provinceOfVillage(m.village)), lines = [`A proclamation in a clerk's hand: ${P.ruler} forbids all trade with ${P.rival} until further notice.`];
+    if(R){ const d = Math.round(Math.hypot(R.ex-hc[0], R.ez-hc[1])/10)*10, isD = R.key[0]==='D'; cryptSeen.add(R.key);
+      lines.push(`A warning, nailed over older ones: keep clear of ${isD ? R.name : 'the '+R.name}, ${d} paces to the ${dirWord(hc[0],hc[1],R.ex,R.ez)}. (Marked on your map.)`);
+      logJournal(`A notice in ${villageName(rx,rz)} warned of ${isD ? R.name+', a delve' : 'the '+R.name}, ${d} paces ${dirWord(hc[0],hc[1],R.ex,R.ez)}.`); }
+    else lines.push('A scrap of paper: LOST, one grey cat. Answers to nothing.');
+    talkLine = lines.join(' '); scheduleSave();
+  }
+  else if(a==='bwork'){
+    const G = boardGuard(rx,rz), mine = quests.find(q=>q.board && q.giver===G.home);
+    if(mine) talkLine = `You have already taken the bounty on ${mine.cname}. ${G.name} of the watch is waiting to hear it is done.`;
+    else if(quests.length>=QUEST_MAX) talkLine = 'You have as much work as you can carry already.';
+    else { const o = boardOffer(m); if(!o) talkLine = 'No bounty is posted. The land hereabouts is quiet, for now.'; else { talkOffer = o; talkLine = o.text; } }
+  }
+  else if(a==='accept' && talkOffer){ const G = boardGuard(rx,rz); acceptQuest({ home:G.home, name:G.name, job:'guard', village:m.village, vc:m.vc }, talkOffer); talkOffer = null;
+    talkLine = `You take the notice down. Report to ${G.name} of the watch when it is done.`; }
+  else if(a==='decline'){ talkOffer = null; talkLine = boardHead(m); }
+}
 function openTalk(m){
   if(paused || craftOpen || m.angry>0 || m.dead || m.bandit) return false;
   talkNpc = m; talkView = 'talk'; m.talkT = 0; talkOffer = null;
@@ -7306,6 +7377,11 @@ function renderTalk(){
   document.getElementById('talkName').textContent = m.name + ' \u2014 ' + (JOB_TITLE[m.job]||'Villager') + (hsOf(m) ? ' of '+hsOf(m).name : m.village ? ' of '+villageName(m.village[0],m.village[1]) : m.site && siteByKey(m.site) ? ' of '+siteByKey(m.site).name : '');
   document.getElementById('talkGold').textContent = gold + ' gold';
   let h = '';
+  if(m.board){                                                 // the notice board: its own few buttons
+    document.getElementById('talkName').textContent = 'Notice board \u2014 ' + villageName(m.village[0], m.village[1]);
+    el.innerHTML = `<div class="tkLine">${talkLine}</div><div class="tkBtns">` + (talkOffer ? `<button data-a="accept">TAKE THE NOTICE</button><button data-a="decline">LEAVE IT</button>`
+      : `<button data-a="bread">READ THE NOTICES</button><button data-a="bwork">POSTED BOUNTY</button><button data-a="bye">STEP AWAY</button>`) + `</div>`;
+    return; }
   document.getElementById('talkGold').textContent = gold + ' gold \u00b7 ' + repWord(repOf(m.village));
   const shunned = repOf(m.village) <= -30;
   if(m.rescue){ const q = quests.find(q=>q.id===m.rescue);
@@ -7326,7 +7402,7 @@ function renderTalk(){
     const del = quests.find(q=>q.kind==='deliver' && q.to===m.home && inv[PARCEL]>0), back = quests.find(q=>q.giver===m.home && (q.kind==='hunt' || q.kind==='build' || q.kind==='crypt' || q.kind==='rescue' ? q.state==='done' : q.kind==='fetch' && (inv[q.item]||0)>=q.n));
     if(del) h += `<button data-a="deliver">GIVE PARCEL</button>`;
     if(back) h += `<button data-a="turnin">${back.kind==='rescue' ? 'TELL THEM THE NEWS' : back.kind==='build' ? 'REPORT THE WORK' : back.kind==='hunt' || back.kind==='crypt' ? 'REPORT THE KILL' : 'HAND OVER '+back.n+' '+NAMES[back.item].toUpperCase()}</button>`;
-    h += `<button data-a="work">ASK FOR WORK</button>`;
+    if(!m.pedlar) h += `<button data-a="work">ASK FOR WORK</button>`;
     { const gid = guildOfJob(m.job); if(gid && guildRank(gid)<0 && !(GUILDS[gid].secret && thefts<3)) h += `<button data-a="join">${GUILDS[gid].secret ? 'A WORD IN PRIVATE' : 'JOIN THE '+GUILDS[gid].name.toUpperCase()}</button>`; }
     if(TRAINS[m.job]) h += `<button data-a="train">TRAIN ${SKILLS.find(k=>k.id===TRAINS[m.job]).name.toUpperCase()} (${trainCost(TRAINS[m.job], m.job)}g)</button>`;
     if(m.job==='blacksmith'){ const rc = repairCost(); if(rc>0) h += `<button data-a="repair">REPAIR (${rc}g)</button>`; }
@@ -7334,6 +7410,7 @@ function renderTalk(){
     if((m.job==='villager' || m.job==='innkeeper') && m.house && m.house.bed) h += `<button data-a="room">RENT A ROOM (${roomCost() ? roomCost()+'g' : 'free today'})</button>`;
     if(shop) h += `<button data-a="trade">TRADE</button>`;
     if(shop && shop.heal) h += `<button data-a="heal">HEALING</button>`;
+    if(shop && shop.heal && !blessed()) h += `<button data-a="bless">ASK A BLESSING (${blessCost() ? blessCost()+'g' : 'free today'})</button>`;
     h += `<button data-a="news">ASK FOR NEWS</button>`; }
     if(!talkOffer) h += `<button data-a="bye">GOODBYE</button>`;
     h += `</div>`;
@@ -7358,6 +7435,7 @@ function renderTalk(){
 function talkAction(a){
   const m = talkNpc; if(!m) return;
   if(a==='bye'){ closeTalk(); return; }
+  if(m.board){ boardAction(m, a); renderTalk(); return; }
   if(a==='finepay'){ if(gold>=fineOf(m.village)) arrestEnd(m, 'pay'); }
   else if(a==='jail'){ arrestEnd(m, 'jail'); return; }
   else if(a==='resist'){ arrestEnd(m, 'resist'); return; }
@@ -7399,6 +7477,10 @@ function talkAction(a){
     else if(q && q.kind==='rescue' && q.state==='done'){ finishQuest(q, true); talkLine = `${q.who} is alive? Out of that place? You have given us back more than gold can pay for. Here: ${q.reward} gold, all the same.`; }
     else if(q && q.kind==='build' && q.state==='done'){ finishQuest(q, true); talkLine = `I saw it with my own eyes. Fine work! ${q.reward} gold, as promised.`; }
     else if(q && q.kind==='fetch' && (inv[q.item]||0)>=q.n){ inv[q.item] -= q.n; finishQuest(q, true); talkLine = q.heist ? `Chalk mark and all. Nicely done. ${q.reward} gold, and the Guild will hear of it.` : q.relic ? `Grandfather's cup. You found it. I never thought to hold it again. ${q.reward} gold, and my family's thanks.` : `Just what I needed. ${q.reward} gold, as promised.`; } }
+  else if(a==='bless'){ const c = blessCost();
+    if(blessed()) talkLine = 'The blessing is on you already.';
+    else if(gold<c) talkLine = `The blessing asks a donation of ${c} gold. You have ${gold}.`;
+    else { gold -= c; blessDay = dayNo+1; blessAcc = 0; talkLine = 'Go with the light. Until the sunrise after next, your wounds will close on their own.'; logJournal('Received a blessing'+(m.village ? ' at the temple of '+villageName(m.village[0],m.village[1]) : '')+'.'); skillToast('BLESSED<br><small>your wounds close on their own</small>', true); scheduleSave(); } }
   else if(a==='heal'){
     const need = maxHP()-health, cost = need*(isClass('whitemage') ? 1.5 : 3)*guildCut('temple', 15, 90)*holidayMul('heal') | 0;
     if(need<=0) talkLine = 'You are whole. Go with the gods.';
@@ -7699,7 +7781,7 @@ function drawMap(){
 function renderMapSide(){
   const el = document.getElementById('mapSide'), here = atPlace();
   const dz = dangerAt(player.x, player.y, player.z);
-  let h = `<div class="skNote">You are in ${isUnder(player.z) ? 'the Underworld' : DANGER_NAMES[Math.min(5,Math.floor(Math.hypot(player.x,player.z)/450))]} (danger ${dz}). ${here ? 'You are at '+here.name+'.' : 'Wagons leave from villages and homesteads.'} Careful travel keeps to the road and the inns: dearer and slower, but you arrive fed and whole. Reckless is cheaper and quicker, and riskier the further you go.</div>`;
+  let h = `<div class="skNote">You are in ${isUnder(player.z) ? 'the Underworld' : DANGER_NAMES[Math.min(5,Math.floor(Math.hypot(player.x,player.z)/450))]} (danger ${dz}). ${isUnder(player.z) || worldGen<2 ? '' : 'This is '+provinceAt(player.x,player.z).name+', held by '+provinceInfo(provinceAt(player.x,player.z)).ruler+'. '}${here ? 'You are at '+here.name+'.' : 'Wagons leave from villages and homesteads.'} Careful travel keeps to the road and the inns: dearer and slower, but you arrive fed and whole. Reckless is cheaper and quicker, and riskier the further you go.</div>`;
   { const P = delveHere(); if(P){ el.innerHTML = `<div class="skNote">You are in ${P.name}. The map shows the chambers you have stood in; a dotted line with a ? is a passage you have not followed yet. No wagon comes down here: the way out is the gate.</div>`; return; } }
   if(isUnder(player.z)){ el.innerHTML = `<div class="skNote">You are in the Underworld (danger ${dz}). No roads, no wagons: only the way you came. The map fills in as you explore.</div>`; return; }
   for(const p of knownPlaces().sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))){
@@ -7775,6 +7857,41 @@ function npcHit(m, dmg){                                         // you hit a vi
   if(m.hp<=0){ m.dead = true; m.deadT = 0; m.path = null; if(m.village){ addRep(m.village, -25); crime(m.village, 'murder'); } }
 }
 // open a closed door the villager is about to walk through, and shut it again once they're past
+// ---------- travellers on the roads: a pedlar walking from one village to the next ----------
+// By day, now and then, one sets out on a road near you toward the further of the two nearest villages. He follows the road a
+// stretch at a time, trades from his pack if you stop him, and idles about the plaza once he arrives. Never more than one.
+let travT = 25;
+function pedlarSpawnAt(x,z){
+  const y = colInfo(x,z).h+1; if(!npcCanStand(x,y,z)) return null;
+  const rx = Math.floor(x/VREG), rz = Math.floor(z/VREG), L = [];
+  for(let a=-2;a<=2;a++) for(let b=-2;b<=2;b++){ const v = villageAt(rx+a,rz+b); if(v && v.houses) L.push([v.cx, v.cz, Math.hypot(v.cx-x, v.cz-z)]); }
+  if(L.length<2) return null; L.sort((p,q)=>p[2]-q[2]);
+  const ch = npcGenerate(Math.random, 'villager'); ch.job = 'pedlar'; ch.topCol = '#7a5a2e'; ch.legsCol = '#4a3c2a';
+  const m = newNpc(x,y,z,ch); m.pedlar = true; m.road = { to:[L[1][0], L[1][1]], t:0 }; m.home = null; m.house = null; m.village = null; m.vc = null;
+  mobs.push(m); return m;
+}
+function travellerTick(){
+  if(worldGen<4 || testWorld || dead || ratNight || isUnder(player.z) || isTestZ(player.z)) return;
+  if(--travT>0) return; travT = 50 + Math.floor(Math.random()*70);
+  if(mobs.some(m=>m.pedlar && !m.dead)) return;
+  const C = [];                                               // every road cell on three rings round you, outside any village
+  for(const r of [36,41,46]) for(let a=0;a<260;a++){ const x = Math.floor(player.x+Math.cos(a*0.02417)*r), z = Math.floor(player.z+Math.sin(a*0.02417)*r); if(roadAt(x,z) && !nearVillage(x,z)) C.push([x,z]); }
+  for(let k=0; k<6 && C.length; k++){ const q = C[Math.floor(Math.random()*C.length)]; if(pedlarSpawnAt(q[0],q[1])) return; }
+}
+function roadWalk(m, dt){
+  const R = m.road; R.t -= dt;
+  if(m.path && m.pi<m.path.length) return npcWalk(m, NPC_WALK*1.25);
+  if(R.t>0) return false; R.t = 1.2;
+  const x0 = Math.floor(m.x), z0 = Math.floor(m.z), d0 = Math.hypot(R.to[0]-m.x, R.to[1]-m.z);
+  if(d0<24){ m.road = null; m.hx = Math.floor(R.to[0]); m.hz = Math.floor(R.to[1]); return false; }      // arrived: from here on he idles about the plaza
+  let best = null, bd = d0-3;
+  for(const r of [13,9,6]) for(let a=0;a<32;a++){ const x = x0+Math.round(Math.cos(a*0.19635)*r), z = z0+Math.round(Math.sin(a*0.19635)*r); if(!roadAt(x,z)) continue;
+    const d = Math.hypot(R.to[0]-x, R.to[1]-z); if(d<bd){ bd = d; best = [x,z]; } }
+  if(!best){ R.lost = (R.lost||0)+1; if(R.lost>8){ m.road = null; m.hx = x0; m.hz = z0; } return false; }      // the road gave out (or was dug up): he gives up and stays about
+  R.lost = 0; const p = npcPath(m, (x,y,z)=>Math.abs(x-best[0])<=1 && Math.abs(z-best[1])<=1, 1200);
+  if(p){ ratSetPath(m,p); return npcWalk(m, NPC_WALK*1.25); }
+  return false;
+}
 function npcDoors(m){
   if(m.door){ const [x,y,z] = m.door, b = getB(x,y,z);
     if(Math.hypot(x+0.5-m.x, z+0.5-m.z)>1.6){ if(IS_DOOR[b] && SH_OPEN[b] && !(Math.floor(player.x)===x && Math.floor(player.z)===z)) npcToggleDoor(x,y,z); m.door = null; } }
@@ -7862,6 +7979,8 @@ function updateNpc(m, dt){
   } else if(m.house && ratNight && !guard){                                            // night: home to bed
     walking = npcGoTo(m, m.house.inside, dt, NPC_WALK*1.4, Math.hypot(m.house.inside[0]-m.x, m.house.inside[2]-m.z)>14 ? 7000 : 1500);      // (a long way if they were at the tavern)
     if(!walking){ m.state = 'home'; if(Math.random()<dt*0.2) m.yaw += (Math.random()-0.5)*2; }
+  } else if(m.road){                                                                   // a traveller on the road
+    walking = roadWalk(m, dt); if(!walking) m.moving = false;
   } else if(m.state==='idle' || m.state==='home'){
     m.moving=false; m.idleT -= dt;
     if(m.idleT<=0){
@@ -9112,7 +9231,7 @@ function updateMobs(){
   if(catSpawnT<=0){ catSpawnT = catnipHere ? 4.5 : 9; if(!underNow) trySpawnCats(); }
   ogreSpawnT -= dt; if(ogreSpawnT<=0){ ogreSpawnT = 20; if(!underNow){ trySpawnOgre(); trySpawnMino(); } else { trySpawnBeetles(); if(isUnder(player.z)) trySpawnDaedra(); } }
   if(NPCS_IN_WORLD){ npcSpawnT -= dt; if(npcSpawnT<=0){ npcSpawnT = 3; trySpawnNpcs(); questTick(); } }
-  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); provinceTick(); horseTick(); lavaFireTick(); }
+  exploreT -= dt; if(exploreT<=0){ exploreT = 1; exploreTick(); cryptTick(); delveTick(); provinceTick(); horseTick(); blessTick(); travellerTick(); lavaFireTick(); }
   const pcx=Math.floor(player.x), pcy=Math.floor(player.y), pcz=Math.floor(player.z);
   const inRatZone = ratAllowed(pcx,pcy,pcz);
   for(let i=mobs.length-1;i>=0;i--){
@@ -9896,6 +10015,7 @@ function placeBlock(){
   if(hit.b===WBP0+2){ wbHarvest(hit.x,hit.y,hit.z); return; }          // a full woolbloom gives its wool
   if(toggleLamp(hit.x,hit.y,hit.z)) return;                 // lanterns and lamps switch on and off
   if(IS_FURN[hit.b] && SH_HALF[hit.b]===2){ sitDown(hit.x,hit.y,hit.z,SH_FACE[hit.b]); return; }
+  if(hit.b===NOTICE0 || hit.b===NOTICE0+1){ openBoard(hit.x, hit.z); return; }
   if(hit.b===TSIGN0 || hit.b===TSIGN0+1){ const nm = tavernNear(hit.x,hit.z); skillToast(nm ? nm.toUpperCase()+'<br><small>food, a bed, and the talk of the road</small>' : 'A tavern sign<br><small>it hangs over no tavern</small>', true); return; }
   if(hit.b===CHEST){ openChest(hit.x,hit.y,hit.z); return; }
   if(IS_BED[hit.b]){ useBed(hit); return; }

@@ -1,7 +1,7 @@
 from playwright.sync_api import sync_playwright
 from PIL import Image
 import json, sys, base64, io
-SCENES = sys.argv[1].split(',') if len(sys.argv)>1 else ['field','village','water','under','k_beasts','k_third','delve','k_delve','tavern','k_horse']
+SCENES = sys.argv[1].split(',') if len(sys.argv)>1 else ['field','village','water','under','k_beasts','k_third','delve','k_delve','tavern','k_horse','board']
 bad = []
 CMP = r"""async (scene)=>{
   const sleep=t=>new Promise(r=>setTimeout(r,t));
@@ -11,6 +11,7 @@ CMP = r"""async (scene)=>{
   if(scene==='village'){ const v=nearestVillage(2); go(v.cx,v.cz+12,0,-0.05,0.3); }
   if(scene==='tavern'){ const v=nearestVillage(2), h=v.houses[v.tavern], dx=(h.out[0]-h.inside[0])/2, dz=(h.out[2]-h.inside[2])/2, x=h.out[0]+dx*4+dz*3, z=h.out[2]+dz*4+dx*3;      // a tavern's front: the hanging lamps and the sign
     go(x,z,Math.atan2(h.out[0]-x,-(h.out[2]-z)),0.22,0.3); }
+  if(scene==='board'){ const v=nearestVillage(2), B=v.board; player.x=B[0]+1.5; player.z=B[2]+3.5; player.y=B[1]; player.yaw=Math.atan2(B[0]+0.5-player.x, -(B[2]+0.5-player.z)); player.pitch=-0.05; tod=0.3; }      // the notice board at the edge of the plaza
   if(scene==='night'){ const v=nearestVillage(2); go(v.cx,v.cz+12,0,-0.05,0.8); }
   if(scene==='water'){ let L=null; for(let x=-400;x<400&&!L;x+=6) for(let z=-400;z<400;z+=6){ const c=colInfo(x,z); if(c.h<SEA-4 && getB(x,SEA,z)!==AIR){ L=[x,z]; break; } } player.x=L[0]-6.5; player.z=L[1]+0.5; player.y=SEA+2; player.yaw=1.57; player.pitch=-0.35; tod=0.35; }
   if(scene==='under'){ let P=null; for(let x=0;x<400&&!P;x+=4){ const z=UNDER_Z+40, c=underCol(x,z); if(c.hf>UNDER_LAVA+3 && c.hc-c.hf>14) P=[x,z,c.hf]; } player.x=P[0]+0.5; player.z=P[1]+0.5; player.y=P[2]+1; player.yaw=0.3; player.pitch=-0.15; }

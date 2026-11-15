@@ -18,15 +18,19 @@ with sync_playwright() as p:
       crime(A,'assault'); o.assault=[bountyOf(A),bountyOf(B),bountyOf(C)];
       o.word=journal.some(e=>e.t.startsWith('Word of it will reach every guard in the '));
       gold=500; arrestEnd({village:B, x:0, z:0}, 'pay'); o.paidB=[bountyOf(A),bountyOf(B),gold];              // paying where only the province wants you clears the province's claim, not the first village's
+      { const P=provinceInfo(provinceAt(player.x,player.z)), rs=new Set(); for(let x=-6000;x<6000;x+=700) rs.add(provinceInfo(provinceAt(x,-900)).ruler);
+        o.ruler=[/^(Baron|Baroness|Count|Countess|Margrave|Margravine|Duke|Duchess|Lord|Lady) /.test(P.ruler), P.rival!==P.name && P.rival.startsWith('the '), rs.size>=6, provinceInfo(provinceAt(player.x,player.z)).ruler===P.ruler];
+        const v=villageAt(0,0); o.says=talkNews({ id:3, x:v.cx, z:v.cz, village:[0,0], vc:[v.cx,v.cz], name:'T', job:'farmer', rumourDay:dayNo }).includes(', under '+P.ruler+'.'); }
       const P0=provinceAt(player.x,player.z); let x=player.x; while(provinceAt(x,player.z).key===P0.key && x<30000) x+=32; window.__bx=x; o.j0=journal.length; o.from=P0.name; o.to=provinceAt(x,player.z).name;
       return o; }""")
     print(json.dumps(r))
     if not (20<=r['provs']<=60 and r['minW']>900 and r['maxW']<2100 and r['stable']): bad.append('province shapes')
+    if not (r['ruler']==[True,True,True,True] and r['says']): bad.append('rulers')
     if not (r['theft']==[30,0,0] and r['assault']==[70,20,0] and r['word']): bad.append('word of a crime')
     if not (r['paidB'][0]==70 and r['paidB'][1]==0 and r['paidB'][2]<500): bad.append('paying in the province')
     pg.wait_for_timeout(1500)
     pg.evaluate("()=>{ fly=true; player.x=window.__bx+40; player.y=TOP_BUILD; }"); pg.wait_for_timeout(2500)
-    c=pg.evaluate("()=>({ here:provHere===provinceAt(player.x,player.z).key, seen:provSeen.length, j:journal.slice(-1)[0].t, toast:!!document.body.innerText.match(/you cross the border/) })")
+    c=pg.evaluate("()=>({ here:provHere===provinceAt(player.x,player.z).key, seen:provSeen.length, j:journal.slice(-1)[0].t, toast:!!document.body.innerText.match(/you cross the border . .* rules here/) })")
     print(json.dumps(c))
     if not (c['here'] and c['seen']==2 and c['j']=='Crossed into '+r['to']+'.' and c['toast'] and r['from']!=r['to']): bad.append('crossing a border')
     pg.evaluate("()=>{ openMap(); }"); pg.wait_for_timeout(1200)

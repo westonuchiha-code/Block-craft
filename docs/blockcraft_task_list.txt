@@ -681,3 +681,17 @@ DONE  THE HORSE (Daggerfall): a farmer sells a riding horse for 300 gold. It is 
       Full suite on this build: 45/46 on the run (proof/suite_horse.log); the one failure was tests/tavern.py's "home at night" check, which
       read villagers as not home when they had gone home and then stepped out to chase the night's rats (and the machine was overloaded by
       other tests running alongside). The test now counts anyone who has been home; rerun alone it passes. The game itself was not changed.
+DONE  RULERS: every province has a named ruler (Baron, Countess, Margrave, Duke, Lord Sheriff...) and a rival neighbour. The border notice,
+      the map panel and ASK FOR NEWS name the ruler; about one villager in four passes on gossip about the feud. Every world. Flavour
+      for now (it is what the notice board's bounties are issued under).
+DONE  NOTICE BOARD (new worlds): a wooden board at the edge of every village plaza (21 of 21 villages checked). USE it for a panel: the
+      village, province, ruler, date and next holiday, and a WANTED line if that is you. READ THE NOTICES gives a proclamation and marks
+      one unknown barrow or delve on your map (once a day). POSTED BOUNTY is the ruler's price on the nearest uncleared barrow or delve;
+      taking it is an ordinary job, reported to the village guard by name. Both renderers match (proof/board_gpu_cpu.png, board_panel.png).
+DONE  TEMPLE BLESSING: a cleric will bless you for 25 gold (less for Temple members, free on the Day of Mending): until the sunrise after
+      next you heal half a heart every ten seconds. Announced, journaled, fades with a notice, saved. Every world.
+DONE  PEDLARS ON THE ROADS: by day, now and then, a pedlar sets out on a road near you (never inside a village, never more than one)
+      and walks it toward the next village: measured 21 blocks of road in about 15 seconds, staying on the road. Stop him to trade from
+      his pack (candles, tinder, potions, dyes, iron; he buys hides and ores) or ask the news. He offers no work, and striking him is
+      no village's crime. When he arrives he idles about the plaza. Worlds with roads (worldGen 4 on).
+      New tests: tests/board.py, bless.py, pedlar.py; province.py checks rulers; gpu.py has a board scene (suite is now 49).

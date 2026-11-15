@@ -94,6 +94,11 @@ runs before optimising.
 - **World shape, 2026-11-14.** New worlds (`worldGen` 6) are lifted 40 blocks: `setWorldShape(40)` sets `YOFF`, `SEA` (56), `TOP_BUILD` (115),
   `TREELINE`, `SNOW_LINE`, cloud height (`uCloudY` in the shader) and the rat/cat/deep lines. These are now `let`, not `const`. `surfaceH`
   works in the old frame (`SEA0` = 16) and adds `YOFF`. Ores, lava, tuff stay counted from bedrock. Older worlds: `setWorldShape(0)`.
+- **Rulers, notice board, blessings, pedlars, 2026-11-15.** `provinceInfo(P)` adds `ruler`, `rival`, `rivalRuler` (all derived). The notice board is
+  `NOTICE0` (2 ids), put in `V.late` at `V.board` for `worldGen` 7; `openBoard` opens the talk panel with a pseudo-person (`m.board`), handled at the
+  top of `renderTalk` and `talkAction` (`boardHead`, `boardAction`, `boardOffer`, `boardGuard`); its bounty is an ordinary `crypt` quest given in the
+  guard's name (`q.board`). Blessing: `blessDay`, `blessed()`, `blessCost()`, `blessTick()` (saved as `bless`). Pedlar: `travellerTick` (once a second,
+  by day, one at a time), `pedlarSpawnAt`, `roadWalk` (the `m.road` branch in `updateNpc`), `SHOPS.pedlar`; he has no village, so no work and no crime.
 - **The horse, 2026-11-15.** `horse` = `{x,y,z,yaw,mounted}` in the save (one horse). It is a `BEAST` of kind `horse` with `tame:true` (no AI, cannot be hurt,
   never counted as wildlife) and `m.mine`; its boxes are in `beastBoxes`. `buyHorse` (farmer), `mountHorse` (use), `dismountHorse` (sneak, death),
   `rideFollow` (every frame: the mob sits under you, `m.ridden` skips its update and the mob ray), `horseTick` (once a second: remembers its place,

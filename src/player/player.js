@@ -6,6 +6,7 @@ const HALF_WIDTH = 0.3, HEIGHT = 1.8, EYE_HEIGHT = 1.62;
 const GRAVITY = 32, TERMINAL = 60, JUMP_SPEED = 8.9;              // a jump clears one and a quarter blocks
 const WALK = 4.3, SPRINT = 5.6, SNEAK = 1.3, FLY = 11, FLY_SPRINT = 22;
 const GROUND_ACCEL = 60, AIR_ACCEL = 18, SWIM_ACCEL = 20;
+const CLIMB_OUT_SPEED = 10.5;                                   // enough to lift a swimmer's feet over a bank a block and a bit above the water
 const PITCH_LIMIT = Math.PI / 2 - 0.01;
 
 export class Player {
@@ -15,6 +16,7 @@ export class Player {
     this.yaw = 0; this.pitch = 0;                // yaw 0 looks towards -z (north)
     this.onGround = false;
     this.inWater = false;
+    this.againstWall = false;                    // touched a wall while moving sideways this step
     this.flying = false;
     this.sprinting = false;
     this.sneaking = false;
@@ -48,6 +50,8 @@ export class Player {
     const sneaking = this.sneaking || input.sneak;
 
     this.inWater = this.bodyIn(world, BLOCK.water);
+    const feetWet = world.getBlock(Math.floor(this.x), Math.floor(this.y + 0.05), Math.floor(this.z)) === BLOCK.water ||
+                    world.getBlock(Math.floor(this.x), Math.floor(this.y - 0.3), Math.floor(this.z)) === BLOCK.water;
     const speed = this.flying ? (this.sprinting ? FLY_SPRINT : FLY)
       : sneaking ? SNEAK : this.sprinting && input.moveZ < 0 ? SPRINT : WALK;
     const swimFactor = this.inWater && !this.flying ? 0.55 : 1;
@@ -72,9 +76,13 @@ export class Player {
       this.vy = Math.max(-TERMINAL, this.vy - GRAVITY * dt);
     }
 
+    // swimming into a bank with jump held, while still wet: climb out onto it (Minecraft gives the same hop)
+    if (!this.flying && (this.inWater || feetWet) && input.jump && this.againstWall && this.vy < CLIMB_OUT_SPEED * 0.5) this.vy = CLIMB_OUT_SPEED;
+
     // move one axis at a time, so sliding along walls works
     const ox = this.x, oz = this.z;
     this.onGround = false;
+    this.againstWall = false;
     this.moveAxis(world, 'y', this.vy * dt);
     this.moveAxis(world, 'x', this.vx * dt);
     this.moveAxis(world, 'z', this.vz * dt);
@@ -94,6 +102,7 @@ export class Player {
         for (let z = Math.floor(box.z0); z <= Math.floor(box.z1); z++) {
           if (!world.isSolid(x, y, z)) continue;
           // push back out of this block along the axis we moved on
+          if (axis !== 'y') this.againstWall = true;
           if (axis === 'x') this.x = delta > 0 ? x - HALF_WIDTH - 1e-4 : x + 1 + HALF_WIDTH + 1e-4;
           if (axis === 'z') this.z = delta > 0 ? z - HALF_WIDTH - 1e-4 : z + 1 + HALF_WIDTH + 1e-4;
           if (axis === 'y') { if (delta < 0) { this.y = y + 1; this.onGround = true; } else this.y = y - HEIGHT - 1e-4; }

@@ -836,3 +836,6 @@ DONE  PHASE 1, FOUNDATION of the rebuild for a gaming PC and a 4K TV (his decisi
 DONE  THE REBUILD IS NOW WHAT YOUR LAUNCHER OPENS: the launcher (and the desktop app) open game/blockcraft.html, and the rebuild had
       been put in next/. The build now writes game/blockcraft.html; the first version moved, unchanged, to legacy/blockcraft_v1.html
       (still playable by opening it directly). The old test suite in tests/ now runs against the legacy file.
+FIXED STUCK IN WATER (his report from playing the rebuild): you could not climb out onto a bank, which stands about a block and an
+      eighth above the water's surface. Now, swimming into a bank with jump held while your feet are still wet gives a hop up and out,
+      as in Minecraft. tests2/swim.py: from a pool up onto a bank one block above the water. Flowing water is not in the rebuild yet.

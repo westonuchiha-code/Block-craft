@@ -4,6 +4,10 @@ Read this whole file before touching the code. It is the working agreement with 
 code, the traps that have already cost time, and what is open. Latest build: `game/blockcraft.html`
 (about 13,100 lines, one self-contained HTML file, no external assets or libraries).
 
+**2026-11-27: THE REBUILD HAS STARTED.** The game is being rebuilt for a gaming PC and a 4K TV, in small modules in `src/`, built into
+`next/blockcraft.html` (see `src/README.md` for the layout and rules, `docs/blockcraft_game_plan.txt` for the phases). Everything below
+describes the FIRST version (`game/blockcraft.html`), which stays playable, and is the reference for porting each system.
+
 ---
 
 ## 1. What the game is

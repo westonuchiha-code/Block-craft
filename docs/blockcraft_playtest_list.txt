@@ -1,3 +1,11 @@
+== THE REBUILD: next/blockcraft.html (2026-11-27) ==
+This is the new game, phase 1 of the overhaul. It is only the foundation: a world to walk round and build in. No saving yet.
+[ ] Open next/blockcraft.html on the PC and the TV. Does it look sharp at 4K? How is the frame rate (MENU > Settings > Show frame rate)?
+[ ] Try View distance 16, 20, 24, 32. Where does the frame rate start to drop on the 5070?
+[ ] Controller: can you get round every menu with the D-pad and A / B without touching anything else? Is anything too small?
+[ ] Look speed and feel of the right stick (Settings > Controller look speed). Is the curve right?
+[ ] Day, sunset and night: night is meant to be dark but playable. Right?
+
 BLOCKCRAFT - PLAYTEST LIST
 
 == START HERE: A 15-MINUTE TOUR OF WHAT IS NEW (new world, seed 12345) ==

@@ -1,0 +1,15 @@
+{
+  "name": "blockcraft",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Blockcraft: a voxel sandbox RPG (the rebuild). Source in src/, built into one HTML file.",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "watch": "node tools/build.mjs --watch"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "three": "0.186.1"
+  }
+}

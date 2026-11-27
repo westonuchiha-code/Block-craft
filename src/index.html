@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blockcraft</title>
+<!--STYLE-->
+</head>
+<body>
+<canvas id="view"></canvas>
+<div id="hud">
+  <div id="crosshair"></div>
+  <div id="breakBar"><i></i></div>
+  <div id="toast"></div>
+  <div id="itemName"></div>
+  <div id="hotbar"></div>
+  <div id="fps"></div>
+</div>
+<div id="screens"></div>
+<div id="errorBox"></div>
+<script>
+  // Before anything else: if the game fails to start (or breaks later), say so on screen instead of leaving a blank window.
+  (function () {
+    var shown = 0;
+    function show(msg) {
+      var box = document.getElementById('errorBox');
+      if (!box || shown++ > 8) return;
+      box.style.display = 'block';
+      if (!box.textContent) box.textContent = 'BLOCKCRAFT HIT AN ERROR. Please send a photo or the text of this box.\n';
+      box.textContent += '\n' + msg + '\n  (' + navigator.userAgent + ')';
+    }
+    window.addEventListener('error', function (e) { show(String(e.message) + (e.lineno ? '  at line ' + e.lineno + ':' + e.colno : '')); });
+    window.addEventListener('unhandledrejection', function (e) { show('unhandled: ' + (e.reason && (e.reason.stack || e.reason.message) || e.reason)); });
+  })();
+</script>
+<!--SCRIPT-->
+</body>
+</html>

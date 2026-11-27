@@ -812,3 +812,24 @@ FIXED GRAY SCREEN ON WINDOWS (found with the other Claude session on his PC, whi
       self-test passes. NOT yet checked on his PC. NOT fixed: the shader itself still does not compile on Direct3D, so on that path
       the game runs on the CPU renderer. His launcher starts it with --use-angle=vulkan, where the GPU works (0.6 s load).
       Also added: an on-screen error box, so a failed start shows its error instead of a blank window.
+
+2026-11-27 (later): THE REBUILD BEGINS
+DONE  PHASE 1, FOUNDATION of the rebuild for a gaming PC and a 4K TV (his decisions: Three.js meshes, many small files with a build
+      step, fresh rebuild beside the old game, old saves need not carry over). New code in src/ (about 2,800 lines in 22 files, each
+      starting with what it is for), built by `npm run build` into next/blockcraft.html (604 KB, one file, Three.js inside).
+      - World: terrain, biomes, caves, ores, rock strata, moss, five trees, tall grass, cactus, lakes and rivers, ported from the old
+        game and giving the same land for the same seed. World height 256, stored in 16-high sections (empty sky costs nothing).
+        Chunks are built on 2-6 worker threads.
+      - Drawing: chunk meshes at the screen's full resolution (setting "Resolution": Native = 100%, up to 200%), anti-aliasing,
+        mipmapped and anisotropic textures (crisp up close, no shimmer far off), smooth lighting with corner shading, biome colours
+        blended across biome edges, fog to the view distance (default 12 chunks = 192 blocks, up to 32), a sky with sun, moon and
+        stars drawn on it, sunsets, moonlit nights.
+      - Player: walk, sprint, sneak (won't walk off edges), jump, swim, fly (F / Y); physics in fixed 1/120 s steps.
+      - Breaking (hold) and placing (press or hold) blocks; a 9-slot hotbar of building blocks with 3D block icons.
+      - Interface: title, pause, settings and loading screens, all driven by the D-pad / stick (up/down move, left/right change,
+        A select, B back, Start pause) with no cursor; mouse and keyboard also work. Sizes follow the screen height (text about 52 px
+        tall on a 4K screen) and a "Menu and HUD size" setting. Button prompts show the controller's names when one is in use.
+      Checked: tests2/run.sh (smoke, play, ui4k) all pass; pictures in proof/rebuild_views.png, rebuild_water_night.png,
+      rebuild_ui_4k.png. NOT checked: frame rate on a real graphics card (the test machine has none); real controller hardware.
+      Not in yet: saving (changes are lost on quitting), torch/lava light (caves are dark), inventory, crafting, creatures,
+      villages and everything after: see the phases in docs/blockcraft_game_plan.txt.

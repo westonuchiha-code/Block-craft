@@ -89,3 +89,27 @@ DESIGN DIRECTION (2026-11-14, from him)
   so the mechanism exists.)
 - THE BIGGER GOAL: it must not feel like a slightly modded Minecraft. Minecraft's functions and look, but a world with a society:
   named places, factions, standing, law, rumours, a journal, and people who want things from you.
+
+
+THE REBUILD (decided 2026-11-27, with him)
+Target: a decent gaming PC (RTX 3070 class) on a big 4K TV, played with a controller. No phone. Decisions he made:
+  - Renderer: chunk meshes drawn with Three.js (replaces the per-pixel ray-tracer: grainy, heavy at 4K, and Windows' Direct3D could
+    not compile its shader).
+  - Code: many small, readable modules in src/, built into one HTML file (next/blockcraft.html).
+  - Approach: a fresh rebuild beside the old game, porting each system across, rewritten clean. game/blockcraft.html stays
+    playable until the rebuild catches up.
+  - Old saves need not carry over.
+Rules for the rebuild (in src/README.md): one place per fact; the world a pure function of the seed; heavy work off the frame;
+fixed-step physics; controller first, no cursor; interface sized from the screen height.
+
+PHASES
+ 1. FOUNDATION (done 2026-11-27): build setup, world generation ported, block art, mesh renderer, sky and day/night, player
+    movement, breaking and placing, controller-driven title / pause / settings / loading screens, HUD. See src/README.md.
+ 2. LOOKS: block light (torches, lava, glowstone) and proper flood-filled daylight; better water (moving surface, reflections of the
+    sky); soft shadows from the sun; clouds; distant land beyond the view distance; a graphics preset menu (High, Ultra) whose
+    lowest setting is still sharp at 4K.
+ 3. SAVING: worlds saved and loaded (the player's changes, where they are, the time).
+ 4. THE GAME, SYSTEM BY SYSTEM (each rewritten, with its test): inventory and the controller inventory screen; crafting; tools and
+    breaking rules (nothing in one hit, tiers); farming; creatures and combat; villages and their people; trade, quests, the law,
+    guilds, the journal; provinces, the calendar, taverns, notice boards; delves and crypts; horses and travel; magic; sound.
+ 5. Retire game/blockcraft.html; point the desktop app and the launcher at the rebuild.

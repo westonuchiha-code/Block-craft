@@ -1,0 +1,94 @@
+/* ==========================================================================================================
+   Blockcraft's interface. Sized for a big TV first: every size is in em, and the root font size follows the
+   window's height (2.4% of it at 100%, so about 52 px on a 4K screen and 26 px at 1080p), times the player's
+   "Menu and HUD size" setting. Nothing is ever smaller on a bigger screen.
+   ========================================================================================================== */
+:root {
+  --ui: 1;
+  --bg: #0b0d10;
+  --panel: rgba(16, 18, 22, 0.86);
+  --panel-edge: rgba(255, 255, 255, 0.10);
+  --text: #f1ead8;
+  --muted: #a99f88;
+  --accent: #e6b450;
+  --accent-dim: rgba(230, 180, 80, 0.22);
+  --danger: #e0644a;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); }
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-size: calc(2.4vh * var(--ui));
+  user-select: none; -webkit-user-select: none;
+  cursor: default;
+}
+body.playing { cursor: none; }
+canvas#view { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+
+/* ---- screens (title, pause, settings, loading) ---- */
+.screen {
+  position: fixed; inset: 0; display: none;
+  align-items: center; justify-content: center; flex-direction: column;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.25), rgba(0,0,0,0.7));
+}
+.screen.open { display: flex; }
+.screen.solid { background: linear-gradient(180deg, #1b2430 0%, #0b0d10 100%); }
+.title {
+  font-size: 3.6em; font-weight: 800; letter-spacing: 0.06em; margin: 0 0 0.15em;
+  text-shadow: 0 0.06em 0 #000, 0 0 0.6em rgba(230, 180, 80, 0.35);
+}
+.subtitle { color: var(--muted); margin: 0 0 1.6em; font-size: 0.9em; letter-spacing: 0.08em; }
+.heading { font-size: 1.6em; font-weight: 700; margin: 0 0 0.8em; }
+
+.panel {
+  background: var(--panel); border: 0.06em solid var(--panel-edge); border-radius: 0.35em;
+  padding: 0.8em; min-width: 18em; max-width: 34em; width: 60vw;
+  max-height: 72vh; overflow-y: auto; scrollbar-width: none;
+}
+.panel::-webkit-scrollbar { display: none; }
+
+/* ---- menu items: one per row, the focused one clearly marked ---- */
+.item {
+  display: flex; align-items: center; justify-content: space-between; gap: 1em;
+  padding: 0.55em 0.9em; margin: 0.18em 0; border-radius: 0.25em;
+  border: 0.08em solid transparent; font-size: 1em; line-height: 1.2;
+}
+.item.button { justify-content: center; font-weight: 600; letter-spacing: 0.04em; }
+.item.focus { background: var(--accent-dim); border-color: var(--accent); }
+.item.disabled { opacity: 0.4; }
+.item .value { color: var(--accent); font-weight: 600; display: flex; align-items: center; gap: 0.5em; white-space: nowrap; }
+.item .arrow { color: var(--muted); font-size: 0.8em; visibility: hidden; }
+.item.focus .arrow { visibility: visible; }
+.item .bar { width: 7em; height: 0.35em; background: rgba(255,255,255,0.12); border-radius: 0.2em; overflow: hidden; }
+.item .bar i { display: block; height: 100%; background: var(--accent); }
+.hint-text { color: var(--muted); font-size: 0.8em; margin: 0.2em 0.9em 0.6em; min-height: 1.2em; }
+
+/* ---- button prompts along the bottom of a screen ---- */
+.prompts { position: fixed; bottom: 1.4em; left: 0; right: 0; display: flex; justify-content: center; gap: 2em; color: var(--muted); font-size: 0.85em; }
+.prompts b { color: var(--text); background: rgba(255,255,255,0.12); border-radius: 0.3em; padding: 0.1em 0.45em; margin-right: 0.35em; }
+
+/* ---- HUD ---- */
+#hud { position: fixed; inset: 0; pointer-events: none; display: none; }
+#hud.open { display: block; }
+#crosshair { position: absolute; left: 50%; top: 50%; width: 1.1em; height: 1.1em; transform: translate(-50%, -50%); }
+#crosshair::before, #crosshair::after { content: ""; position: absolute; background: rgba(255,255,255,0.85); box-shadow: 0 0 0.12em rgba(0,0,0,0.8); }
+#crosshair::before { left: 50%; top: 0; width: 0.1em; height: 100%; transform: translateX(-50%); }
+#crosshair::after { top: 50%; left: 0; height: 0.1em; width: 100%; transform: translateY(-50%); }
+#hotbar { position: absolute; bottom: 1.2em; left: 50%; transform: translateX(-50%); display: flex; gap: 0.25em; padding: 0.3em; background: rgba(0,0,0,0.4); border-radius: 0.3em; }
+#hotbar .slot { width: 2.6em; height: 2.6em; border: 0.1em solid rgba(255,255,255,0.16); border-radius: 0.2em; display: grid; place-items: center; background: rgba(0,0,0,0.3); }
+#hotbar .slot.selected { border-color: var(--accent); box-shadow: 0 0 0 0.08em var(--accent); }
+#hotbar .slot canvas { width: 2em; height: 2em; image-rendering: pixelated; }
+#itemName { position: absolute; bottom: 4.9em; left: 0; right: 0; text-align: center; font-weight: 600; text-shadow: 0 0.06em 0.12em #000; opacity: 0; transition: opacity 0.4s; }
+#itemName.show { opacity: 1; transition: none; }
+#fps { position: absolute; top: 0.6em; left: 0.8em; font: 600 0.75em ui-monospace, Consolas, monospace; color: #fff; text-shadow: 0 0 0.2em #000; white-space: pre; }
+#breakBar { position: absolute; left: 50%; top: calc(50% + 1.2em); width: 3em; height: 0.25em; transform: translateX(-50%); background: rgba(0,0,0,0.5); border-radius: 0.15em; overflow: hidden; display: none; }
+#breakBar i { display: block; height: 100%; width: 0; background: #fff; }
+#toast { position: absolute; top: 18%; left: 0; right: 0; text-align: center; font-size: 1.3em; font-weight: 700; text-shadow: 0 0.06em 0.15em #000; opacity: 0; transition: opacity 0.6s; }
+#toast.show { opacity: 1; transition: none; }
+
+/* ---- loading ---- */
+.loading-bar { width: 18em; height: 0.4em; background: rgba(255,255,255,0.12); border-radius: 0.2em; overflow: hidden; margin-top: 1em; }
+.loading-bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.2s; }
+
+/* ---- the on-screen error box (startup problems are shown, never a blank window) ---- */
+#errorBox { position: fixed; left: 1em; right: 1em; bottom: 1em; display: none; background: #2a0c0c; color: #ffd8c8; border: 0.1em solid var(--danger); padding: 0.6em 0.8em; font: 0.6em/1.4 ui-monospace, Consolas, monospace; white-space: pre-wrap; max-height: 40vh; overflow: auto; z-index: 100; }

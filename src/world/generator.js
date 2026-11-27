@@ -7,17 +7,29 @@ import { createTerrain } from './terrain.js';
 import { buildTree, TREE_REACH } from './trees.js';
 import { CHUNK_SIZE, SECTION_HEIGHT, SECTIONS_PER_CHUNK, WORLD_HEIGHT, SEA_LEVEL, TREE_LINE, LAVA_LEVEL } from './constants.js';
 
-const CAVE_WIDTH = 0.05;
-const GENERATED_TOP = 120;            // nothing natural above this
+const CAVE_WIDTH = 0.075;
+const CAVE_ROOF = 9;                  // caves stay at least this far under the ground (except at cave mouths)
+const GENERATED_TOP = 160;            // nothing natural above this
 
 export function createGenerator(seed) {
   const terrain = createTerrain(seed);
   const { column } = terrain;
 
-  // caves: where two 3D noise fields are both near their middle, the rock is hollowed into winding tunnels
+  // caves: where two 3D noise fields are both near their middle, the rock is hollowed into a winding tunnel. The fields are as
+  // tall as they are wide, so tunnels are round (two to four blocks high, high enough to walk in), and a third, slow field
+  // decides where caves are at all, so they come in clusters with solid rock between.
   function isCave(x, y, z) {
-    if (Math.abs(valueNoise3(x / 11, y / 7, z / 11, seed + 80) - 0.5) > CAVE_WIDTH) return false;
-    return Math.abs(valueNoise3(x / 11, y / 7, z / 11, seed + 81) - 0.5) < CAVE_WIDTH;
+    if (valueNoise3(x / 90, y / 45, z / 90, seed + 82) < 0.52) return false;
+    if (Math.abs(valueNoise3(x / 16, y / 20, z / 16, seed + 80) - 0.5) > CAVE_WIDTH) return false;
+    return Math.abs(valueNoise3(x / 16, y / 20, z / 16, seed + 81) - 0.5) < CAVE_WIDTH;
+  }
+
+  // desert mesas: flat bands of coloured rock, each a few blocks thick, wandering gently up and down
+  const MESA_BANDS = [BLOCK.terracotta, BLOCK.light_terracotta, BLOCK.terracotta, BLOCK.red_terracotta, BLOCK.red_sandstone,
+                      BLOCK.terracotta, BLOCK.light_terracotta, BLOCK.red_sandstone, BLOCK.red_terracotta];
+  function mesaBand(x, y, z) {
+    const wave = y + Math.floor(Math.sin(x * 0.05 + z * 0.03) * 1.5 + valueNoise(x / 40, z / 40, seed + 340) * 3);
+    return MESA_BANDS[Math.floor(hash3(Math.floor(wave / 3), 0, 0, seed + 341) * MESA_BANDS.length)];
   }
 
   // ores lie deeper the better they are: iron below 48, mithril below 20, adamantite (the best) only down by the lava
@@ -77,19 +89,23 @@ export function createGenerator(seed) {
     const col = column(x, z), h = col.h;
     if (y > h) {
       if (y <= SEA_LEVEL) return (y === SEA_LEVEL && col.biome === BIOME.frost) ? BLOCK.ice : BLOCK.water;
-      if (col.biome === BIOME.desert && col.top === BLOCK.sand && !col.caveMouth && h > SEA_LEVEL + 2 && y <= h + cactusHeight(x, z)) return BLOCK.cactus;
+      if (col.biome === BIOME.desert && col.top === BLOCK.sand && !col.caveMouth && h > SEA_LEVEL + 4 && y <= h + cactusHeight(x, z)) return BLOCK.cactus;
       if (y === h + 1 && col.top === BLOCK.grass && !col.caveMouth && h > SEA_LEVEL && tallGrassAt(x, z)) return BLOCK.tall_grass;
       return BLOCK.air;
     }
     if (y >= h - 3) {                                             // the surface and the three blocks under it
       if (col.caveMouth && y >= 2 && isCave(x, y, z)) return BLOCK.air;
+      if (col.mesa) return y === h && col.top === BLOCK.red_sand ? BLOCK.red_sand : mesaBand(x, y, z);
       if (y === h) return col.top === BLOCK.stone ? stoneFace(x, y, z) : col.top;
       if (col.biome === BIOME.desert && col.top === BLOCK.sand && y <= h - 2) return BLOCK.sandstone;
       if (col.under === BLOCK.stone) return stoneFace(x, y, z);
       if (col.under === BLOCK.dirt && hash3(x, y, z, seed + 9) < 0.05) return BLOCK.gravel;
       return col.under;
     }
-    if (y >= 2 && isCave(x, y, z)) return y <= LAVA_LEVEL ? BLOCK.lava : (h < SEA_LEVEL && y <= SEA_LEVEL) ? BLOCK.water : BLOCK.air;
+    // (caves stay well under the ground, so thin ridges and peaks are not left with holes or hanging pieces; they open to the
+    //  surface only where the column is marked as a cave mouth, above)
+    if (y >= 2 && y < h - CAVE_ROOF && isCave(x, y, z)) return y <= LAVA_LEVEL ? BLOCK.lava : (h < SEA_LEVEL && y <= SEA_LEVEL) ? BLOCK.water : BLOCK.air;
+    if (col.mesa && y >= h - 30) return mesaBand(x, y, z);            // the bands run deep into the mesa
     const ore = oreAt(x, y, z);
     if (ore) return ore;
     if (hash3(x, y, z, seed + 7) < 0.04) return BLOCK.coal_ore;
@@ -115,7 +131,7 @@ export function createGenerator(seed) {
       const col = wins ? column(x, z) : null;
       const groundOk = col && (col.top === BLOCK.grass ||
         (col.biome === BIOME.frost && col.top === BLOCK.snow && col.h < TREE_LINE && hash3(x, 2, z, seed + 97) < 0.45) ||
-        (col.biome === BIOME.desert && col.top === BLOCK.sand && col.h > SEA_LEVEL + 2 && hash3(x, 2, z, seed + 97) < 0.14));
+        (col.biome === BIOME.desert && col.top === BLOCK.sand && col.h <= SEA_LEVEL + 4 && hash3(x, 2, z, seed + 97) < 0.3));   // palms only by the water
       if (groundOk && !col.caveMouth && col.h > SEA_LEVEL + 1 && col.h + 24 < WORLD_HEIGHT) {
         const table = TREES_BY_BIOME[col.biome];
         let total = 0; for (const e of table) total += e[2];

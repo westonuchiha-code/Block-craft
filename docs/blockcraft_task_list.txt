@@ -839,3 +839,16 @@ DONE  THE REBUILD IS NOW WHAT YOUR LAUNCHER OPENS: the launcher (and the desktop
 FIXED STUCK IN WATER (his report from playing the rebuild): you could not climb out onto a bank, which stands about a block and an
       eighth above the water's surface. Now, swimming into a bank with jump held while your feet are still wet gives a hop up and out,
       as in Minecraft. tests2/swim.py: from a pool up onto a bank one block above the water. Flowing water is not in the rebuild yet.
+DONE  BIOMES REWORKED (his playtest: three biomes in view at once, sand mountains, rock and sand mixed, palms on high ground, too
+      many thin cave slits). Measured over 150 random spots on seed 12345 with tools/worldstats.mjs (new; run it after any change to
+      world generation):
+        biomes visible within 192 blocks    before: 4 or 5 at every spot     now: 1 or 2 at 87% of spots, 3 at 13% (where 3 regions meet)
+        sand on ground 14+ above the sea    before: 5.1%                      now: 0%
+        cave openings only 1 block tall     before: 60%                       now: 14% (half of all tunnels are 4+ blocks tall)
+      How: the world is cut into large regions (about 1,300 blocks across, with wavy borders), each one biome, picked from a slow climate
+      map so neighbours are related. Each biome now shapes its own land: the desert is flat with dunes, and its high ground is mesas
+      of banded red rock (new blocks: red sand, red sandstone, terracotta in three colours); the highlands raise the big mountains;
+      the woods roll. The land's shape is blended over 90 blocks at each border so it never steps. Palms grow only by water.
+      Caves are round tunnels in clusters, kept 9 blocks under the ground except at cave mouths (no hanging rock on thin peaks).
+      Pictures: proof/rebuild_biomes.png (desert mesas, an oasis, a highland/autumn border).
+      Also: block ids now change when blocks are added (allowed); saves and tests must use block names. Tests updated.

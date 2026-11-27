@@ -8,6 +8,10 @@ code, the traps that have already cost time, and what is open. First version: `l
 `game/blockcraft.html` (see `src/README.md` for the layout and rules, `docs/blockcraft_game_plan.txt` for the phases). Everything below
 describes the FIRST version, now `legacy/blockcraft_v1.html` (the line numbers and names below refer to that file), which stays playable, and is the reference for porting each system.
 
+**Playtest screenshots from his TV** arrive on branch `xmb-playtest` (an orphan branch of PNGs only, pushed by his launcher; never merge
+it). `git fetch origin xmb-playtest`, then `git show origin/xmb-playtest:screenshots/INDEX.md` lists them newest last, with the
+build (commit) each was taken on; read one with `git show origin/xmb-playtest:screenshots/<file>.png > shot.png`.
+
 ---
 
 ## 1. What the game is

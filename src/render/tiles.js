@@ -173,6 +173,16 @@ export function buildTiles() {
     const k = n8(x, y), crack = (x * 3 + y * 5) % 11 === 0 || (x * 7 - y * 2 + 40) % 13 === 0;
     return crack ? [226, 242, 252] : shadeRgb([150 + 20 * k, 198 + 14 * k, 234], 0.9 + 0.2 * n4(x, y));
   }));
+  // DESERT MESAS: red sand, red sandstone, and smooth fired-clay bands (terracotta) in three colours
+  { const r = rng(76), t = clumps(r, [[188, 104, 52], [198, 112, 58], [208, 122, 66]], 4, 8, 0.3);
+    scatter(t, r, 16, 1, 1, [168, 88, 42]); scatter(t, r, 6, 2, 1, [222, 140, 84]); add('red_sand', t); }
+  add('red_sandstone_side', Tile.from((x, y) => shadeRgb([184, 100, 48], (y % 5 === 0 ? 0.84 : y % 5 === 1 ? 1.05 : 0.97) * (0.95 + 0.1 * n8(x, y)))));
+  add('red_sandstone_top', Tile.from((x, y) => shadeRgb([192, 108, 54], 0.94 + 0.12 * n8(x, y))));
+  const clay = (seed, c) => { const r = rng(seed); return Tile.from((x, y) => shadeRgb(c, 0.95 + 0.08 * n4(x, y) + (r() < 0.06 ? -0.08 : 0))); };
+  add('terracotta', clay(77, [158, 96, 70]));
+  add('light_terracotta', clay(78, [208, 178, 152]));
+  add('red_terracotta', clay(79, [146, 62, 46]));
+
   add('cactus_side', Tile.from((x, y) => {
     if (x % 4 === 2 && y % 3 === 1) return [236, 230, 190];                     // spines
     return shadeRgb([66, 126, 58], (x % 4 === 0 ? 0.78 : x % 4 === 1 ? 1.1 : 1.0) * (0.94 + 0.12 * n8(x, y)));

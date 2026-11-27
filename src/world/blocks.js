@@ -1,5 +1,6 @@
-// Every kind of block, in one list. A block's id (its number in the world data) is given out in the order blocks are defined
-// here, so never reorder existing entries once worlds are saved: add new ones at the end.
+// Every kind of block, in one list. A block's id (its number in the world data) is given out in the order blocks are defined here,
+// so ids change when blocks are added or moved. That is allowed: anything stored outside the running game (saved worlds, tests)
+// must refer to blocks by their key ('stone', 'water'), never by number. Saves keep a key list to translate their ids.
 //
 // Fields of a definition:
 //   name       what the player sees
@@ -59,6 +60,11 @@ define('dirt',       { name: 'Dirt', textures: { all: 'dirt' }, hardness: 1 });
 define('grass',      { name: 'Grass Block', textures: { top: 'grass_top', side: 'grass_side', bottom: 'dirt' }, tint: 'grass', hardness: 1.2, drops: 'dirt' });
 define('sand',       { name: 'Sand', textures: { all: 'sand' }, hardness: 1 });
 define('sandstone',  { name: 'Sandstone', textures: { top: 'sandstone_top', side: 'sandstone_side' }, hardness: 2.5 });
+define('red_sand',   { name: 'Red Sand', textures: { all: 'red_sand' }, hardness: 1 });
+define('red_sandstone', { name: 'Red Sandstone', textures: { top: 'red_sandstone_top', side: 'red_sandstone_side' }, hardness: 2.5 });
+define('terracotta', { name: 'Terracotta', textures: { all: 'terracotta' }, hardness: 3 });
+define('light_terracotta', { name: 'Pale Terracotta', textures: { all: 'light_terracotta' }, hardness: 3 });
+define('red_terracotta',   { name: 'Red Terracotta', textures: { all: 'red_terracotta' }, hardness: 3 });
 define('gravel',     { name: 'Gravel', textures: { all: 'gravel' }, hardness: 1.2 });
 define('snow',       { name: 'Snow', textures: { all: 'snow' }, hardness: 0.8 });
 define('ice',        { name: 'Ice', render: 'glass', textures: { all: 'ice' }, hardness: 1.2 });

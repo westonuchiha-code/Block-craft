@@ -229,3 +229,4 @@ class Game {
 }
 
 window.game = new Game();
+window.BLOCK = BLOCK;            // (block ids by key, for tests and the browser console)

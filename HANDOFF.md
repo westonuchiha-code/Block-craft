@@ -118,6 +118,7 @@ runs before optimising.
 - **The realm map, 2026-11-15.** `mapRealm` (the REALM / LOCAL button in the map header) makes `drawMap` call `drawRealm`: land and sea from `surfaceH`
   (the middle of five soundings per 4-pixel cell), provinces tinted by `provinceTint`, labels placed nearest-first with no overlaps, painted once
   into `REALM.cv` and reused until you move 200 blocks or change the scale.
+- **GPU start-up, 2026-11-27.** `gpuStart` / `gpuPoll` / `gpuInit(wait)`: the shader compiles in the background (KHR_parallel_shader_compile) after load; the CPU renderer runs until it is ready; 45 s limit. It used to block page load, and on Windows Direct3D it never finishes (gray screen). Tests call `gpuSet(true)`, which still waits.
 - **Planning ahead on another core, 2026-11-15.** The first chunk generated in new country used to freeze the game for 0.2-0.5 s (planning that
   region's villages, road edges, crypt and delve on the spot; delves had doubled it). `PLN` / `plStart` / `plTick` / `plGot` on the page and
   `planJob` in a worker (the same script: `wkBlobUrl`, shared with the render workers) now plan the 5x5 delve regions round the player ahead of

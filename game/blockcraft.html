@@ -6217,15 +6217,28 @@ function gpuCompile(gl, type, src){
   if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error('shader: ' + gl.getShaderInfoLog(s));
   return s;
 }
-function gpuInit(){
+// The GPU renderer's shader is large. Some graphics drivers (Windows' in particular) take a long time to compile it, and asking
+// whether it is done makes the browser wait for it: done during start-up, that left the window gray until it finished. So the compile
+// is started in the background (gpuStart) and the game runs on the CPU renderer meanwhile; each frame asks, without waiting, whether
+// it is ready (KHR_parallel_shader_compile), and switches to the GPU when it is. gpuInit(true) still waits, for the tests.
+function gpuInit(wait){
   if(GPU.ok) return true;
   try{
-    const cv = document.getElementById('gl');
-    const gl = cv.getContext('webgl2', { antialias:false, alpha:false, depth:false, stencil:false, preserveDrawingBuffer:false, powerPreference:'high-performance' });
-    if(!gl) throw new Error('no WebGL2');
-    const pr = gl.createProgram();
-    gl.attachShader(pr, gpuCompile(gl, gl.VERTEX_SHADER, GPU_VS)); gl.attachShader(pr, gpuCompile(gl, gl.FRAGMENT_SHADER, GPU_FS));
-    gl.linkProgram(pr); if(!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error('link: ' + gl.getProgramInfoLog(pr));
+    if(!GPU.pend){
+      const cv = document.getElementById('gl');
+      const gl = cv.getContext('webgl2', { antialias:false, alpha:false, depth:false, stencil:false, preserveDrawingBuffer:false, powerPreference:'high-performance' });
+      if(!gl) throw new Error('no WebGL2');
+      const ext = gl.getExtension('KHR_parallel_shader_compile'), mk = (type, src)=>{ const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh); return sh; };
+      const vs = mk(gl.VERTEX_SHADER, GPU_VS), fs = mk(gl.FRAGMENT_SHADER, GPU_FS), pr = gl.createProgram();
+      gl.attachShader(pr, vs); gl.attachShader(pr, fs); gl.linkProgram(pr);
+      GPU.pend = { cv, gl, pr, vs, fs, ext, t0:performance.now() };
+    }
+    const P = GPU.pend, gl = P.gl, pr = P.pr, cv = P.cv;
+    if(!wait && !P.ext && !GPU.chosen){ GPU.pend = null; GPU.err = 'this browser cannot compile the GPU shader in the background'; return false; }      // without the extension we could only wait on it, blind: not at start-up unless you chose the GPU yourself
+    if(!wait && (P.ext ? !gl.getProgramParameter(pr, P.ext.COMPLETION_STATUS_KHR) : performance.now()-P.t0 < 1500)) return false;      // still compiling
+    GPU.pend = null;
+    if(!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error('link: ' + (gl.getProgramInfoLog(pr) || '') + ' ' + (gl.getShaderInfoLog(P.fs) || '') + ' ' + (gl.getShaderInfoLog(P.vs) || ''));
+    GPU.prepMs = Math.round(performance.now()-P.t0);
     gl.useProgram(pr);
     GPU.gl = gl; GPU.cv = cv; GPU.pr = pr; GPU.U = {};
     if(!GPU.lossHooked){                                     // the graphics card can drop the context (app sent to the background, driver reset):
@@ -6233,7 +6246,7 @@ function gpuInit(){
       cv.addEventListener('webglcontextlost', e=>{ e.preventDefault(); const was = GPU.on; GPU.on = false; GPU.ok = false; GPU.made = false; GPU.lost = was;
         document.body.classList.remove('gpu'); if(wkWanted){ WK.fail = false; wkStart(); } });
       cv.addEventListener('webglcontextrestored', ()=>{ GPU.texSeed = null; GPU.models = new Map(); GPU.mdlN = 0; GPU.skinN = 0; GPU.grassSet = false;
-        if(GPU.lost){ GPU.lost = false; gpuSet(true); } });
+        if(GPU.lost){ GPU.lost = false; gpuStart(); } });
     }
     for(let i=0, n=gl.getProgramParameter(pr, gl.ACTIVE_UNIFORMS); i<n; i++){ const a = gl.getActiveUniform(pr, i); GPU.U[a.name] = gl.getUniformLocation(pr, a.name); }
     gl.bindVertexArray(gl.createVertexArray());
@@ -6542,8 +6555,22 @@ function depthAt(ix, iy){
   const h = cast(CAM.x,CAM.y,CAM.z,dx,dy,dz,VIEW_DIST,undefined,HIT_S), mh = ratRay(CAM.x,CAM.y,CAM.z,dx,dy,dz, h ? h.t : 1e9);
   v = mh ? mh.t : h ? h.t : 1e9; GPU.depthMemo.set(k, v); return v;
 }
+function gpuStart(){                                    // ask for the GPU renderer without waiting for it (see gpuInit)
+  if(IS_WORKER || GPU.on) return; GPU.err = ''; GPU.want = true;
+  if(gpuInit(false)){ GPU.want = false; gpuSet(true); }
+  else if(GPU.err){ GPU.want = false; }
+  if(GPU.want && !GPU.pollT) GPU.pollT = setInterval(()=>{ gpuPoll(); if(!GPU.want){ clearInterval(GPU.pollT); GPU.pollT = 0; } }, 250);      // (also asked on a timer, so it is ready at the title screen)
+  if(typeof gpuLabel==='function') gpuLabel();
+}
+function gpuPoll(){                                     // each frame while the shader compiles
+  if(!GPU.want || GPU.on) return;
+  if(GPU.pend && performance.now()-GPU.pend.t0 > 45000){        // some drivers never finish it (Edge on Windows, Direct3D): stay on the CPU renderer
+    GPU.want = false; GPU.err = 'the GPU shader did not finish compiling on this graphics driver'; if(typeof gpuLabel==='function') gpuLabel(); return; }
+  if(gpuInit(false)){ GPU.want = false; gpuSet(true); if(typeof gpuLabel==='function') gpuLabel(); }
+  else if(GPU.err || !GPU.pend){ GPU.want = false; if(typeof gpuLabel==='function') gpuLabel(); }
+}
 function gpuSet(on){
-  if(on && !gpuInit()) on = false;
+  if(on && !gpuInit(true)) on = false;
   GPU.on = !!on;
   document.body.classList.toggle('gpu', GPU.on);
   if(GPU.on){ if(WK.on) wkStop(); GPU.slotC.fill(null); GPU.slotV.fill(-1); GPU.frames = 0; }
@@ -6552,6 +6579,7 @@ function gpuSet(on){
 }
 
 function renderFrame(){
+  if(GPU.want) gpuPoll();
   if(GPU.on){ gpuRender(); renderOverlay(); return; }
   if(!WK.on){ render(); return; }
   if(WK.busy){                                                             // still drawing the last picture
@@ -13431,9 +13459,11 @@ requestAnimationFrame(frame);
 // multi-core rendering: a worker starts listening; the game starts its workers
 if(!IS_WORKER){
   const gb = document.getElementById('gpuBtn');
-  const gpuLabel = ()=>{ gb.textContent = GPU.on ? 'RENDERER: GPU (FULL RESOLUTION)' : (GPU.err ? 'RENDERER: CPU (NO WEBGL2)' : 'RENDERER: CPU'); };
-  gb.addEventListener('click', ()=>{ gpuSet(!GPU.on); try{ localStorage.setItem('bc_gpu', GPU.on ? '1' : '0'); }catch(e){} if(!GPU.on && wkWanted){ WK.fail = false; wkStart(); } gpuLabel(); });
-  if(gpuWanted()) gpuSet(true);
+  window.gpuLabel = ()=>{ gb.textContent = GPU.on ? 'RENDERER: GPU (FULL RESOLUTION)' : GPU.want ? 'RENDERER: CPU (GPU GETTING READY...)' : (GPU.err ? (/WebGL2/.test(GPU.err) ? 'RENDERER: CPU (NO WEBGL2)' : 'RENDERER: CPU (GPU NOT AVAILABLE HERE)') : 'RENDERER: CPU'); };
+  gb.addEventListener('click', ()=>{ const toGpu = !GPU.on && !GPU.want; try{ localStorage.setItem('bc_gpu', toGpu ? '1' : '0'); }catch(e){}
+    if(toGpu){ GPU.chosen = true; gpuStart(); } else { GPU.want = false; gpuSet(false); if(wkWanted){ WK.fail = false; wkStart(); } } gpuLabel(); });
+  GPU.chosen = (()=>{ try{ return localStorage.getItem('bc_gpu')==='1'; }catch(e){ return false; } })();
+  if(gpuWanted()) setTimeout(gpuStart, 0);                // (after start-up: the title screen comes up first, whatever the graphics driver does)
   gpuLabel();
 }
 if(IS_WORKER) wkWorkerInit(); else wkStart();

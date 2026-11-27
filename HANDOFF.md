@@ -1,12 +1,12 @@
 # Blockcraft — handoff brief
 
 Read this whole file before touching the code. It is the working agreement with the developer, a map of the
-code, the traps that have already cost time, and what is open. Latest build: `game/blockcraft.html`
+code, the traps that have already cost time, and what is open. First version: `legacy/blockcraft_v1.html` (the rebuild builds into `game/blockcraft.html`)
 (about 13,100 lines, one self-contained HTML file, no external assets or libraries).
 
 **2026-11-27: THE REBUILD HAS STARTED.** The game is being rebuilt for a gaming PC and a 4K TV, in small modules in `src/`, built into
-`next/blockcraft.html` (see `src/README.md` for the layout and rules, `docs/blockcraft_game_plan.txt` for the phases). Everything below
-describes the FIRST version (`game/blockcraft.html`), which stays playable, and is the reference for porting each system.
+`game/blockcraft.html` (see `src/README.md` for the layout and rules, `docs/blockcraft_game_plan.txt` for the phases). Everything below
+describes the FIRST version, now `legacy/blockcraft_v1.html` (the line numbers and names below refer to that file), which stays playable, and is the reference for porting each system.
 
 ---
 
@@ -216,7 +216,7 @@ runs before optimising.
 - Useful one-offs: `gpucmp.py` (GPU vs CPU with side-by-side and diff images), `held4.py` (held tools in full
   frames), `beforeafter.py`, `ctxloss.py`.
 
-## 7. Code map (`game/blockcraft.html`, approximate line numbers)
+## 7. Code map (`legacy/blockcraft_v1.html`, approximate line numbers)
 
 | Lines | Area |
 |---|---|

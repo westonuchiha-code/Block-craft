@@ -833,3 +833,6 @@ DONE  PHASE 1, FOUNDATION of the rebuild for a gaming PC and a 4K TV (his decisi
       rebuild_ui_4k.png. NOT checked: frame rate on a real graphics card (the test machine has none); real controller hardware.
       Not in yet: saving (changes are lost on quitting), torch/lava light (caves are dark), inventory, crafting, creatures,
       villages and everything after: see the phases in docs/blockcraft_game_plan.txt.
+DONE  THE REBUILD IS NOW WHAT YOUR LAUNCHER OPENS: the launcher (and the desktop app) open game/blockcraft.html, and the rebuild had
+      been put in next/. The build now writes game/blockcraft.html; the first version moved, unchanged, to legacy/blockcraft_v1.html
+      (still playable by opening it directly). The old test suite in tests/ now runs against the legacy file.

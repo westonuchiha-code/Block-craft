@@ -3,7 +3,7 @@
 from playwright.sync_api import sync_playwright
 import os, json
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-GAME = 'file://' + os.path.join(ROOT, 'next', 'blockcraft.html')
+GAME = 'file://' + os.path.join(ROOT, 'game', 'blockcraft.html')
 ARGS = ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']
 
 def open_game(p, width=1280, height=720, settings=None):

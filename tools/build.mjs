@@ -5,7 +5,8 @@
 //   src/main.js           the game, with all its imports       -> replaces <!--SCRIPT-->
 //   src/world/worker.js   the world-generation worker, bundled on its own and handed to the game as a string
 //
-// Output: dist/blockcraft.html (scratch) and next/blockcraft.html (the copy that is committed, for playing).
+// Output: game/blockcraft.html, the copy that is committed and that launchers and the desktop app open.
+// (The first version of the game is kept, untouched, in legacy/blockcraft_v1.html.)
 //   node tools/build.mjs           build once
 //   node tools/build.mjs --watch   rebuild whenever a file in src/ changes
 import * as esbuild from 'esbuild';
@@ -32,11 +33,11 @@ async function buildOnce() {
   // (a function, not a string, as the replacement: the code contains "$&" and similar sequences that replace() would expand)
   html = html.replace('<!--STYLE-->', () => `<style>\n${css}\n</style>`);
   html = html.replace('<!--SCRIPT-->', () => `<script>\n${game.replace(/<\/script/gi, '<\\/script')}\n</script>`);
-  for (const dir of ['dist', 'next']) {
+  for (const dir of ['game']) {
     fs.mkdirSync(path.join(root, dir), { recursive: true });
     fs.writeFileSync(path.join(root, dir, 'blockcraft.html'), html);
   }
-  console.log(`built next/blockcraft.html: ${(html.length / 1024).toFixed(0)} KB in ${Date.now() - t0} ms`);
+  console.log(`built game/blockcraft.html: ${(html.length / 1024).toFixed(0)} KB in ${Date.now() - t0} ms`);
 }
 
 await buildOnce();

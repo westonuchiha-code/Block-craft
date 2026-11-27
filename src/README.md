@@ -1,15 +1,15 @@
 # Blockcraft: the rebuild
 
 The game is being rebuilt from the ground up for a gaming PC on a big screen (target: an RTX 3070-class card at 4K, played with a
-controller from the sofa). The first version stays playable in `game/blockcraft.html` until this one has caught up.
+controller from the sofa). The first version is kept, playable, in `legacy/blockcraft_v1.html` until this one has caught up.
 
 ## Playing it
 
-`next/blockcraft.html` is the built game: one file, open it in Chrome or Edge (or point a launcher at it). It is rebuilt from
+`game/blockcraft.html` is the built game (the file launchers and the desktop app open): one file, open it in Chrome or Edge (or point a launcher at it). It is rebuilt from
 `src/` with:
 
     npm install        (once)
-    npm run build      writes next/blockcraft.html
+    npm run build      writes game/blockcraft.html
     npm run watch      rebuilds whenever a file in src/ changes
 
 ## How the code is laid out

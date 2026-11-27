@@ -112,4 +112,9 @@ PHASES
  4. THE GAME, SYSTEM BY SYSTEM (each rewritten, with its test): inventory and the controller inventory screen; crafting; tools and
     breaking rules (nothing in one hit, tiers); farming; creatures and combat; villages and their people; trade, quests, the law,
     guilds, the journal; provinces, the calendar, taverns, notice boards; delves and crypts; horses and travel; magic; sound.
+    NEW (his request, 2026-11-27): FISH AND FISHING, one of the first things after the basics. Fish swimming in water (kinds by biome
+    and by sea / river / lake); a fishing rod with a crafting recipe (sticks and string); casting a line with a bobber; a fishing
+    mini-game when something bites (controller-friendly: keep a moving marker inside a zone, or time a button press), with harder
+    fish being harder to land; raw fish as items. When COOKING is ported from the old game, add fish dishes (grilled fish, fish
+    stew, fish pie and so on). The old game had only a raw and a grilled fish item and no fishing at all.
  5. Retire game/blockcraft.html; point the desktop app and the launcher at the rebuild.

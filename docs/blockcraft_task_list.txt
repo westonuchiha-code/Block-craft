@@ -852,3 +852,20 @@ DONE  BIOMES REWORKED (his playtest: three biomes in view at once, sand mountain
       Caves are round tunnels in clusters, kept 9 blocks under the ground except at cave mouths (no hanging rock on thin peaks).
       Pictures: proof/rebuild_biomes.png (desert mesas, an oasis, a highland/autumn border).
       Also: block ids now change when blocks are added (allowed); saves and tests must use block names. Tests updated.
+DONE  MOUNTAINS YOU CAN WALK UP (his playtest: too many sky-high pillars and 7-block walls a 2-block-tall player cannot climb; some
+      floating blocks). Measured with tools/worldstats.mjs, seed 12345 (new measurements: the step between neighbouring land columns,
+      and thin rock hanging over air):
+        steps between neighbouring land columns   0-1 blocks (walkable) / 2-3 / 4+ (cliff)
+          all land       before 89.2% / 7.3% / 3.5%      now 97.5% / 1.9% / 0.6%
+          highlands      before 78.8% / 12.2% / 9.0%     now 94.8% / 4.4% / 0.8%
+      Cause: the mountains were made from narrow noise (50 blocks across), and the mask that switched mountains on changed over about
+      90 blocks, so 50-block-tall mountains were cut into towers. Now mountains are broad ridges (a 240-block noise) on their own wide,
+      slow mask (380 blocks), so slopes are long and mostly a block per step. Rare crag patches (about 6% of the highlands) still
+      raise a taller, steeper peak or two as landmarks. Caves now stay 9 blocks under the LOWEST ground within 4 blocks, not just the
+      ground straight above, so they cannot hollow out the thin edge of a slope.
+      Floating blocks: a search of 25 highland areas (40x40, every block, trees included) found no floating pieces in either the old
+      or the new generator, so what he saw was probably a narrow spire seen from the side, or something not yet drawn at the edge of
+      the view. Watch for it in the next playtest.
+      Pictures: proof/rebuild_mountains.png (the highest ground near spawn, and an ordinary mountain; from the ground and from above).
+      tests2/mountains.py makes them. All 4 rebuild tests pass.
+      Also: fishing written into the plan (docs/blockcraft_game_plan.txt, phase 4).

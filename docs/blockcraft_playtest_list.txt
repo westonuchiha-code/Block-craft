@@ -5,6 +5,8 @@ This is the new game, phase 1 of the overhaul. It is only the foundation: a worl
 [ ] Controller: can you get round every menu with the D-pad and A / B without touching anything else? Is anything too small?
 [ ] Look speed and feel of the right stick (Settings > Controller look speed). Is the curve right?
 [ ] Day, sunset and night: night is meant to be dark but playable. Right?
+[ ] MOUNTAINS (reshaped 2026-11-27): find a highland area. Can you walk up most slopes without digging or building stairs? Are there
+    still enough tall peaks to look good? Any floating blocks? If so, a screenshot please: the generator has none that a search finds.
 
 BLOCKCRAFT - PLAYTEST LIST
 

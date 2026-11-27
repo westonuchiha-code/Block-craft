@@ -104,7 +104,7 @@ export function createGenerator(seed) {
     }
     // (caves stay well under the ground, so thin ridges and peaks are not left with holes or hanging pieces; they open to the
     //  surface only where the column is marked as a cave mouth, above)
-    if (y >= 2 && y < h - CAVE_ROOF && isCave(x, y, z)) return y <= LAVA_LEVEL ? BLOCK.lava : (h < SEA_LEVEL && y <= SEA_LEVEL) ? BLOCK.water : BLOCK.air;
+    if (y >= 2 && y < col.low - CAVE_ROOF && isCave(x, y, z)) return y <= LAVA_LEVEL ? BLOCK.lava : (h < SEA_LEVEL && y <= SEA_LEVEL) ? BLOCK.water : BLOCK.air;
     if (col.mesa && y >= h - 30) return mesaBand(x, y, z);            // the bands run deep into the mesa
     const ore = oreAt(x, y, z);
     if (ore) return ore;

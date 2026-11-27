@@ -26,7 +26,7 @@ const MAX_HEIGHT = 150;             // the tallest ground
 const LAND_CURVE   = [[0, 4], [0.1, 7], [0.17, 12], [0.25, 15.5], [0.33, 18], [0.6, 22], [0.8, 28], [1, 35]]; // continentalness -> base height
 const RUGGED_CURVE = [[0, 1], [0.5, 0.9], [0.65, 0.55], [0.8, 0.2], [1, 0.05]];                             // erosion -> roughness
 const MOUNT_CURVE  = [[0, 0], [0.42, 0], [0.55, 0.8], [0.68, 1], [1, 1]];                                   // continentalness -> mountains
-const MOUNT_MASK   = [[0, 1], [0.4, 1], [0.55, 0], [1, 0]];                                                 // erosion -> mountains only where rugged
+const MOUNT_MASK   = [[0, 1], [0.3, 1], [0.7, 0], [1, 0]];                                                  // wide erosion -> where mountains rise (a slow fade, so they never end in a wall)
 const LAKE_LEVEL = 0.33, RIVER_WIDTH = 0.03;
 
 /** A cache keyed by column, cleared when it grows too big. */
@@ -105,13 +105,22 @@ export function createTerrain(seed) {
     const w = fbm(x / 120, z / 120, seed + 140);
     const rough = spline(e, RUGGED_CURVE) * shape(info, 'rolling');
     const inland = smooth01((c - 0.2) / 0.12);             // 0 out at sea, 1 on the continent
+    const mountainous = fbm(x / 380, z / 380, seed + 125);  // a wide, slow version of erosion just for mountains
+    const mount = spline(c, MOUNT_CURVE) * spline(mountainous, MOUNT_MASK) * shape(info, 'mountains');
 
     let h = spline(c, LAND_CURVE) + shape(info, 'lift') * inland;
-    h += pv * 9 * rough * inland + pv * 1.5 * (1 - inland);          // rolling ground, more where it is rugged
+    h += pv * 9 * rough * inland * (1 - 0.6 * Math.min(1, mount)) + pv * 1.5 * (1 - inland);          // rolling ground, more where it is rugged
     h -= smooth01((-pv - 0.5) / 0.3) * rough * 4 * inland;          // valleys between the rises
-    const ridge = 1 - Math.abs(pv);
-    const mount = spline(c, MOUNT_CURVE) * spline(e, MOUNT_MASK) * shape(info, 'mountains');
-    h += mount * (ridge * ridge * 36 + ridge * 5);                  // mountain ridges with foothills
+    // mountains: broad ridges from a wide noise field, so slopes are long and mostly a block or less per step.
+    // Now and then a crag (a tall narrow peak) rises off a ridge as a landmark.
+    if (mount > 0) {
+      const ridge = 1 - Math.abs(fbm(x / 240, z / 240, seed + 135) * 2 - 1);      // 1 along a ridge line
+      const massif = smooth01((ridge - 0.3) / 0.7);
+      h += mount * (massif * massif * 34 + massif * 6);
+      // crags: only where a rare patch noise is high AND a wide bump peaks there, so a crag area holds one or two of them
+      const crag = smooth01((fbm(x / 900, z / 900, seed + 137) - 0.86) / 0.04);
+      if (crag > 0) h += mount * crag * massif * smooth01((fbm(x / 90, z / 90, seed + 138) - 0.62) / 0.16) * 24;
+    }
     const dunes = shape(info, 'dunes') * inland;
     if (dunes > 0) h += dunes * (Math.abs(gradientNoise(x / 26, z / 40, seed + 145) - 0.5) * 9 - 1.5);
     const terrace = smooth01((w - 0.72) / 0.04) * (1 - Math.min(1, mount));
@@ -134,7 +143,7 @@ export function createTerrain(seed) {
 
   /**
    * Everything about one column that more than one block needs:
-   *   h, biome, top (the surface block), under (the blocks under it), steep (a cliff), caveMouth (a cave may open here),
+   *   h, low (lowest ground within 4 blocks), biome, top (the surface block), under (the blocks under it), steep (a cliff), caveMouth (a cave may open here),
    *   mesa (desert high ground: layered red rock instead of sand).
    */
   function column(x, z) {
@@ -144,6 +153,9 @@ export function createTerrain(seed) {
     const slope = Math.max(
       Math.abs(surfaceHeight(x + 1, z) - h), Math.abs(surfaceHeight(x - 1, z) - h),
       Math.abs(surfaceHeight(x, z + 1) - h), Math.abs(surfaceHeight(x, z - 1) - h));
+    // the lowest ground nearby: caves stay under this, so they never hollow out the thin edge of a slope
+    let low = h;
+    for (const d of [2, 4]) low = Math.min(low, surfaceHeight(x + d, z), surfaceHeight(x - d, z), surfaceHeight(x, z + d), surfaceHeight(x, z - d));
     const steep = slope >= 3 && h > SEA_LEVEL + 1;                 // sheer faces show bare rock
     const snowY = SNOW_LINE - 3 + Math.floor(valueNoise(x / 18, z / 18, seed + 180) * 6);
     const biome = biomeAt(x, z);
@@ -161,7 +173,7 @@ export function createTerrain(seed) {
     else if (biome === BIOME.frost) { top = BLOCK.snow; under = BLOCK.dirt; }
     else { top = BLOCK.grass; under = BLOCK.dirt; }
     const caveMouth = h > SEA_LEVEL + 3 && valueNoise(x / 30, z / 30, seed + 190) > 0.86;
-    return columns.set(x, z, { h, biome, top, under, steep, caveMouth, mesa });
+    return columns.set(x, z, { h, low, biome, top, under, steep, caveMouth, mesa });
   }
 
   return { surfaceHeight, biomeAt, regionInfo, column };

@@ -9,6 +9,7 @@
 //              'glass'    a full see-through block; faces between two of them are not drawn
 //              'liquid'   water and lava: drawn on their own, see-through, slightly lowered top
 //              'cross'    two crossed flat pictures (grass tufts, flowers)
+//              'torch'    a thin stick standing in the middle of the block
 //              'none'     not drawn (air)
 //   textures   tile names: { all } or { top, bottom, side }
 //   tint       'grass' or 'foliage': the texture is coloured by the biome where the block stands
@@ -95,11 +96,14 @@ define('tall_grass', { name: 'Tall Grass', render: 'cross', textures: { all: 'ta
 // ---- made things ----
 define('glass',     { name: 'Glass', render: 'glass', textures: { all: 'glass' }, hardness: 0.5 });
 define('glowstone', { name: 'Glowstone', textures: { all: 'glowstone' }, hardness: 0.5, light: 15 });
+define('torch',     { name: 'Torch', render: 'torch', textures: { all: 'torch' }, solid: false, hardness: 0, light: 14 });
 
 // ---- quick lookups by id, for the hot loops (meshing, collision, light) ----
 export const IS_SOLID = Uint8Array.from(BLOCKS, b => (b.solid ? 1 : 0));
 export const IS_OPAQUE = Uint8Array.from(BLOCKS, b => (b.opaque ? 1 : 0));
 export const LIGHT_OF = Uint8Array.from(BLOCKS, b => b.light);
+/** How light passes a block: 0 it stops light (rock), 1 it dims light (water, lava, leaves, ice), 2 it is clear (air, glass, plants). */
+export const LIGHT_PASS = Uint8Array.from(BLOCKS, b => (b.render === 'cube' ? 0 : b.render === 'liquid' || b.render === 'cutout' || b.key === 'ice' ? 1 : 2));
 
 /** The id of a wood's block, e.g. woodBlock('oak', 'log'). */
 export const woodBlock = (wood, part) => BLOCK[`${wood}_${part}`];

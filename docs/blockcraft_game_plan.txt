@@ -105,7 +105,7 @@ fixed-step physics; controller first, no cursor; interface sized from the screen
 PHASES
  1. FOUNDATION (done 2026-11-27): build setup, world generation ported, block art, mesh renderer, sky and day/night, player
     movement, breaking and placing, controller-driven title / pause / settings / loading screens, HUD. See src/README.md.
- 2. LOOKS: block light (torches, lava, glowstone) and proper flood-filled daylight; better water (moving surface, reflections of the
+ 2. LOOKS: [done 2026-11-27: block light (torches, lava, glowstone) and proper flood-filled daylight] better water (moving surface, reflections of the
     sky); soft shadows from the sun; clouds; distant land beyond the view distance; a graphics preset menu (High, Ultra) whose
     lowest setting is still sharp at 4K.
  3. SAVING: worlds saved and loaded (the player's changes, where they are, the time).

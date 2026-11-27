@@ -3,7 +3,7 @@
 //   player/   the player's body and what it points at                 input/    keyboard, mouse and controller
 //   ui/       screens, menus and the HUD                              settings.js  the player's settings
 import { World } from './world/world.js';
-import { BLOCK, BLOCKS } from './world/blocks.js';
+import { BLOCK, BLOCKS, IS_SOLID, LIGHT_OF, LIGHT_PASS } from './world/blocks.js';
 import { DAY_LENGTH_SECONDS, WORLD_HEIGHT } from './world/constants.js';
 import { Renderer } from './render/renderer.js';
 import { Player } from './player/player.js';
@@ -19,7 +19,7 @@ const PHYSICS_STEP = 1 / 120;
 const BREAK_SPEEDUP = 3;                        // until tools are back, everything breaks three times faster than by bare hand
 
 // Until the inventory is rebuilt, the hotbar holds a fixed set of blocks to build with.
-const STARTING_HOTBAR = [BLOCK.grass, BLOCK.dirt, BLOCK.stone, BLOCK.cobblestone, BLOCK.oak_planks, BLOCK.oak_log, BLOCK.glass, BLOCK.glowstone, BLOCK.sand];
+const STARTING_HOTBAR = [BLOCK.grass, BLOCK.dirt, BLOCK.stone, BLOCK.cobblestone, BLOCK.oak_planks, BLOCK.oak_log, BLOCK.glass, BLOCK.glowstone, BLOCK.torch];
 
 class Game {
   constructor() {
@@ -112,6 +112,7 @@ class Game {
       onChunkLoaded: c => this.renderer.chunkLoaded(c),
       onChunkUnloaded: c => this.renderer.chunkUnloaded(c),
       onBlockChanged: (x, y, z) => this.renderer.blockChanged(x, y, z),
+      onLightChanged: (cx, cz, sy) => this.renderer.lightChanged(cx, cz, sy),
     });
     this.renderer.setWorld(this.world);
     const spawn = this.world.findSpawn();
@@ -134,7 +135,7 @@ class Game {
     this.screens.update();
 
     if (this.world && this.player) {
-      this.world.update(this.player.x, this.player.z, this.settings.renderDistance);
+      this.world.update(this.player.x, this.player.z, this.settings.renderDistance, this.state === 'loading' ? 12 : 4);
       if (this.state === 'loading') this.updateLoading();
       if (this.state === 'playing') this.updatePlaying(dt);
       const p = this.player, bob = this.state === 'playing' && this.settings.viewBob && p.onGround ? Math.sin(p.walked * 2.2) * 0.035 : 0;
@@ -194,6 +195,7 @@ class Game {
     this.hud.setBreaking(Math.min(1, this.breaking.progress));
     if (this.breaking.progress >= 1) {
       this.world.setBlock(t.x, t.y, t.z, BLOCK.air);
+      if (this.world.getBlock(t.x, t.y + 1, t.z) === BLOCK.torch) this.world.setBlock(t.x, t.y + 1, t.z, BLOCK.air);   // it stood on this
       this.breaking = null;
       this.hud.setBreaking(null);
     }
@@ -210,7 +212,9 @@ class Game {
     const x = t.x + t.nx, y = t.y + t.ny, z = t.z + t.nz, id = this.hotbar[this.selected];
     const here = this.world.getBlock(x, y, z);
     if (here !== BLOCK.air && here !== BLOCK.water && here !== BLOCK.tall_grass) return;
-    if (this.player.overlaps(x, y, z)) return;
+    if (id === BLOCK.torch) {
+      if (t.ny !== 1 || !IS_SOLID[t.id]) return;                  // torches stand on top of solid blocks (wall torches come later)
+    } else if (this.player.overlaps(x, y, z)) return;
     this.world.setBlock(x, y, z, id);
   }
 
@@ -230,3 +234,4 @@ class Game {
 
 window.game = new Game();
 window.BLOCK = BLOCK;            // (block ids by key, for tests and the browser console)
+window.LIGHT_TABLES = { LIGHT_OF, LIGHT_PASS };   // for tests: light rules

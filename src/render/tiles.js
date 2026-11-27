@@ -307,6 +307,13 @@ export function buildTiles() {
       add(`${wood}_leaves`, t);
     } }
 
+  // TORCH: a stick two pixels wide in the middle columns, rows 6-15, with a flame on its top two rows; the rest is clear
+  { const t = new Tile();
+    for (let i = 0; i < N * N; i++) t.hole(i % N, (i / N) | 0);
+    for (let y = 8; y < N; y++) { t.set(7, y, [128, 92, 54]); t.set(8, y, [104, 74, 42]); }
+    t.set(7, 6, [255, 250, 210]); t.set(8, 6, [255, 226, 120]); t.set(7, 7, [255, 200, 80]); t.set(8, 7, [236, 150, 50]);
+    add('torch', t); }
+
   // GLASS: pale blue with a bright frame and two diagonal glints; mostly see-through
   { const t = new Tile();
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) t.set(x, y, [200, 228, 240], 0);

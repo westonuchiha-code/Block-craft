@@ -64,6 +64,13 @@ export class Renderer {
     for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (this.world.getChunk(chunk.cx + dx, chunk.cz + dz)) this.markChunk(chunk.cx + dx, chunk.cz + dz);
   }
 
+  /** Light changed in a section (a torch placed, light flowing in from a new chunk): draw it again when there is time. */
+  lightChanged(cx, cz, sy) {
+    if (!this.world?.getChunk(cx, cz)) return;
+    const key = sectionKey(cx, cz, sy);
+    if (this.sections.has(key) || sy <= this.world.getChunk(cx, cz).topSection() + 1) this.dirty.add(key);
+  }
+
   chunkUnloaded(chunk) {
     for (let sy = 0; sy < SECTIONS_PER_CHUNK; sy++) {
       const key = sectionKey(chunk.cx, chunk.cz, sy), s = this.sections.get(key);

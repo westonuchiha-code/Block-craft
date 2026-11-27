@@ -1,5 +1,6 @@
 // The world as the game sees it: the chunks loaded round the player, block reads and writes, and the workers that build new chunks.
 import { Chunk } from './chunk.js';
+import { Lighting } from './light.js';
 import { createGenerator } from './generator.js';
 import { CHUNK_SIZE, WORLD_HEIGHT, SEA_LEVEL } from './constants.js';
 import { IS_SOLID } from './blocks.js';
@@ -10,14 +11,17 @@ export class World {
   /**
    * @param {number} seed
    * @param {{ onChunkLoaded?: (chunk: Chunk) => void, onChunkUnloaded?: (chunk: Chunk) => void,
-   *           onBlockChanged?: (x: number, y: number, z: number) => void }} hooks
+   *           onBlockChanged?: (x: number, y: number, z: number) => void,
+   *           onLightChanged?: (cx: number, cz: number, sy: number) => void }} hooks
    */
   constructor(seed, hooks = {}) {
     this.seed = seed;
     this.hooks = hooks;
-    /** @type {Map<string, Chunk>} */
+    /** The chunks in the world, built and lit. @type {Map<string, Chunk>} */
     this.chunks = new Map();
-    this.pending = new Map();            // key -> request id, chunks asked of a worker but not back yet
+    this.pending = new Map();            // key -> request id, chunks asked for and not yet in the world
+    this.arrived = [];                   // chunks back from a worker, waiting to be lit (then they join the world)
+    this.lighting = new Lighting(this, (cx, cz, sy) => this.hooks.onLightChanged?.(cx, cz, sy));
     this.nextRequestId = 1;
     /** The same generator the workers run, for questions the game asks directly (biome colours, spawn point). */
     this.generator = createGenerator(seed);
@@ -56,6 +60,7 @@ export class World {
     c.set(lx, y, lz, id);
     c.updateSkyTop(lx, lz);
     c.edits.set(`${lx},${y},${lz}`, id);
+    this.lighting.blockChanged(x, y, z);
     this.hooks.onBlockChanged?.(x, y, z);
     return true;
   }
@@ -64,9 +69,10 @@ export class World {
 
   /**
    * Keep the chunks within `radius` of (x, z) loaded: ask for missing ones nearest first, drop ones well outside.
+   * Arrived chunks are lit and join the world within `lightBudgetMs` of work.
    * Call every frame; it does little work when nothing has changed.
    */
-  update(x, z, radius) {
+  update(x, z, radius, lightBudgetMs = 4) {
     const pcx = Math.floor(x / CHUNK_SIZE), pcz = Math.floor(z / CHUNK_SIZE);
     const maxInFlight = this.workers.length * 3;
     if (this.pending.size < maxInFlight) {
@@ -81,9 +87,18 @@ export class World {
       for (const [, cx, cz, key] of wanted.slice(0, maxInFlight - this.pending.size)) this.request(cx, cz, key);
     }
     const drop = radius + 2;
+    const t0 = performance.now();
+    while (this.arrived.length && performance.now() - t0 < lightBudgetMs) {
+      const chunk = this.arrived.shift(), key = chunkKey(chunk.cx, chunk.cz);
+      this.pending.delete(key);
+      if (Math.abs(chunk.cx - pcx) > drop || Math.abs(chunk.cz - pcz) > drop) continue;
+      this.lighting.lightChunk(chunk);               // this also puts it in this.chunks
+      this.hooks.onChunkLoaded?.(chunk);
+    }
     for (const [key, c] of this.chunks) {
       if (Math.abs(c.cx - pcx) > drop || Math.abs(c.cz - pcz) > drop) {
         this.chunks.delete(key);
+        this.lighting.forget(c);
         this.hooks.onChunkUnloaded?.(c);
       }
     }
@@ -98,10 +113,8 @@ export class World {
   receiveChunk({ id, seed, cx, cz, sections }) {
     const key = chunkKey(cx, cz);
     if (seed !== this.seed || this.pending.get(key) !== id) return;     // an answer for a world or a request we no longer want
-    this.pending.delete(key);
-    const chunk = new Chunk(cx, cz, sections);
-    this.chunks.set(key, chunk);
-    this.hooks.onChunkLoaded?.(chunk);
+    this.pending.set(key, -1);                                             // still pending: built, waiting to be lit
+    this.arrived.push(new Chunk(cx, cz, sections));
   }
 
   /** Are the chunks round this spot loaded (so the player can be put down there)? */

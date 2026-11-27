@@ -21,7 +21,7 @@ Every file does one job and starts with a comment saying what that job is.
 | `main.js` | Start-up and the main loop. Only wires the parts together. |
 | `settings.js` | The player's settings, their ranges, defaults and labels. |
 | `core/` | `math.js` small maths helpers; `noise.js` hashing and noise (the world is built from these). |
-| `world/` | `constants.js` world size, sea level; `blocks.js` **every block, defined once**; `biomes.js`; `terrain.js` the shape of the land; `trees.js`; `generator.js` the natural world, block by block and chunk by chunk; `chunk.js` storage; `world.js` the loaded world, block reads and writes; `worker.js` builds chunks on other CPU cores. |
+| `world/` | `constants.js` world size, sea level; `blocks.js` **every block, defined once**; `biomes.js`; `terrain.js` the shape of the land; `trees.js`; `generator.js` the natural world, block by block and chunk by chunk; `chunk.js` storage; `light.js` sky and block light (flood fills, as in Minecraft); `world.js` the loaded world, block reads and writes; `worker.js` builds chunks on other CPU cores. |
 | `render/` | `tiles.js` the 16 x 16 block art; `textures.js` puts it on the GPU; `mesher.js` turns sections into triangles with smooth lighting; `materials.js` the block shaders; `sky.js` sky, sun, moon, stars, day and night; `renderer.js` keeps every section's mesh up to date and draws the frame (Three.js). |
 | `player/` | `player.js` the body: movement, collision, swimming, flying; `raycast.js` what the player points at. |
 | `input/` | `input.js` keyboard, mouse and controller, as gameplay actions and as menu navigation. |
@@ -43,15 +43,17 @@ Every file does one job and starts with a comment saying what that job is.
 ## Tests
 
 `tests2/run.sh` builds the game and runs the browser tests (headless Chrome with a software GPU):
-`smoke.py` (title, world builds, player stands in it), `play.py` (walk, jump, break, place, fly),
-`ui4k.py` (the menus on a 4K screen driven by a simulated controller). `views.py` and `water.py` take pictures to look at.
+`smoke.py` (title, world builds, player stands in it), `play.py` (walk, jump, break, place, fly), `swim.py` (climb out of water),
+`light.py` (torch, daylight through a hole, every block's light obeys the rules), `ui4k.py` (the menus on a 4K screen driven by a
+simulated controller). `views.py`, `water.py`, `biomes.py`, `mountains.py` and `lightviews.py` take pictures to look at.
+`node tools/worldstats.mjs [seed]` measures world generation (biomes in view, cave shapes, how walkable the land is).
 
 ## What is in so far (phase 1: the foundation)
 
 Terrain, biomes, caves, ores, rock strata, five kinds of tree, tall grass, cactus, lakes and rivers, all as in the first version;
 the block art; a mesh renderer at native resolution with anti-aliasing, smooth lighting and corner shading, biome colours blended
 at the edges, fog, sky, sun, moon and stars, day and night; walking, sprinting, sneaking, swimming, flying; breaking and placing
-blocks; the title, pause, settings and loading screens; the hotbar.
+blocks; light from the sky and from torches, lava and glowstone; the title, pause, settings and loading screens; the hotbar.
 
-Not yet: saving, block light (torches, lava), the inventory, crafting, creatures, villages and everything built on them. These are
+Not yet: saving, the inventory, crafting, creatures, villages and everything built on them. These are
 ported one system at a time, rewritten in this style, in the order set out in `docs/blockcraft_game_plan.txt`.

@@ -3,11 +3,12 @@
 // Only faces that can be seen are emitted (a face against an opaque block is skipped). Each corner of each face carries:
 //   uv, layer   where in the block textures to look
 //   light       x: ambient occlusion times the face's own shading (corners in creases are darker, like Minecraft's smooth lighting)
-//               y: daylight reaching the corner (0 = under cover, 1 = open sky), averaged over the four cells round the corner
-//               z: block light (reserved: torches, lava and glowstone come in the lighting pass)
+//               y: sky light at the corner, 0-1 (light.js), averaged over the open cells round the corner (smooth lighting)
+//               z: block light at the corner (torches, lava, glowstone), 0-1, averaged the same way
 //   tint        the biome colour at that column, for grass and leaves (blended over the neighbouring columns)
 // Two meshes come out: 'solid' (opaque, leaves, glass, plants: drawn without blending) and 'liquid' (water, lava: blended).
-import { BLOCKS } from '../world/blocks.js';
+import { BLOCKS, LIGHT_OF } from '../world/blocks.js';
+import { sectionIndex } from '../world/chunk.js';
 import { BIOMES } from '../world/biomes.js';
 import { CHUNK_SIZE as S, WORLD_HEIGHT } from '../world/constants.js';
 
@@ -34,8 +35,8 @@ const LIQUID_DROP = 0.125;                        // a liquid's surface sits thi
 
 class Buffers {
   constructor() { this.pos = []; this.uv = []; this.layer = []; this.light = []; this.tint = []; this.index = []; this.count = 0; }
-  vertex(x, y, z, u, v, layer, ao, sky, tint) {
-    this.pos.push(x, y, z); this.uv.push(u, v); this.layer.push(layer); this.light.push(ao, sky, 0); this.tint.push(tint[0], tint[1], tint[2]);
+  vertex(x, y, z, u, v, layer, ao, sky, glow, tint) {
+    this.pos.push(x, y, z); this.uv.push(u, v); this.layer.push(layer); this.light.push(ao, sky, glow); this.tint.push(tint[0], tint[1], tint[2]);
     return this.count++;
   }
   quad(a, b, c, d, flip) {
@@ -62,16 +63,18 @@ export function meshSection(world, cx, cz, sy, faceLayer) {
 
   // 1. copy the section and a one-block border round it into a padded array (neighbour chunks included)
   const ids = new Uint16Array(P * P * P);
-  const sky = new Uint8Array(P * P);                 // per padded column: the sky top height
+  const light = new Uint8Array(P * P * P).fill(0xF0); // light bytes (sky << 4 | block), open sky where there is no chunk
   for (let dz = -1; dz <= S; dz++) for (let dx = -1; dx <= S; dx++) {
     const wx = x0 + dx, wz = z0 + dz, ccx = Math.floor(wx / S), ccz = Math.floor(wz / S);
     const chunk = world.getChunk(ccx, ccz);
     if (!chunk) continue;
     const lx = wx - ccx * S, lz = wz - ccz * S;
-    sky[(dz + 1) * P + (dx + 1)] = chunk.skyTop[lz * S + lx];
     for (let dy = -1; dy <= S; dy++) {
       const wy = y0 + dy;
-      if (wy >= 0 && wy < WORLD_HEIGHT) ids[pidx(dx, dy, dz)] = chunk.get(lx, wy, lz);
+      if (wy < 0 || wy >= WORLD_HEIGHT) continue;
+      ids[pidx(dx, dy, dz)] = chunk.get(lx, wy, lz);
+      const ls = chunk.light?.[wy >> 4];
+      if (ls) light[pidx(dx, dy, dz)] = ls[sectionIndex(lx, wy & 15, lz)];
     }
   }
 
@@ -98,13 +101,8 @@ export function meshSection(world, cx, cz, sy, faceLayer) {
     return BLOCKS[id].tint === 'foliage' ? tintFoliage[i] : tintGrass[i];
   };
 
-  // daylight at a padded cell: 1 if open to the sky, a little if just under an overhang, dark deep under rock
-  const skyAt = (x, y, z) => {
-    const top = sky[(z + 1) * P + (x + 1)], wy = y0 + y;
-    if (wy >= top) return 1;
-    const depth = top - wy;
-    return depth <= 2 ? 0.55 : depth <= 6 ? 0.3 : 0.12;
-  };
+  const skyAt = (x, y, z) => (light[pidx(x, y, z)] >> 4) / 15;
+  const glowAt = (x, y, z) => (light[pidx(x, y, z)] & 15) / 15;
 
   const solid = new Buffers(), liquid = new Buffers();
 
@@ -114,7 +112,8 @@ export function meshSection(world, cx, cz, sy, faceLayer) {
     const render = RENDER[id];
     if (render === 'none') continue;
 
-    if (render === 'cross') { emitCross(solid, id, x, y, z, faceLayer[id * 6], skyAt(x, y, z), tintAt(id, x, z)); continue; }
+    if (render === 'cross') { emitCross(solid, id, x, y, z, faceLayer[id * 6], skyAt(x, y, z), glowAt(x, y, z), tintAt(id, x, z)); continue; }
+    if (render === 'torch') { emitTorch(solid, x, y, z, faceLayer[id * 6], skyAt(x, y, z), LIGHT_OF[id] / 15); continue; }
 
     const isLiquid = render === 'liquid';
     const out = isLiquid ? liquid : solid;
@@ -129,7 +128,7 @@ export function meshSection(world, cx, cz, sy, faceLayer) {
       if (isLiquid && other && RENDER[other] !== 'cross' && RENDER[other] !== 'none' && f !== 2) continue; // water sides against any block
       if (isLiquid && f === 2 && other && RENDER[other] === 'liquid') continue;
 
-      const layer = faceLayer[id * 6 + f], tint = tintAt(id, x, z);
+      const layer = faceLayer[id * 6 + f], tint = tintAt(id, x, z), ownGlow = LIGHT_OF[id] / 15;   // a glowing block is lit by itself
       const v = [];
       for (let k = 0; k < 4; k++) {
         const [su, sv] = CORNERS[k];
@@ -140,18 +139,18 @@ export function meshSection(world, cx, cz, sy, faceLayer) {
         const cx2 = nx + F.u[0] * du + F.v[0] * dv, cy2 = ny + F.u[1] * du + F.v[1] * dv, cz2 = nz + F.u[2] * du + F.v[2] * dv;
         const sa = OPAQUE[ids[pidx(ax, ay, az)]], sb = OPAQUE[ids[pidx(bx, by, bz)]], sc = OPAQUE[ids[pidx(cx2, cy2, cz2)]];
         const ao = isLiquid ? 3 : (sa && sb ? 0 : 3 - sa - sb - sc);
-        // smooth daylight: the average over the open cells among the four round this corner
-        let skySum = skyAt(nx, ny, nz), skyN = 1;
-        if (!sa) { skySum += skyAt(ax, ay, az); skyN++; }
-        if (!sb) { skySum += skyAt(bx, by, bz); skyN++; }
-        if (!sc && !(sa && sb)) { skySum += skyAt(cx2, cy2, cz2); skyN++; }
+        // smooth light: the average over the open cells among the four round this corner
+        let skySum = skyAt(nx, ny, nz), glowSum = glowAt(nx, ny, nz), n = 1;
+        if (!sa) { skySum += skyAt(ax, ay, az); glowSum += glowAt(ax, ay, az); n++; }
+        if (!sb) { skySum += skyAt(bx, by, bz); glowSum += glowAt(bx, by, bz); n++; }
+        if (!sc && !(sa && sb)) { skySum += skyAt(cx2, cy2, cz2); glowSum += glowAt(cx2, cy2, cz2); n++; }
         let px = x + 0.5 + 0.5 * F.n[0] + (su - 0.5) * F.u[0] + (sv - 0.5) * F.v[0];
         let py = y + 0.5 + 0.5 * F.n[1] + (su - 0.5) * F.u[1] + (sv - 0.5) * F.v[1];
         const pz = z + 0.5 + 0.5 * F.n[2] + (su - 0.5) * F.u[2] + (sv - 0.5) * F.v[2];
         if (lowered && py > y + 0.99) py -= LIQUID_DROP;
-        v.push({ px, py, pz, u: su, v: sv, ao, sky: skySum / skyN });
+        v.push({ px, py, pz, u: su, v: sv, ao, sky: skySum / n, glow: Math.max(glowSum / n, ownGlow) });
       }
-      const idx = v.map(c => out.vertex(c.px, c.py, c.pz, c.u, c.v, layer, AO_LEVELS[c.ao] * F.shade, c.sky, tint));
+      const idx = v.map(c => out.vertex(c.px, c.py, c.pz, c.u, c.v, layer, AO_LEVELS[c.ao] * F.shade, c.sky, c.glow, tint));
       // turn the quad's diagonal to follow the darker corners, so shading in creases does not look skewed
       out.quad(idx[0], idx[1], idx[2], idx[3], v[0].ao + v[2].ao < v[1].ao + v[3].ao);
     }
@@ -160,14 +159,40 @@ export function meshSection(world, cx, cz, sy, faceLayer) {
 }
 
 /** A plant: two pictures crossed diagonally through the block, each drawn from both sides. */
-function emitCross(out, id, x, y, z, layer, sky, tint) {
+function emitCross(out, id, x, y, z, layer, sky, glow, tint) {
   const planes = [[[0.15, 0.15], [0.85, 0.85]], [[0.15, 0.85], [0.85, 0.15]]];
   for (const [[ax, az], [bx, bz]] of planes) {
-    const a = out.vertex(x + ax, y, z + az, 0, 0, layer, 0.9, sky, tint);
-    const b = out.vertex(x + bx, y, z + bz, 1, 0, layer, 0.9, sky, tint);
-    const c = out.vertex(x + bx, y + 1, z + bz, 1, 1, layer, 1.0, sky, tint);
-    const d = out.vertex(x + ax, y + 1, z + az, 0, 1, layer, 1.0, sky, tint);
+    const a = out.vertex(x + ax, y, z + az, 0, 0, layer, 0.9, sky, glow, tint);
+    const b = out.vertex(x + bx, y, z + bz, 1, 0, layer, 0.9, sky, glow, tint);
+    const c = out.vertex(x + bx, y + 1, z + bz, 1, 1, layer, 1.0, sky, glow, tint);
+    const d = out.vertex(x + ax, y + 1, z + az, 0, 1, layer, 1.0, sky, glow, tint);
     out.quad(a, b, c, d, false);
     out.quad(b, a, d, c, false);       // the back side
   }
+}
+
+/**
+ * A torch: a stick two pixels square and ten tall standing in the middle of the block, its four sides and top cut from the
+ * middle of the torch picture (the flame is the top two rows of the stick).
+ */
+const TORCH_W = 1 / 16, TORCH_H = 10 / 16, NO_TINT = [1, 1, 1];
+function emitTorch(out, x, y, z, layer, sky, glow) {
+  const lo = 0.5 - TORCH_W, hi = 0.5 + TORCH_W, u0 = 7 / 16, u1 = 9 / 16;
+  const side = (ax, az, bx, bz, shade) => {
+    const a = out.vertex(x + ax, y, z + az, u0, 0, layer, shade, sky, glow, NO_TINT);
+    const b = out.vertex(x + bx, y, z + bz, u1, 0, layer, shade, sky, glow, NO_TINT);
+    const c = out.vertex(x + bx, y + TORCH_H, z + bz, u1, TORCH_H, layer, shade, sky, glow, NO_TINT);
+    const d = out.vertex(x + ax, y + TORCH_H, z + az, u0, TORCH_H, layer, shade, sky, glow, NO_TINT);
+    out.quad(a, b, c, d, false);
+  };
+  side(lo, hi, hi, hi, 0.9);       // south
+  side(hi, lo, lo, lo, 0.9);       // north
+  side(hi, hi, hi, lo, 0.8);       // east
+  side(lo, lo, lo, hi, 0.8);       // west
+  const t = y + TORCH_H, v0 = TORCH_H - 2 / 16, v1 = TORCH_H;
+  const a = out.vertex(x + lo, t, z + hi, u0, v0, layer, 1, sky, glow, NO_TINT);
+  const b = out.vertex(x + hi, t, z + hi, u1, v0, layer, 1, sky, glow, NO_TINT);
+  const c = out.vertex(x + hi, t, z + lo, u1, v1, layer, 1, sky, glow, NO_TINT);
+  const d = out.vertex(x + lo, t, z + lo, u0, v1, layer, 1, sky, glow, NO_TINT);
+  out.quad(a, b, c, d, false);
 }

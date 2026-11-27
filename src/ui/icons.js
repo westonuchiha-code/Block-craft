@@ -16,7 +16,7 @@ export function blockIcon(id, tiles) {
   if (b.textures) {
     const tint = b.tint === 'foliage' ? BIOMES[0].foliage : b.tint === 'grass' ? BIOMES[1].grass : null;
     const face = (name, shade) => tileCanvas(tiles.get(name), tint, shade);
-    if (b.render === 'cross') {
+    if (b.render === 'cross' || b.render === 'torch') {
       g.drawImage(face(b.textures.side, 1), 8, 8, 48, 48);
     } else {
       // top: squashed diamond; left and right: slanted sides. Each tile is drawn through a transform onto its face.

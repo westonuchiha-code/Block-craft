@@ -869,3 +869,17 @@ DONE  MOUNTAINS YOU CAN WALK UP (his playtest: too many sky-high pillars and 7-b
       Pictures: proof/rebuild_mountains.png (the highest ground near spawn, and an ordinary mountain; from the ground and from above).
       tests2/mountains.py makes them. All 4 rebuild tests pass.
       Also: fishing written into the plan (docs/blockcraft_game_plan.txt, phase 4).
+DONE  LIGHT (rebuild, phase 2 begins). Real light, as in Minecraft, instead of the guess from depth used so far:
+      - sky light 0-15: falls straight down through open air, fades one level per block sideways and through water and leaves.
+        Cave mouths and overhangs now shade off step by step; tunnels away from the sky are dark; under trees is a little darker.
+      - block light 0-15: glowstone and lava 15, and a new TORCH 14 (in the last hotbar slot, where sand was; it stands on top of
+        a block, and goes when that block is broken). Light fades one level per block; torchlight is warm in colour.
+      - both update when blocks change: placing a block shuts light out, breaking one lets it in, across chunk borders.
+      - an unlit cave is very dark but not pure black (a faint grey floor), so torches matter but you can still see shapes.
+      Code: src/world/light.js (the two flood fills), chunks lit as they arrive (2.8 ms a chunk on the slow test machine, within
+      4 ms a frame while playing), mesher reads the light for smooth per-corner shading, shader turns levels into brightness.
+      Bug found and fixed on the way: the first fill skipped neighbouring columns inside the same chunk (under leaves was a level dark).
+      Test: tests2/light.py (sealed room across a chunk border: dark; torch 14 at it, 11 three blocks away, 5 nine away across the
+      border; torch broken: dark; hole in the roof: 15 below it, 14 beside, 9 six away; shut: dark; and every block of the room and of
+      a 41 x 41 natural area from bedrock to y 130 obeys the light rules). All 5 rebuild tests pass.
+      Pictures: proof/rebuild_light.png (an unlit cave, the same cave with torches, an overhang shading off, torches and glowstone at night).

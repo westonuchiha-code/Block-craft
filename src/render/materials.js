@@ -42,10 +42,14 @@ void main() {
   float tintAmount = texture(tintMap, vUv).r;
   vec3 colour = tex.rgb * mix(vec3(1.0), vTint / ${TINT_BASE.toFixed(3)}, tintAmount);
 
-  // light: daylight where the sky reaches, a dim floor so caves are dark but not black, the corner shading on top
-  float sky = vLight.y * mix(0.24, 1.0, daylight);     // night keeps a quarter of the light: moonlit, dark but playable
-  float ambient = max(sky, max(vLight.z, 0.045));
-  vec3 lit = colour * ambient * vLight.x * mix(vec3(1.0), sunTint, vLight.y);
+  // light: sky light scaled by the time of day, and warm block light from torches, lava and glowstone; whichever is brighter
+  // wins. Levels are turned into brightness on a curve (level 8 of 15 gives about a third), so light fades off into the dark
+  // the way it does in Minecraft. A small floor keeps the darkest caves just readable. The corner shading goes on top.
+  vec2 level = clamp(vLight.yz, 0.0, 1.0);
+  vec2 bright = level / (3.0 - 2.0 * level);
+  vec3 skyLight = vec3(bright.x * mix(0.2, 1.0, daylight)) * mix(vec3(1.0), sunTint, level.x);   // night keeps a fifth: moonlit
+  vec3 glowLight = bright.y * vec3(1.0, 0.84, 0.62);
+  vec3 lit = colour * max(max(skyLight, glowLight), vec3(0.055, 0.06, 0.075)) * vLight.x;   // the floor is a faint cool grey
 
   float fog = smoothstep(fogNear, fogFar, vFogDepth);
   outColour = vec4(mix(lit, fogColour, fog), opacity);

@@ -466,6 +466,22 @@ body.padmode.gpui #gpCursor { display:block; }
 <div id="talkMenu"><div id="talkPanel"><div id="talkTop"><h2 id="talkName"></h2><span id="talkGold"></span></div><div id="talkBody"></div></div></div>
 <div id="gpHint"></div><div id="gpCursor"></div>
 <script>
+// If anything goes wrong while the game starts (or later), say so on screen instead of leaving a black window: the message, where,
+// and the browser, so it can be read out and fixed. (Inside a worker this does nothing.)
+if(!(typeof self!=='undefined' && self.__BC_WORKER)){
+  const bcShowError = (msg, where)=>{ try{
+    let el = document.getElementById('bcErr');
+    if(!el){ el = document.createElement('div'); el.id = 'bcErr';
+      el.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;background:#2a0c0c;color:#ffd8c8;border:2px solid #c04030;padding:10px 12px;font:13px/1.4 monospace;white-space:pre-wrap;max-height:45vh;overflow:auto';
+      (document.body || document.documentElement).appendChild(el); el.textContent = 'BLOCKCRAFT HIT AN ERROR. Please send a photo or the text of this box.\n'; }
+    if(el.textContent.length < 4000) el.textContent += '\n' + msg + (where ? '\n  at ' + where : '') + '\n  (' + navigator.userAgent + ')';
+  }catch(e){} };
+  window.addEventListener('error', e=>bcShowError(String(e.message || e.error || 'error'), (e.filename ? e.filename.split('/').pop() : '') + ':' + (e.lineno||'?') + ':' + (e.colno||'?')));
+  window.addEventListener('unhandledrejection', e=>bcShowError('unhandled: ' + String(e.reason && (e.reason.stack || e.reason.message) || e.reason), ''));
+  window.bcShowError = bcShowError;
+}
+</script>
+<script>
 const IS_WORKER = typeof self!=='undefined' && !!self.__BC_WORKER;     // true inside a render worker (see the multi-core rendering section)
 // ================= CHARACTER CREATOR: data, skin painter and 3D preview renderer =================
 // A character is a small record. paintSkin() turns it into a standard 64x64 Minecraft-layout skin texture, and

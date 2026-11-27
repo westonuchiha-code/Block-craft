@@ -790,3 +790,12 @@ DONE  INDEPENDENT REVIEW of everything added to the game file on 2026-11-15 (a s
       9. A horse left far above you (you in a delve below) was put back in the world and removed again every second.
       tests/horse.py checks 1, 2 and 4.
       Full suite on this build (review fixes): 55/55 (proof/suite_review.log).
+
+2026-11-27
+OPEN  "THE NEWEST VERSION DOES NOT LAUNCH ON MY PC" (his report). Could not reproduce: the GitHub build (identical to the last one sent)
+      opens and plays in Chrome with the CPU renderer and with the GPU renderer, the desktop (Electron) app's self-test passes, and
+      worlds saved by eight different earlier builds all load in it (including one saved while riding). No computer of his is
+      connected to the session, so it cannot be run on his PC from here. Waiting on: how he launches it, and what he sees.
+DONE  ON-SCREEN ERROR BOX: if anything goes wrong while the game starts (or later), a red box now appears at the bottom of the
+      screen with the error, where it happened and the browser, instead of a black window. Silent on a normal start (checked);
+      shows a forced error (checked); render workers, the planning worker and the desktop self-test still pass.

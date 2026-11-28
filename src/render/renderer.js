@@ -7,10 +7,12 @@ import { CHUNK_SIZE, SECTIONS_PER_CHUNK } from '../world/constants.js';
 import { createBlockTextures } from './textures.js';
 import { createBlockMaterials } from './materials.js';
 import { createSky } from './sky.js';
-import { meshSection } from './mesher.js';
+import { meshSection, LIQUID_DROP } from './mesher.js';
+import { BLOCK } from '../world/blocks.js';
 
 const sectionKey = (cx, cz, sy) => `${cx},${cz},${sy}`;
-const MESH_BUDGET_MS = 6;
+const MESH_BUDGET_MS = 6;                 // meshing time per frame while playing
+const LOADING_MESH_BUDGET_MS = 40;        // ... and behind the loading screen, where a smooth frame rate does not matter
 
 export class Renderer {
   /** @param {HTMLCanvasElement} canvas */
@@ -98,7 +100,7 @@ export class Renderer {
   }
 
   /** Mesh waiting sections, nearest first, within the frame's time budget. */
-  updateMeshes(eye) {
+  updateMeshes(eye, budgetMs = MESH_BUDGET_MS) {
     const t0 = performance.now();
     let n = 0;
     for (const key of this.urgent) { this.dirty.delete(key); this.rebuild(key); n++; }
@@ -108,7 +110,7 @@ export class Renderer {
       const order = [...this.dirty].map(k => { const [cx, cz, sy] = k.split(',').map(Number); return [k, cx, cz, (cx + 0.5 - pcx) ** 2 + (cz + 0.5 - pcz) ** 2 + 0.3 * (sy + 0.5 - psy) ** 2]; });
       order.sort((a, b) => a[3] - b[3]);
       for (const [key, cx, cz] of order) {
-        if (performance.now() - t0 > MESH_BUDGET_MS) break;
+        if (performance.now() - t0 > budgetMs) break;
         if (!this.neighboursLoaded(cx, cz)) continue;          // wait, so its edges are drawn right the first time
         this.dirty.delete(key);
         this.rebuild(key);
@@ -158,6 +160,22 @@ export class Renderer {
 
   // ---- each frame ----
 
+  /** Behind the loading screen: only build meshes (faster), and draw nothing; the screen covers the view. */
+  prepare(view) {
+    this.camera.position.set(view.x, view.y, view.z);
+    this.updateMeshes(this.camera.position, LOADING_MESH_BUDGET_MS);
+    this.gl.setClearColor(0x0b0d10);
+    this.gl.clear();
+  }
+
+  /** Is the eye below the surface of water? (A water block's surface is a little below its top.) */
+  eyeUnderWater(view) {
+    if (!this.world) return false;
+    const x = Math.floor(view.x), y = Math.floor(view.y), z = Math.floor(view.z);
+    if (this.world.getBlock(x, y, z) !== BLOCK.water) return false;
+    return this.world.getBlock(x, y + 1, z) === BLOCK.water || view.y - y < 1 - LIQUID_DROP;
+  }
+
   /**
    * @param {{x:number,y:number,z:number,yaw:number,pitch:number}} view  where the eye is and where it looks
    * @param {number} time  time of day 0..1
@@ -173,9 +191,25 @@ export class Renderer {
     u.daylight.value = sky.daylight;
     u.sunTint.value.copy(sky.sunTint);
     u.fogColour.value.copy(sky.fog);
+    u.sunDir.value.copy(sky.sunDir);
+    u.sunAmount.value = sky.sunAmount;
+    u.skyTop.value.copy(sky.top);
+    u.skyHorizon.value.copy(sky.horizon);
+    u.time.value = (performance.now() / 1000) % 1000;          // for moving water (wrapped: large values lose precision)
     const reach = this.settings.renderDistance * CHUNK_SIZE;
     u.fogNear.value = reach * 0.6;
     u.fogFar.value = reach * 0.95;
+    // under water: a short murky blue fog instead of the sky, darker in the deep and at night
+    const under = this.eyeUnderWater(view);
+    this.sky.dome.visible = !under;
+    if (under) {
+      const level = (this.world.lighting.get(Math.floor(view.x), Math.floor(view.y), Math.floor(view.z)) >> 4) / 15;
+      const bright = Math.max(0.08, (level / (3 - 2 * level)) * (0.2 + 0.8 * sky.daylight));
+      u.fogColour.value.setRGB(0.07 * bright, 0.2 * bright, 0.36 * bright);
+      u.fogNear.value = 1;
+      u.fogFar.value = 22;
+      this.gl.setClearColor(u.fogColour.value);
+    }
     this.camera.far = reach * 1.2 + 32;
     this.camera.updateProjectionMatrix();
 

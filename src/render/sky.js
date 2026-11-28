@@ -64,7 +64,8 @@ export function createSky(scene) {
   dome.frustumCulled = false;
   scene.add(dome);
 
-  const state = { daylight: 1, sunTint: new THREE.Color(1, 1, 1), fog: new THREE.Color(), sunDir: new THREE.Vector3() };
+  const state = { daylight: 1, sunTint: new THREE.Color(1, 1, 1), fog: new THREE.Color(), sunDir: new THREE.Vector3(),
+                  top: new THREE.Color(), horizon: new THREE.Color(), sunAmount: 1 };
 
   /**
    * @param {number} time  time of day 0..1 (0.25 noon, 0.75 midnight)
@@ -84,7 +85,9 @@ export function createSky(scene) {
     uniforms.horizonColour.value.copy(horizon);
     uniforms.sunDir.value.copy(state.sunDir);
     uniforms.starAmount.value = 1 - day;
-    uniforms.sunAmount.value = smooth01((elevation + 0.1) / 0.15);
+    uniforms.sunAmount.value = state.sunAmount = smooth01((elevation + 0.1) / 0.15);
+    state.top.copy(top);
+    state.horizon.copy(horizon);
     state.fog.copy(horizon);
     state.sunTint.setRGB(1, 1, 1).lerp(new THREE.Color(1.08, 0.86, 0.72), dusk * 0.7);
 
@@ -92,5 +95,5 @@ export function createSky(scene) {
     return state;
   }
 
-  return { update, state };
+  return { update, state, dome };
 }

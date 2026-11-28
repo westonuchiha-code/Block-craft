@@ -135,11 +135,13 @@ class Game {
     this.screens.update();
 
     if (this.world && this.player) {
-      this.world.update(this.player.x, this.player.z, this.settings.renderDistance, this.state === 'loading' ? 12 : 4);
+      this.world.update(this.player.x, this.player.z, this.settings.renderDistance, this.state === 'loading' ? 40 : 4);   // more per frame behind the loading screen
       if (this.state === 'loading') this.updateLoading();
       if (this.state === 'playing') this.updatePlaying(dt);
       const p = this.player, bob = this.state === 'playing' && this.settings.viewBob && p.onGround ? Math.sin(p.walked * 2.2) * 0.035 : 0;
-      this.renderer.render({ x: p.x, y: p.eyeY + bob, z: p.z, yaw: p.yaw, pitch: p.pitch }, this.time, this.state === 'playing' ? this.target : null);
+      const view = { x: p.x, y: p.eyeY + bob, z: p.z, yaw: p.yaw, pitch: p.pitch };
+      if (this.state === 'loading') this.renderer.prepare(view);
+      else this.renderer.render(view, this.time, this.state === 'playing' ? this.target : null);
     } else {
       this.renderer.gl.setClearColor(0x0b0d10);
       this.renderer.gl.clear();

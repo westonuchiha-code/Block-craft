@@ -883,3 +883,16 @@ DONE  LIGHT (rebuild, phase 2 begins). Real light, as in Minecraft, instead of t
       border; torch broken: dark; hole in the roof: 15 below it, 14 beside, 9 six away; shut: dark; and every block of the room and of
       a 41 x 41 natural area from bedrock to y 130 obeys the light rules). All 5 rebuild tests pass.
       Pictures: proof/rebuild_light.png (an unlit cave, the same cave with torches, an overhang shading off, torches and glowstone at night).
+DONE  WATER (rebuild, phase 2). Water now:
+      - reflects the sky, strongly at a glancing angle and weakly looking straight down, as real water does, with a sun glint (a
+        golden path on the water at sunset); only where the sky reaches, so cave pools do not shine with sky;
+      - moves: the surface drifts slowly, and ripples tilt the reflection in steps of one texture pixel (keeps the blocky look);
+        the ripples fade with distance so far water does not shimmer;
+      - is darker and less see-through where it is deep (the mesher passes the depth under each corner, 0 at the shore, full at 12);
+      - under water: a short murky blue fog instead of the sky, darker in the deep and at night.
+      Lava flows slowly and is nearly opaque, lit by its own glow.
+      Also: LOADING IS MUCH FASTER. Behind the loading screen the world is no longer drawn (it was hidden anyway) and meshing gets
+      40 ms a frame instead of 6. Measured at 4K in the slow test browser: 108 s -> under 3 s. (Found because the 4K test timed out
+      once chunks had to be lit before joining the world.)
+      Pictures: proof/rebuild_water.png (midday lake, looking up from under water, a lava pool lighting a cave, sunset on the water).
+      tests2/waterviews.py makes them. All 5 rebuild tests pass. Not done yet: water that flows (spreads when placed or released).

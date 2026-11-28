@@ -5,9 +5,11 @@
 //   light       x: ambient occlusion times the face's own shading (corners in creases are darker, like Minecraft's smooth lighting)
 //               y: sky light at the corner, 0-1 (light.js), averaged over the open cells round the corner (smooth lighting)
 //               z: block light at the corner (torches, lava, glowstone), 0-1, averaged the same way
-//   tint        the biome colour at that column, for grass and leaves (blended over the neighbouring columns)
+//   tint        the biome colour at that column, for grass and leaves (blended over the neighbouring columns).
+//               Liquids use it for something else: x = how deep the liquid is under that corner (0 at the shore, 1 at 12+
+//               blocks), y = 1 for water and 0 for lava, so the liquid shader can darken deep water and treat lava apart.
 // Two meshes come out: 'solid' (opaque, leaves, glass, plants: drawn without blending) and 'liquid' (water, lava: blended).
-import { BLOCKS, LIGHT_OF } from '../world/blocks.js';
+import { BLOCK, BLOCKS, LIGHT_OF } from '../world/blocks.js';
 import { sectionIndex } from '../world/chunk.js';
 import { BIOMES } from '../world/biomes.js';
 import { CHUNK_SIZE as S, WORLD_HEIGHT } from '../world/constants.js';
@@ -31,7 +33,9 @@ const FACES = [
 ];
 const CORNERS = [[0, 0], [1, 0], [1, 1], [0, 1]];
 const AO_LEVELS = [0.42, 0.62, 0.82, 1.0];
-const LIQUID_DROP = 0.125;                        // a liquid's surface sits this far below the top of its block
+export const LIQUID_DROP = 0.125;                        // a liquid's surface sits this far below the top of its block
+const LIQUID_DEEP = 12;                           // liquid this deep (or more) counts as fully deep
+const WATER = BLOCK.water;
 
 class Buffers {
   constructor() { this.pos = []; this.uv = []; this.layer = []; this.light = []; this.tint = []; this.index = []; this.count = 0; }
@@ -104,6 +108,26 @@ export function meshSection(world, cx, cz, sy, faceLayer) {
   const skyAt = (x, y, z) => (light[pidx(x, y, z)] >> 4) / 15;
   const glowAt = (x, y, z) => (light[pidx(x, y, z)] & 15) / 15;
 
+  // how deep the liquid is at a padded column, counted down from the layer y (cached: lakes are mostly one level)
+  const depthCache = new Map();
+  const liquidDepth = (dx, y, dz, id) => {
+    if (dx < -1 || dz < -1 || dx > S || dz > S || ids[pidx(dx, y, dz)] !== id) return 0;
+    const key = (y * P + dz + 1) * P + dx + 1;
+    let d = depthCache.get(key);
+    if (d === undefined) {
+      const wx = x0 + dx, wz = z0 + dz;
+      d = 0;
+      while (d < LIQUID_DEEP && world.getBlock(wx, y0 + y - d, wz) === id) d++;
+      depthCache.set(key, d);
+    }
+    return d;
+  };
+  const liquidTint = (id, px, y, pz) => {
+    const cx = Math.round(px), cz = Math.round(pz);
+    const d = liquidDepth(cx - 1, y, cz - 1, id) + liquidDepth(cx, y, cz - 1, id) + liquidDepth(cx - 1, y, cz, id) + liquidDepth(cx, y, cz, id);
+    return [d / 4 / LIQUID_DEEP, id === WATER ? 1 : 0, 0];
+  };
+
   const solid = new Buffers(), liquid = new Buffers();
 
   for (let y = 0; y < S; y++) for (let z = 0; z < S; z++) for (let x = 0; x < S; x++) {
@@ -148,9 +172,9 @@ export function meshSection(world, cx, cz, sy, faceLayer) {
         let py = y + 0.5 + 0.5 * F.n[1] + (su - 0.5) * F.u[1] + (sv - 0.5) * F.v[1];
         const pz = z + 0.5 + 0.5 * F.n[2] + (su - 0.5) * F.u[2] + (sv - 0.5) * F.v[2];
         if (lowered && py > y + 0.99) py -= LIQUID_DROP;
-        v.push({ px, py, pz, u: su, v: sv, ao, sky: skySum / n, glow: Math.max(glowSum / n, ownGlow) });
+        v.push({ px, py, pz, u: su, v: sv, ao, sky: skySum / n, glow: Math.max(glowSum / n, ownGlow), tint: isLiquid ? liquidTint(id, px, y, pz) : tint });
       }
-      const idx = v.map(c => out.vertex(c.px, c.py, c.pz, c.u, c.v, layer, AO_LEVELS[c.ao] * F.shade, c.sky, c.glow, tint));
+      const idx = v.map(c => out.vertex(c.px, c.py, c.pz, c.u, c.v, layer, AO_LEVELS[c.ao] * F.shade, c.sky, c.glow, c.tint));
       // turn the quad's diagonal to follow the darker corners, so shading in creases does not look skewed
       out.quad(idx[0], idx[1], idx[2], idx[3], v[0].ao + v[2].ao < v[1].ao + v[3].ao);
     }

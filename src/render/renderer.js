@@ -7,6 +7,7 @@ import { CHUNK_SIZE, SECTIONS_PER_CHUNK } from '../world/constants.js';
 import { createBlockTextures } from './textures.js';
 import { createBlockMaterials } from './materials.js';
 import { createSky } from './sky.js';
+import { createClouds, CLOUD_HEIGHT, CLOUD_RANGE } from './clouds.js';
 import { meshSection, LIQUID_DROP } from './mesher.js';
 import { BLOCK } from '../world/blocks.js';
 
@@ -25,6 +26,7 @@ export class Renderer {
     this.textures = createBlockTextures(this.gl.capabilities.getMaxAnisotropy());
     this.materials = createBlockMaterials(this.textures);
     this.sky = createSky(this.scene);
+    this.clouds = createClouds(this.scene);
     this.world = null;
     /** @type {Map<string, {solid?: THREE.Mesh, liquid?: THREE.Mesh}>} */
     this.sections = new Map();
@@ -202,6 +204,8 @@ export class Renderer {
     // under water: a short murky blue fog instead of the sky, darker in the deep and at night
     const under = this.eyeUnderWater(view);
     this.sky.dome.visible = !under;
+    this.clouds.mesh.visible = this.settings.clouds && !under;
+    if (this.clouds.mesh.visible) this.clouds.update(this.camera.position, performance.now() / 1000, sky);
     if (under) {
       const level = (this.world.lighting.get(Math.floor(view.x), Math.floor(view.y), Math.floor(view.z)) >> 4) / 15;
       const bright = Math.max(0.08, (level / (3 - 2 * level)) * (0.2 + 0.8 * sky.daylight));
@@ -210,7 +214,8 @@ export class Renderer {
       u.fogFar.value = 22;
       this.gl.setClearColor(u.fogColour.value);
     }
-    this.camera.far = reach * 1.2 + 32;
+    // far enough for the land, and for clouds out to the edge of their layer
+    this.camera.far = Math.max(reach * 1.2 + 32, this.settings.clouds ? Math.hypot(CLOUD_RANGE, CLOUD_HEIGHT) : 0);
     this.camera.updateProjectionMatrix();
 
     this.highlight.visible = !!target;

@@ -896,3 +896,7 @@ DONE  WATER (rebuild, phase 2). Water now:
       once chunks had to be lit before joining the world.)
       Pictures: proof/rebuild_water.png (midday lake, looking up from under water, a lava pool lighting a cave, sunset on the water).
       tests2/waterviews.py makes them. All 5 rebuild tests pass. Not done yet: water that flows (spreads when placed or released).
+DONE  CLOUDS (rebuild, phase 2). A layer of blocky clouds at height 182, as in Minecraft: cells 12 blocks square, 4 thick, clumped
+      by a slow noise into clouds of every size, drifting slowly east, out to 384 blocks with a fade at the edge. White by day,
+      warm pink at dawn and dusk, dark at night; hidden under water. Settings > Clouds turns them off. src/render/clouds.js.
+      Pictures: proof/rebuild_clouds.png (midday, dusk, from a mountain, flying just above them). tests2/cloudviews.py.

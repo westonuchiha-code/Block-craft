@@ -12,6 +12,7 @@ export const SETTINGS = {
   uiScale:          { label: 'Menu and HUD size', default: 1, min: 0.7, max: 1.6, step: 0.05, format: v => `${Math.round(v * 100)}%` },
   stickSensitivity: { label: 'Controller look speed', default: 1, min: 0.3, max: 2.5, step: 0.05, format: v => `${Math.round(v * 100)}%` },
   mouseSensitivity: { label: 'Mouse look speed', default: 1, min: 0.2, max: 3, step: 0.05, format: v => `${Math.round(v * 100)}%` },
+  clouds:           { label: 'Clouds', default: true },
   invertY:          { label: 'Invert look up and down', default: false },
   viewBob:          { label: 'View bob while walking', default: true },
   showFps:          { label: 'Show frame rate', default: false },

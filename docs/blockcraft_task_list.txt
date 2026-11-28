@@ -900,3 +900,7 @@ DONE  CLOUDS (rebuild, phase 2). A layer of blocky clouds at height 182, as in M
       by a slow noise into clouds of every size, drifting slowly east, out to 384 blocks with a fade at the edge. White by day,
       warm pink at dawn and dusk, dark at night; hidden under water. Settings > Clouds turns them off. src/render/clouds.js.
       Pictures: proof/rebuild_clouds.png (midday, dusk, from a mountain, flying just above them). tests2/cloudviews.py.
+DONE  PERFORMANCE CHECK of water and clouds (his request). docs/performance_report_2026-11-28.txt. Neither has a measurable cost
+      (same frame time with and without, clouds under 1% of triangles); loading is ~15x faster since the water commit. The land's
+      triangle count is what costs: greedy meshing and fewer draw calls are the big future wins. Measured in a software-GPU
+      browser, so only relative; the real frame rate on the 5070 is still to be read off Show frame rate.

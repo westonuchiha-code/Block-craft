@@ -1,0 +1,47 @@
+BLOCKCRAFT REBUILD - PERFORMANCE: WHAT WATER AND CLOUDS COST (2026-11-28)
+
+How it was measured
+  tests2/bench.py, run twice on each of three builds, same seed (12345), same places, view distance 12, 1280 x 720:
+    before-water  fe0c7f7 (light done, old water)
+    water         60b7d4a (new water + faster loading)
+    clouds        0a6c1d4 (clouds added)
+  Plus a fair clouds on/off check: one settled scene, clouds switched on and off four times in a row.
+  The test machine has NO graphics card: the browser draws with SwiftShader, a GPU emulated on 4 CPU cores. Frames take about
+  half a second here, against a few milliseconds on a real card. So the numbers only compare builds with each other; they say
+  nothing about the frame rate on an RTX 5070.
+
+Results (median frame time in ms; two runs each)
+                         before-water     water          clouds
+  lake view              717 / 717        700 / 717      700 / 717
+  sky view               500 / 517        500 / 500      533 / 550
+  under water            517 / 500        517 / 517      550 / 567
+  load a new world (s)   19.3 / 22.9      1.2 / 1.5      1.4 / 1.6
+  mesh a section (ms)    1.23 / 1.47      1.49 / 1.31    1.69 / 1.37
+  light a chunk (ms)     2.4 / 1.1        1.0 / 2.9      1.3 / 0.9
+  JavaScript memory (MB) 321 / 325        359 / 331      342 / 338
+
+  Clouds on/off, same scene, back to back (ms): 500 vs 533, 533 vs 533, 583 vs 600, 650 vs 650 (never slower with clouds on).
+
+What it means
+  - WATER: no measurable cost. The lake view, where water fills a third of the screen, runs the same in all three builds. The
+    water shader (ripples, reflection, depth) only runs on water pixels and is small next to drawing the land. The mesher's new
+    depth count may add a few percent per section, inside the noise (1.2-1.7 ms either way).
+  - CLOUDS: no measurable cost. 4,596 triangles in one draw call, under 1% of the ~500,000-800,000 triangles of land in view.
+    The cloud shape is rebuilt only when the player or the drift crosses a 12-block cell: 1.6 ms (once 9 ms with the garbage
+    collector), at most a few times a second when flying fast.
+    The 30-50 ms differences in the sky and underwater rows are noise: the same build varies that much between runs (frame
+    times here move in steps of 16.7 ms), clouds are hidden under water anyway, and the on/off check shows no difference.
+  - LOADING: about 15 times faster (20 s -> 1.5 s), from the water commit's change: the world is no longer drawn behind the
+    loading screen, and meshing gets more time there.
+  - Memory: no clear change (320-360 MB either way).
+
+What does cost: the land itself
+  Frame time follows the land's triangle count (480,000 -> 640,000 triangles: 500 -> 650 ms in the on/off check). At view
+  distance 12 there are 500,000-800,000 triangles in 300-700 draw calls. A 3070-class card handles that easily, but at view
+  distance 32 it would be roughly seven times as much. The biggest future gains are there, not in water or clouds:
+    1. greedy meshing (merge flat runs of the same block face into one big quad): typically 3-5 times fewer triangles;
+    2. fewer draw calls (one mesh per chunk rather than per 16-block section, or batching);
+    3. distant land drawn as a cheap low-detail mesh (planned anyway: "distant land beyond the view distance").
+
+Still to be measured on the real PC
+  Settings > Show frame rate on the 5070 at 4K: lake, forest, mountains, at view distance 12, 16, 24 and 32.
